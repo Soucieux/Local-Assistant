@@ -1,4 +1,0 @@
-interface:
-  display_name: "Exhaustive Pass"
-  short_description: "Run the complete no-skips Local Assistant audit"
-  default_prompt: "Use $exhaustive-pass to review, simplify, audit, test, and build the current Local Assistant scope."
