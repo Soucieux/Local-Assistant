@@ -5,6 +5,7 @@ enum UIStrings {
     static let appName = "Local Assistant"
     static let about = "About Local Assistant"
     static let settings = "Settings"
+    static let activity = "Activity"
     static let assistant = "Assistant"
     static let backToAssistant = "Back to Assistant"
     static let assistantSubtitle = "Private answers and file search on this Mac"
@@ -29,6 +30,16 @@ enum UIStrings {
     static let localOnly = "Local only"
     static let privateOnThisMac = "Private on this Mac"
     static let indexing = "Indexing"
+    static let indexingInBackground = "Indexing in the background"
+    static let scanningForChanges = "Scanning for changes…"
+    static let viewActivity = "View Activity"
+    static let pauseIndexing = "Pause Indexing"
+    static let pausingIndexing = "Pausing…"
+    static let monitoringActive = "Automatic updates on"
+    static let monitoringPaused = "Automatic updates paused"
+    static let monitoringUnavailable = "Automatic updates unavailable"
+    static let pauseAutomaticUpdates = "Pause Automatic Updates"
+    static let resumeAutomaticUpdates = "Resume Automatic Updates"
     static let done = "Done"
     static let errorTitle = "Local Assistant could not complete that action"
     static let offlineSetupRequired =
@@ -38,8 +49,6 @@ enum UIStrings {
     static let folderPickerPrompt = "Allow Read-Only Access"
     static let answerWithEvidence = "Send message"
     static let searchResults = "File matches"
-    static let indexedItems = "indexed"
-    static let skippedItems = "skipped"
     static let neverIndexed = "Not indexed yet"
     static let lastIndexed = "Last indexed"
     static let readOnlyAccess = "Read-only access"
@@ -109,6 +118,107 @@ enum UIStrings {
     static let assistantStatusDescription =
         "Bring Local Assistant forward without leaving the app you are using."
     static let updateAllFolders = "Update All Folders"
+    static let activityTitle = "Index Activity"
+    static let activityDetail = "See automatic updates, indexing progress, and file-level results from the last 30 days."
+    static let activityEmptyTitle = "No indexing activity yet"
+    static let activityEmptyDetail = "Automatic and manual folder updates will appear here."
+    static let activityHistory = "Indexing history"
+    static let monitoringEvents = "Monitoring activity"
+    static let monitoredFolders = "folders monitored"
+    static let clearActivity = "Clear Activity"
+    static let clearActivityTitle = "Clear indexing activity?"
+    static let clearActivityMessage =
+        "This removes the retained 30-day activity history. Indexed files, folder access, and source files are not changed."
+    static let noFileDetails = "No file-level details were recorded."
+    static let newStatus = "New"
+    static let updatedStatus = "Updated"
+    static let unchangedStatus = "Unchanged"
+    static let removedStatus = "Removed from index"
+    static let skippedStatus = "Skipped"
+    static let sourceFilter = "Source"
+    static let allSources = "All"
+    static let folderFilter = "Folder"
+    static let allFolders = "All folders"
+    static let statusFilter = "Status"
+    static let allStatuses = "All statuses"
+    static let filterHistory = "Filter history"
+    static let filterHistoryDescription = "Narrow the activity list by how it started, folder, or result."
+    static let clearFilters = "Clear filters"
+    static let listSeparator = "·"
+
+    /// Returns a rich label for the source of an indexing run.
+    /// - Parameter trigger: Source that requested the run.
+    /// - Returns: Plain-language trigger label.
+    internal static func indexingTrigger(_ trigger: IndexingTrigger) -> String {
+        switch trigger {
+        case .automatic: return "Automatic"
+        case .manual: return "Manual"
+        case .startup: return "Startup scan"
+        }
+    }
+
+    /// Returns a precise user-visible file indexing state.
+    /// - Parameter state: Durable file-level indexing state.
+    /// - Returns: Plain-language state label.
+    internal static func indexingItemState(_ state: IndexingItemState) -> String {
+        switch state {
+        case .newWaiting: return "New — Waiting"
+        case .newIndexing: return "New — Indexing"
+        case .newIndexed: return "New — Indexed"
+        case .modifiedWaiting: return "Modified — Waiting"
+        case .modifiedUpdating: return "Modified — Updating"
+        case .modifiedUpdated: return "Modified — Updated"
+        case .unchanged: return unchangedStatus
+        case .missingPendingRemoval: return "Missing — Pending removal from index"
+        case .removedFromIndex: return removedStatus
+        case .skipped: return "Skipped — Needs attention"
+        }
+    }
+
+    /// Returns a concise retained run state.
+    /// - Parameter state: Durable lifecycle state for a run.
+    /// - Returns: Plain-language run state label.
+    internal static func indexingRunState(_ state: IndexingRunState) -> String {
+        switch state {
+        case .running: return "In progress"
+        case .completed: return "Completed"
+        case .stopped: return "Paused"
+        case .failed: return "Needs attention"
+        }
+    }
+
+    /// Returns plain-language monitoring timeline copy.
+    /// - Parameter kind: Durable monitoring or indexing event.
+    /// - Returns: Plain-language event description.
+    internal static func activityEvent(_ kind: IndexActivityEventKind) -> String {
+        switch kind {
+        case .changesDetected: return "Folder changes detected"
+        case .updateScheduled: return "Automatic update scheduled"
+        case .monitoringPaused: return monitoringPaused
+        case .monitoringResumed: return "Automatic updates resumed"
+        case .indexingStopped: return "Indexing paused safely"
+        case .indexingFailed: return "Indexing needs attention"
+        case .monitoringUnavailable: return monitoringUnavailable
+        }
+    }
+
+    /// Formats bounded determinate indexing progress.
+    /// - Parameters:
+    ///   - processed: Number of completed work items.
+    ///   - total: Total number of work items.
+    ///   - fraction: Bounded completion fraction.
+    /// - Returns: Localized count and percentage text.
+    internal static func indexingProgress(processed: Int, total: Int, fraction: Double) -> String {
+        let percent = Int((fraction * 100).rounded())
+        return "\(processed) of \(total) · \(percent)%"
+    }
+
+    /// Prefixes a folder name with the standard compact separator.
+    /// - Parameter folderName: Visible authorized-folder name.
+    /// - Returns: Compact secondary folder label.
+    internal static func indexingFolderLabel(_ folderName: String) -> String {
+        "\(listSeparator) \(folderName)"
+    }
 
     /// Prefixes a numeric bundle release for human-facing presentation.
     /// - Parameter numericVersion: Numeric marketing version stored in bundle metadata.
@@ -184,15 +294,6 @@ enum UIStrings {
         case .archive: return "Archive"
         case .other: return "File"
         }
-    }
-
-    /// Formats indexing progress counts.
-    /// - Parameters:
-    ///   - processed: Completed item count.
-    ///   - skipped: Skipped or excluded item count.
-    /// - Returns: Compact progress text.
-    internal static func indexingCounts(processed: Int, skipped: Int) -> String {
-        "\(processed) \(indexedItems), \(skipped) \(skippedItems)"
     }
 
     /// Formats a message timestamp using the current locale and time zone.

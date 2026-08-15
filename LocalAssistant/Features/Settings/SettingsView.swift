@@ -244,7 +244,7 @@ struct SettingsView: View {
 
                 if model.indexedRoots.count > 1 {
                     Button {
-                        Task { await model.indexAll() }
+                        model.indexAll()
                     } label: {
                         Label(
                             UIStrings.updateAllFolders,
@@ -283,9 +283,6 @@ struct SettingsView: View {
                 }
             }
 
-            if model.indexingProgress.state != .idle {
-                indexingProgress
-            }
         }
     }
 
@@ -409,12 +406,35 @@ struct SettingsView: View {
                 Spacer()
 
                 Button {
-                    Task { await model.index(root: root) }
+                    model.index(root: root)
                 } label: {
                     Label(UIStrings.reindex, systemImage: SystemImages.indexedFolders)
                 }
                 .buttonStyle(SecondaryActionButtonStyle())
-                .disabled(model.isBusy)
+                .disabled(model.indexingIsActive(rootID: root.id))
+
+                Button {
+                    Task {
+                        if model.monitoringIsActive(rootID: root.id) {
+                            await model.pauseMonitoring(rootID: root.id)
+                        } else {
+                            await model.resumeMonitoring(rootID: root.id)
+                        }
+                    }
+                } label: {
+                    Label(
+                        monitoringActionTitle(rootID: root.id),
+                        systemImage: monitoringActionImage(rootID: root.id)
+                    )
+                }
+                .buttonStyle(
+                    TintedActionButtonStyle(tint: monitoringActionTint(rootID: root.id))
+                )
+                .help(
+                    model.monitoringIsActive(rootID: root.id)
+                        ? UIStrings.pauseAutomaticUpdates
+                        : UIStrings.resumeAutomaticUpdates
+                )
 
                 Button {
                     rootPendingRevocation = root
@@ -422,7 +442,14 @@ struct SettingsView: View {
                     Label(UIStrings.revokeAccess, systemImage: SystemImages.removeFolder)
                 }
                 .buttonStyle(DestructiveActionButtonStyle())
-                .disabled(model.isBusy)
+                .disabled(model.indexingIsActive(rootID: root.id))
+            }
+
+            if let progress = model.indexingProgressByRoot[root.id],
+               progress.state != .idle,
+               progress.state != .stopped,
+               progress.state != .failed {
+                indexingProgress(progress)
             }
         }
         .padding(DesignTokens.Spacing.medium)
@@ -437,35 +464,106 @@ struct SettingsView: View {
     }
 
     /// Builds the active indexing path and bounded progress feedback.
-    private var indexingProgress: some View {
+    /// - Parameter progress: Live progress for the authorized folder.
+    /// - Returns: Bounded progress, state metrics, and pause control.
+    private func indexingProgress(_ progress: IndexingProgress) -> some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             HStack(spacing: DesignTokens.Spacing.small) {
-                ProgressView()
-                    .controlSize(.small)
-                    .tint(DesignTokens.Color.processing)
-                Text(UIStrings.indexing)
+                if progress.state == .stopping {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(DesignTokens.Color.processing)
+                }
+                Text(
+                    progress.state == .stopping
+                        ? UIStrings.pausingIndexing
+                        : UIStrings.indexing
+                )
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(DesignTokens.Color.processing)
+                Spacer()
+                if progress.totalItems > 0 {
+                    Text(
+                        UIStrings.indexingProgress(
+                            processed: progress.processedItems,
+                            total: progress.totalItems,
+                            fraction: progress.fractionCompleted
+                        )
+                    )
+                    .font(.caption.weight(.semibold))
+                }
             }
-            ProgressView(value: model.indexingProgress.fractionCompleted)
-                .tint(DesignTokens.Color.processing)
-            Text(model.indexingProgress.currentPath ?? UIStrings.indexing)
+            if progress.totalItems > 0 {
+                ProgressView(value: progress.fractionCompleted)
+                    .tint(DesignTokens.Color.processing)
+            } else {
+                ProgressView()
+                    .controlSize(.small)
+            }
+            Text(progress.currentPath ?? UIStrings.scanningForChanges)
                 .font(.caption.monospaced())
                 .lineLimit(1)
-            Text(
-                UIStrings.indexingCounts(
-                    processed: model.indexingProgress.processedItems,
-                    skipped: model.indexingProgress.skippedItems
-                )
+            if let currentItemState = progress.currentItemState {
+                Text(UIStrings.indexingItemState(currentItemState))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(DesignTokens.Color.processing)
+            }
+            IndexingSummaryBadges(
+                newItems: progress.newItems,
+                updatedItems: progress.updatedItems,
+                unchangedItems: progress.unchangedItems,
+                removedItems: progress.removedItems,
+                skippedItems: progress.skippedItems
             )
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            if let rootID = progress.rootID {
+                HStack {
+                    Spacer()
+                    Button(
+                        progress.state == .stopping
+                            ? UIStrings.pausingIndexing
+                            : UIStrings.pauseIndexing
+                    ) {
+                        model.pauseIndexing(rootID: rootID)
+                    }
+                    .buttonStyle(
+                        TintedActionButtonStyle(tint: DesignTokens.Color.processing)
+                    )
+                    .disabled(progress.state == .stopping)
+                }
+            }
         }
         .padding(DesignTokens.Spacing.medium)
         .background(
             RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
                 .fill(DesignTokens.Color.processingSurface)
         )
+    }
+
+    /// Returns the visible state label for the single automatic-update control.
+    /// - Parameter rootID: Authorized folder identifier.
+    /// - Returns: Active, paused, or unavailable monitoring copy.
+    private func monitoringActionTitle(rootID: UUID) -> String {
+        if model.monitoringIsPaused(rootID: rootID) { return UIStrings.monitoringPaused }
+        if model.monitoringIsActive(rootID: rootID) { return UIStrings.monitoringActive }
+        return UIStrings.monitoringUnavailable
+    }
+
+    /// Returns the symbol for the single automatic-update control.
+    /// - Parameter rootID: Authorized folder identifier.
+    /// - Returns: A monitoring, paused, or attention symbol.
+    private func monitoringActionImage(rootID: UUID) -> String {
+        if model.monitoringIsPaused(rootID: rootID) { return SystemImages.paused }
+        if model.monitoringIsActive(rootID: rootID) { return SystemImages.monitoring }
+        return SystemImages.stale
+    }
+
+    /// Returns the semantic tint for the single automatic-update control.
+    /// - Parameter rootID: Authorized folder identifier.
+    /// - Returns: Teal, orange, or red according to monitoring state.
+    private func monitoringActionTint(rootID: UUID) -> Color {
+        if model.monitoringIsPaused(rootID: rootID) { return DesignTokens.Color.processing }
+        if model.monitoringIsActive(rootID: rootID) { return DesignTokens.Color.verifiedLocal }
+        return DesignTokens.Color.destructive
     }
 
     /// Builds one non-color-only privacy guarantee.

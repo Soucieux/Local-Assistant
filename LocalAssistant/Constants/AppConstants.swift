@@ -23,8 +23,9 @@ enum AppConstants {
         static let modelsDirectory = "Models"
         static let databaseFilename = "assistant.sqlite3"
         static let modelAssetManifestFilename = "model-assets.sha256"
+        static let folderMonitorQueueLabel = "com.soucieux.LocalAssistant.folder-monitoring"
         static let bundleShortVersionKey = "CFBundleShortVersionString"
-        static let fallbackVersion = "0.9"
+        static let fallbackVersion = "1.0"
     }
 
     enum Chat {
@@ -41,7 +42,8 @@ enum AppConstants {
         static let maximumTextFileBytes: Int64 = 20 * 1_024 * 1_024
         static let maximumOCRPixelCount = 30_000_000
         static let embeddingDimensions = 1_024
-        static let completedFraction = 1.0
+        static let activityRetentionDays = 30
+        static let changeDebounceNanoseconds: UInt64 = 2_000_000_000
     }
 
     enum Storage {

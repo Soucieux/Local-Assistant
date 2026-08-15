@@ -179,6 +179,40 @@ struct SecondaryActionButtonStyle: ButtonStyle {
     }
 }
 
+/// Tinted outlined style for a reversible stateful action such as monitoring or pausing work.
+struct TintedActionButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let tint: Color
+
+    /// Builds a semantic action appearance without implying destructive behavior.
+    /// - Parameter configuration: SwiftUI button state and label.
+    /// - Returns: A tinted, bordered action control with pressed and disabled feedback.
+    internal func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.callout.weight(.medium))
+            .foregroundStyle(tint)
+            .padding(.horizontal, DesignTokens.Spacing.medium)
+            .padding(.vertical, DesignTokens.Spacing.small)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                    .fill(tint.opacity(configuration.isPressed ? 0.17 : 0.10))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                    .stroke(tint.opacity(configuration.isPressed ? 0.32 : 0.20))
+            )
+            .opacity(isEnabled ? 1 : 0.46)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(
+                reduceMotion
+                    ? nil
+                    : .easeOut(duration: DesignTokens.Motion.controlDuration),
+                value: configuration.isPressed
+            )
+    }
+}
+
 /// Tinted icon-only button style for compact toolbar and composer controls.
 struct IconActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled

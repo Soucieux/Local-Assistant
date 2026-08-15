@@ -23,6 +23,9 @@ struct ChatView: View {
 
             VStack(spacing: 0) {
                 header
+                if model.isIndexing {
+                    BackgroundIndexingBanner()
+                }
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(
@@ -118,6 +121,25 @@ struct ChatView: View {
                 systemImage: SystemImages.localVerified,
                 tint: DesignTokens.Color.verifiedLocal
             )
+
+            Button {
+                model.showActivity()
+            } label: {
+                Image(systemName: SystemImages.activity)
+            }
+            .buttonStyle(
+                IconActionButtonStyle(
+                    tint: model.isIndexing
+                        ? DesignTokens.Color.processing
+                        : DesignTokens.Color.primaryAccent,
+                    fill: model.isIndexing
+                        ? DesignTokens.Color.processingSurface
+                        : DesignTokens.Color.selectedSurface,
+                    size: DesignTokens.Control.compactIconButtonSize
+                )
+            )
+            .accessibilityLabel(UIStrings.activity)
+            .help(UIStrings.activity)
 
             Button {
                 model.requestConversationClearConfirmation()

@@ -10,6 +10,7 @@ final class ServiceContainer {
     let embeddings: LocalEmbeddingService
     let retrieval: HybridRetrievalService
     let indexing: IndexingService
+    let monitoring: FolderMonitorService
     let assistant: GroundedAssistantService
     let voice: LocalVoiceService
 
@@ -38,6 +39,7 @@ final class ServiceContainer {
             chunker: TextChunker(),
             embeddings: embeddings
         )
+        monitoring = FolderMonitorService()
         self.assistant = assistant
         voice = LocalVoiceService()
     }

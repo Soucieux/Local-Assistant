@@ -11,6 +11,8 @@ struct RootView: View {
             switch model.activeScreen {
             case .assistant:
                 ChatView()
+            case .activity:
+                IndexActivityView()
             case .settings:
                 SettingsView()
             }
@@ -39,6 +41,19 @@ struct RootView: View {
                 }
             } message: {
                 Text(UIStrings.clearConversationMessage)
+            }
+            .alert(
+                UIStrings.clearActivityTitle,
+                isPresented: $model.activityClearConfirmationIsPresented
+            ) {
+                Button(UIStrings.clearActivity, role: .destructive) {
+                    Task { await model.confirmActivityClear() }
+                }
+                Button(UIStrings.cancel, role: .cancel) {
+                    model.dismissActivityClearConfirmation()
+                }
+            } message: {
+                Text(UIStrings.clearActivityMessage)
             }
     }
 }

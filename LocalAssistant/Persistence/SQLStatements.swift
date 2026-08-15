@@ -108,6 +108,56 @@ enum SQLStatements {
             key TEXT PRIMARY KEY NOT NULL,
             value TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS folder_monitoring_states (
+            root_id TEXT PRIMARY KEY NOT NULL REFERENCES authorized_roots(id) ON DELETE CASCADE,
+            is_enabled INTEGER NOT NULL,
+            updated_at REAL NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS indexing_runs (
+            id TEXT PRIMARY KEY NOT NULL,
+            root_id TEXT NOT NULL,
+            folder_name TEXT NOT NULL,
+            folder_path TEXT NOT NULL,
+            trigger TEXT NOT NULL,
+            state TEXT NOT NULL,
+            started_at REAL NOT NULL,
+            finished_at REAL,
+            total_items INTEGER NOT NULL,
+            new_items INTEGER NOT NULL,
+            updated_items INTEGER NOT NULL,
+            unchanged_items INTEGER NOT NULL,
+            removed_items INTEGER NOT NULL,
+            skipped_items INTEGER NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS indexing_runs_started_at ON indexing_runs(started_at DESC);
+        CREATE INDEX IF NOT EXISTS indexing_runs_root_id ON indexing_runs(root_id);
+
+        CREATE TABLE IF NOT EXISTS indexing_run_items (
+            id TEXT PRIMARY KEY NOT NULL,
+            run_id TEXT NOT NULL REFERENCES indexing_runs(id) ON DELETE CASCADE,
+            display_name TEXT NOT NULL,
+            relative_path TEXT NOT NULL,
+            state TEXT NOT NULL,
+            detail TEXT,
+            updated_at REAL NOT NULL,
+            UNIQUE(run_id, relative_path)
+        );
+
+        CREATE INDEX IF NOT EXISTS indexing_run_items_run_id ON indexing_run_items(run_id);
+
+        CREATE TABLE IF NOT EXISTS index_activity_events (
+            id TEXT PRIMARY KEY NOT NULL,
+            root_id TEXT NOT NULL,
+            folder_name TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            occurred_at REAL NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS index_activity_events_occurred_at
+            ON index_activity_events(occurred_at DESC);
         """
 
     static let beginTransaction = "BEGIN IMMEDIATE TRANSACTION;"
@@ -190,6 +240,72 @@ enum SQLStatements {
     static let insertChatMessage = "INSERT OR REPLACE INTO chat_messages (id, role, payload, created_at) VALUES (?, ?, ?, ?);"
     static let fetchChatMessages = "SELECT payload FROM chat_messages ORDER BY created_at DESC LIMIT ?;"
     static let clearChatMessages = "DELETE FROM chat_messages;"
+
+    static let upsertMonitoringState = """
+        INSERT INTO folder_monitoring_states (root_id, is_enabled, updated_at)
+        VALUES (?, ?, ?)
+        ON CONFLICT(root_id) DO UPDATE SET
+            is_enabled = excluded.is_enabled,
+            updated_at = excluded.updated_at;
+        """
+    static let fetchMonitoringStates = "SELECT root_id, is_enabled FROM folder_monitoring_states;"
+    static let insertIndexingRun = """
+        INSERT INTO indexing_runs (
+            id, root_id, folder_name, folder_path, trigger, state, started_at, finished_at,
+            total_items, new_items, updated_items, unchanged_items, removed_items, skipped_items
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+    static let updateIndexingRun = """
+        UPDATE indexing_runs SET
+            state = ?, finished_at = ?, total_items = ?, new_items = ?, updated_items = ?,
+            unchanged_items = ?, removed_items = ?, skipped_items = ?
+        WHERE id = ?;
+        """
+    static let fetchIndexingRuns = """
+        SELECT id, root_id, folder_name, folder_path, trigger, state, started_at, finished_at,
+               total_items, new_items, updated_items, unchanged_items, removed_items, skipped_items
+        FROM indexing_runs ORDER BY started_at DESC;
+        """
+    static let upsertIndexingRunItem = """
+        INSERT INTO indexing_run_items (id, run_id, display_name, relative_path, state, detail, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(run_id, relative_path) DO UPDATE SET
+            display_name = excluded.display_name,
+            state = excluded.state,
+            detail = excluded.detail,
+            updated_at = excluded.updated_at;
+        """
+    static let fetchIndexingRunItems = """
+        SELECT id, run_id, display_name, relative_path, state, detail, updated_at
+        FROM indexing_run_items WHERE run_id = ?
+        ORDER BY relative_path COLLATE NOCASE;
+        """
+    static let insertIndexActivityEvent = """
+        INSERT INTO index_activity_events (id, root_id, folder_name, kind, occurred_at)
+        VALUES (?, ?, ?, ?, ?);
+        """
+    static let fetchIndexActivityEvents = """
+        SELECT id, root_id, folder_name, kind, occurred_at
+        FROM index_activity_events ORDER BY occurred_at DESC;
+        """
+    static let deleteExpiredIndexingRuns = "DELETE FROM indexing_runs WHERE started_at < ?;"
+    static let deleteExpiredIndexActivityEvents = "DELETE FROM index_activity_events WHERE occurred_at < ?;"
+    static let clearIndexingRuns = "DELETE FROM indexing_runs;"
+    static let clearIndexActivityEvents = "DELETE FROM index_activity_events;"
+    static let stopInterruptedIndexingRuns = """
+        UPDATE indexing_runs SET state = ?, finished_at = ? WHERE state = ?;
+        """
+    static let resetInterruptedIndexingItems = """
+        UPDATE indexing_run_items
+        SET state = CASE state
+                WHEN ? THEN ?
+                WHEN ? THEN ?
+                ELSE state
+            END,
+            updated_at = ?
+        WHERE run_id IN (SELECT id FROM indexing_runs WHERE state = ?)
+          AND state IN (?, ?);
+        """
 
     /// Builds metadata retrieval with hard item kinds applied before the row limit.
     /// - Parameter kindCount: Number of kind values that will be bound first.

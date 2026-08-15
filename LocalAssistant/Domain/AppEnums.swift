@@ -3,6 +3,7 @@ import Foundation
 /// Main-window destinations that preserve one focused application surface.
 enum AppScreen {
     case assistant
+    case activity
     case settings
 }
 
@@ -73,5 +74,47 @@ enum IndexingState: String, Codable, Sendable {
     case extracting
     case embedding
     case saving
+    case stopping
+    case stopped
     case failed
+}
+
+/// Source that requested one incremental indexing run.
+enum IndexingTrigger: String, Codable, CaseIterable, Sendable {
+    case automatic
+    case manual
+    case startup
+}
+
+/// Final lifecycle state retained for one indexing run.
+enum IndexingRunState: String, Codable, CaseIterable, Sendable {
+    case running
+    case completed
+    case stopped
+    case failed
+}
+
+/// File-level state recorded for an indexing run.
+enum IndexingItemState: String, Codable, CaseIterable, Sendable {
+    case newWaiting
+    case newIndexing
+    case newIndexed
+    case modifiedWaiting
+    case modifiedUpdating
+    case modifiedUpdated
+    case unchanged
+    case missingPendingRemoval
+    case removedFromIndex
+    case skipped
+}
+
+/// Durable monitoring and indexing events shown in the activity timeline.
+enum IndexActivityEventKind: String, Codable, Sendable {
+    case changesDetected
+    case updateScheduled
+    case monitoringPaused
+    case monitoringResumed
+    case indexingStopped
+    case indexingFailed
+    case monitoringUnavailable
 }

@@ -256,19 +256,75 @@ struct PersonalAlias: Identifiable, Codable, Hashable, Sendable {
 
 /// Live progress for a read-only indexing run.
 struct IndexingProgress: Codable, Hashable, Sendable {
+    var runID: UUID?
+    var rootID: UUID?
+    var folderName: String?
+    var trigger: IndexingTrigger?
     var state: IndexingState
     var currentPath: String?
+    var currentItemState: IndexingItemState?
     var processedItems: Int
     var totalItems: Int
     var skippedItems: Int
+    var newItems: Int
+    var updatedItems: Int
+    var unchangedItems: Int
+    var removedItems: Int
     var fractionCompleted: Double
 
     static let idle = IndexingProgress(
+        runID: nil,
+        rootID: nil,
+        folderName: nil,
+        trigger: nil,
         state: .idle,
         currentPath: nil,
+        currentItemState: nil,
         processedItems: 0,
         totalItems: 0,
         skippedItems: 0,
+        newItems: 0,
+        updatedItems: 0,
+        unchangedItems: 0,
+        removedItems: 0,
         fractionCompleted: 0
     )
+}
+
+/// Durable summary of one automatic, manual, or startup indexing run.
+struct IndexingRunRecord: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    let rootID: UUID
+    let folderName: String
+    let folderPath: String
+    let trigger: IndexingTrigger
+    var state: IndexingRunState
+    let startedAt: Date
+    var finishedAt: Date?
+    var totalItems: Int
+    var newItems: Int
+    var updatedItems: Int
+    var unchangedItems: Int
+    var removedItems: Int
+    var skippedItems: Int
+}
+
+/// Durable per-file classification retained for the activity details view.
+struct IndexingItemRecord: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    let runID: UUID
+    let displayName: String
+    let relativePath: String
+    var state: IndexingItemState
+    var detail: String?
+    var updatedAt: Date
+}
+
+/// Durable non-file event retained in the activity timeline.
+struct IndexActivityEventRecord: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    let rootID: UUID
+    let folderName: String
+    let kind: IndexActivityEventKind
+    let occurredAt: Date
 }

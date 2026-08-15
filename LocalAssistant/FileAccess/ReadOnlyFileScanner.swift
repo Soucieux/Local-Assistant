@@ -38,6 +38,7 @@ struct ReadOnlyFileScanner: Sendable {
 
         var files: [ScannedFile] = []
         for case let url as URL in enumerator {
+            try Task.checkCancellation()
             do {
                 let values = try url.resourceValues(forKeys: resourceKeys)
                 if let reason = exclusionPolicy.reason(for: url, values: values) {
