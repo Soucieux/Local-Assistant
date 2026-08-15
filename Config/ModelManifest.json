@@ -1,0 +1,30 @@
+{
+  "formatVersion": 1,
+  "models": [
+    {
+      "role": "chat",
+      "repository": "Qwen/Qwen3-4B-GGUF",
+      "revision": "bc640142c66e1fdd12af0bd68f40445458f3869b",
+      "sourcePath": "Qwen3-4B-Q4_K_M.gguf",
+      "installedName": "Qwen3-4B-Q4_K_M.gguf",
+      "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
+      "byteCount": 2497280256
+    },
+    {
+      "role": "embedding",
+      "repository": "Qwen/Qwen3-Embedding-0.6B-GGUF",
+      "revision": "370f27d7550e0def9b39c1f16d3fbaa13aa67728",
+      "sourcePath": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "installedName": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+      "byteCount": 639150592
+    },
+    {
+      "role": "speech",
+      "repository": "argmaxinc/whisperkit-coreml",
+      "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808",
+      "sourcePath": "openai_whisper-small",
+      "installedName": "openai_whisper-small"
+    }
+  ]
+}

@@ -1,0 +1,214 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A0000010000000000000002 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1A0000210000000000000002 /* WhisperKit */; };
+		1A0000010000000000000003 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1A0000210000000000000003 /* ZIPFoundation */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1A0000020000000000000001 /* LocalAssistant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocalAssistant.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1A0000300000000000000001 /* Exceptions for LocalAssistant in LocalAssistant target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = 1A0000060000000000000001 /* LocalAssistant */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1A0000030000000000000001 /* LocalAssistant */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1A0000300000000000000001 /* Exceptions for LocalAssistant in LocalAssistant target */,
+			);
+			path = LocalAssistant;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1A0000040000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0000010000000000000002 /* WhisperKit in Frameworks */,
+				1A0000010000000000000003 /* ZIPFoundation in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1A0000050000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				1A0000030000000000000001 /* LocalAssistant */,
+				1A0000050000000000000002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1A0000050000000000000002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000020000000000000001 /* LocalAssistant.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1A0000060000000000000001 /* LocalAssistant */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0000100000000000000002 /* Build configuration list for PBXNativeTarget "LocalAssistant" */;
+			buildPhases = (
+				1A0000070000000000000001 /* Sources */,
+				1A0000040000000000000001 /* Frameworks */,
+				1A0000080000000000000001 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (
+				1A0000030000000000000001 /* LocalAssistant */,
+			);
+			name = LocalAssistant;
+			packageProductDependencies = (
+				1A0000210000000000000002 /* WhisperKit */,
+				1A0000210000000000000003 /* ZIPFoundation */,
+			);
+			productName = LocalAssistant;
+			productReference = 1A0000020000000000000001 /* LocalAssistant.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1A0000090000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					1A0000060000000000000001 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+				};
+			};
+			buildConfigurationList = 1A0000100000000000000001 /* Build configuration list for PBXProject "LocalAssistant" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = 1A0000050000000000000001;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1A0000200000000000000002 /* XCLocalSwiftPackageReference "Vendor/WhisperKit" */,
+				1A0000200000000000000003 /* XCLocalSwiftPackageReference "Vendor/ZIPFoundation" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1A0000050000000000000002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (1A0000060000000000000001 /* LocalAssistant */);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1A0000080000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A0000070000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1A0000110000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; MACOSX_DEPLOYMENT_TARGET = 15.0; SDKROOT = macosx; SWIFT_VERSION = 6.0; }; name = Debug; };
+		1A0000110000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; MACOSX_DEPLOYMENT_TARGET = 15.0; SDKROOT = macosx; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_VERSION = 6.0; }; name = Release; };
+		1A0000110000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LocalAssistant/Resources/LocalAssistant.entitlements;
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LocalAssistant/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 0.9;
+				OTHER_CFLAGS = "$(inherited) -DSQLITE_CORE=1";
+				OTHER_LDFLAGS = "$(inherited) -lsqlite3 -Wl,-force_load,$(PROJECT_DIR)/Vendor/llama.cpp/build-localassistant-macos/Release/libllama-localassistant.a -framework Accelerate -framework Metal -framework Foundation -lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistant;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = LocalAssistant/VendorBridge/LocalAssistant-Bridging-Header.h;
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/LocalAssistant/VendorBridge/LlamaModule $(PROJECT_DIR)/Vendor/llama.cpp/ggml/include";
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Debug;
+		};
+		1A0000110000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LocalAssistant/Resources/LocalAssistant.entitlements;
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LocalAssistant/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 0.9;
+				OTHER_CFLAGS = "$(inherited) -DSQLITE_CORE=1";
+				OTHER_LDFLAGS = "$(inherited) -lsqlite3 -Wl,-force_load,$(PROJECT_DIR)/Vendor/llama.cpp/build-localassistant-macos/Release/libllama-localassistant.a -framework Accelerate -framework Metal -framework Foundation -lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistant;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = LocalAssistant/VendorBridge/LocalAssistant-Bridging-Header.h;
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/LocalAssistant/VendorBridge/LlamaModule $(PROJECT_DIR)/Vendor/llama.cpp/ggml/include";
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A0000100000000000000001 /* Build configuration list for PBXProject "LocalAssistant" */ = {isa = XCConfigurationList; buildConfigurations = (1A0000110000000000000001 /* Debug */, 1A0000110000000000000002 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		1A0000100000000000000002 /* Build configuration list for PBXNativeTarget "LocalAssistant" */ = {isa = XCConfigurationList; buildConfigurations = (1A0000110000000000000003 /* Debug */, 1A0000110000000000000004 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		1A0000200000000000000002 /* XCLocalSwiftPackageReference "Vendor/WhisperKit" */ = {isa = XCLocalSwiftPackageReference; relativePath = Vendor/WhisperKit; };
+		1A0000200000000000000003 /* XCLocalSwiftPackageReference "Vendor/ZIPFoundation" */ = {isa = XCLocalSwiftPackageReference; relativePath = Vendor/ZIPFoundation; };
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1A0000210000000000000002 /* WhisperKit */ = {isa = XCSwiftPackageProductDependency; package = 1A0000200000000000000002 /* XCLocalSwiftPackageReference "Vendor/WhisperKit" */; productName = WhisperKit; };
+		1A0000210000000000000003 /* ZIPFoundation */ = {isa = XCSwiftPackageProductDependency; package = 1A0000200000000000000003 /* XCLocalSwiftPackageReference "Vendor/ZIPFoundation" */; productName = ZIPFoundation; };
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 1A0000090000000000000001 /* Project object */;
+}

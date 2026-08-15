@@ -1,0 +1,219 @@
+import Foundation
+
+extension AssistantDatabase {
+    /// Replaces one indexed item and all of its extracted passages atomically.
+    /// - Parameters:
+    ///   - item: Current read-only file metadata.
+    ///   - chunks: Extracted passages and optional local embeddings.
+    /// - Throws: A local database error when the update cannot be committed.
+    internal func replaceItem(_ item: IndexedItem, chunks: [ContentChunk]) throws {
+        try inTransaction {
+            try deleteVectors(itemID: item.id)
+            try deleteFTS(itemID: item.id)
+            try deleteChunks(itemID: item.id)
+            try upsertItem(item)
+
+            for chunk in chunks {
+                let rowID = try insertChunk(chunk)
+                try insertFTS(chunk: chunk, item: item)
+                if let embedding = chunk.embedding {
+                    try insertVector(embedding, rowID: rowID)
+                }
+            }
+        }
+    }
+
+    /// Returns an indexed item by identifier.
+    /// - Parameter id: Stable item identifier.
+    /// - Returns: Matching item or `nil`.
+    /// - Throws: A local database error when the lookup fails.
+    internal func fetchItem(id: UUID) throws -> IndexedItem? {
+        let statement = try preparedStatement(SQLStatements.fetchItem)
+        defer { sqlite3_finalize(statement) }
+        try bind(id.uuidString, at: 1, in: statement)
+        guard try step(statement) else { return nil }
+        return try readIndexedItem(statement)
+    }
+
+    /// Returns every item currently recorded for one authorized root.
+    /// - Parameter rootID: Root identifier.
+    /// - Returns: Current item metadata.
+    /// - Throws: A local database error when rows cannot be read.
+    internal func fetchItems(rootID: UUID) throws -> [IndexedItem] {
+        let statement = try preparedStatement(SQLStatements.fetchItemsForRoot)
+        defer { sqlite3_finalize(statement) }
+        try bind(rootID.uuidString, at: 1, in: statement)
+        var items: [IndexedItem] = []
+        while try step(statement) {
+            items.append(try readIndexedItem(statement))
+        }
+        return items
+    }
+
+    /// Deletes records for files no longer present in a completed root scan.
+    /// - Parameters:
+    ///   - rootID: Root whose snapshot was completed.
+    ///   - retainedPaths: Absolute paths observed during the scan.
+    /// - Throws: A local database error when stale rows cannot be removed.
+    internal func pruneItems(rootID: UUID, retaining retainedPaths: Set<String>) throws {
+        let existingItems = try fetchItems(rootID: rootID)
+        let staleItems = existingItems.filter { retainedPaths.contains($0.url.path) == false }
+        try inTransaction {
+            for item in staleItems {
+                try deleteVectors(itemID: item.id)
+                let statement = try preparedStatement(SQLStatements.deleteItem)
+                defer { sqlite3_finalize(statement) }
+                try bind(item.id.uuidString, at: 1, in: statement)
+                try stepDone(statement)
+            }
+        }
+    }
+
+    /// Inserts or updates one file metadata row.
+    /// - Parameter item: Metadata read from the authorized root.
+    /// - Throws: A local database error when the row cannot be saved.
+    private func upsertItem(_ item: IndexedItem) throws {
+        let statement = try preparedStatement(SQLStatements.upsertItem)
+        defer { sqlite3_finalize(statement) }
+        try bind(item.id.uuidString, at: 1, in: statement)
+        try bind(item.rootID.uuidString, at: 2, in: statement)
+        try bind(item.parentID?.uuidString, at: 3, in: statement)
+        try bind(item.url.path, at: 4, in: statement)
+        try bind(item.relativePath, at: 5, in: statement)
+        try bind(item.displayName, at: 6, in: statement)
+        try bind(item.kind.rawValue, at: 7, in: statement)
+        try bind(item.contentType, at: 8, in: statement)
+        try bind(item.byteCount, at: 9, in: statement)
+        try bind(item.createdAt, at: 10, in: statement)
+        try bind(item.modifiedAt, at: 11, in: statement)
+        try bind(item.contentHash, at: 12, in: statement)
+        try bind(item.metadataHash, at: 13, in: statement)
+        try bind(item.isDirectory, at: 14, in: statement)
+        try bind(item.isHidden, at: 15, in: statement)
+        try stepDone(statement)
+    }
+
+    /// Inserts one extracted passage.
+    /// - Parameter chunk: Passage to store.
+    /// - Returns: SQLite row identifier used by the vector table.
+    /// - Throws: A local database error when insertion fails.
+    private func insertChunk(_ chunk: ContentChunk) throws -> Int64 {
+        let statement = try preparedStatement(SQLStatements.insertChunk)
+        defer { sqlite3_finalize(statement) }
+        try bind(chunk.id.uuidString, at: 1, in: statement)
+        try bind(chunk.itemID.uuidString, at: 2, in: statement)
+        try bind(chunk.ordinal, at: 3, in: statement)
+        try bind(chunk.text, at: 4, in: statement)
+        try bind(chunk.characterStart, at: 5, in: statement)
+        try bind(chunk.characterEnd, at: 6, in: statement)
+        try bind(chunk.pageNumber, at: 7, in: statement)
+        try bind(chunk.sectionName, at: 8, in: statement)
+        try stepDone(statement)
+        guard let connection else { throw LocalAssistantError.database(DatabaseConstants.missingDatabase) }
+        return sqlite3_last_insert_rowid(connection)
+    }
+
+    /// Inserts a passage into the full-text index.
+    /// - Parameters:
+    ///   - chunk: Passage to make searchable.
+    ///   - item: Parent file supplying name and path fields.
+    /// - Throws: A local database error when insertion fails.
+    private func insertFTS(chunk: ContentChunk, item: IndexedItem) throws {
+        let statement = try preparedStatement(SQLStatements.insertFTS)
+        defer { sqlite3_finalize(statement) }
+        try bind(chunk.id.uuidString, at: 1, in: statement)
+        try bind(item.id.uuidString, at: 2, in: statement)
+        try bind(item.displayName, at: 3, in: statement)
+        try bind(item.relativePath, at: 4, in: statement)
+        try bind(chunk.text, at: 5, in: statement)
+        try stepDone(statement)
+    }
+
+    /// Inserts one fixed-size float vector into sqlite-vec.
+    /// - Parameters:
+    ///   - embedding: Local document embedding.
+    ///   - rowID: Matching content-chunk row identifier.
+    /// - Throws: A local database error when dimensions or insertion are invalid.
+    private func insertVector(_ embedding: [Float], rowID: Int64) throws {
+        guard embedding.count == AppConstants.Indexing.embeddingDimensions else {
+            throw LocalAssistantError.database(DatabaseConstants.vectorRegistrationFailure)
+        }
+        let statement = try preparedStatement(SQLStatements.insertVector)
+        defer { sqlite3_finalize(statement) }
+        try bind(rowID, at: 1, in: statement)
+        let result = embedding.withUnsafeBytes { bytes in
+            sqlite3_bind_blob(statement, 2, bytes.baseAddress, Int32(bytes.count), DatabaseConstants.transientDestructor)
+        }
+        guard result == SQLITE_OK else { throw LocalAssistantError.database(databaseErrorMessage()) }
+        try stepDone(statement)
+    }
+
+    /// Deletes a file's old full-text records.
+    /// - Parameter itemID: Parent item identifier.
+    /// - Throws: A local database error when deletion fails.
+    private func deleteFTS(itemID: UUID) throws {
+        let statement = try preparedStatement(SQLStatements.deleteFTSForItem)
+        defer { sqlite3_finalize(statement) }
+        try bind(itemID.uuidString, at: 1, in: statement)
+        try stepDone(statement)
+    }
+
+    /// Deletes a file's old passage records.
+    /// - Parameter itemID: Parent item identifier.
+    /// - Throws: A local database error when deletion fails.
+    private func deleteChunks(itemID: UUID) throws {
+        let statement = try preparedStatement(SQLStatements.deleteChunksForItem)
+        defer { sqlite3_finalize(statement) }
+        try bind(itemID.uuidString, at: 1, in: statement)
+        try stepDone(statement)
+    }
+
+    /// Deletes vector rows before their parent passage rows disappear.
+    /// - Parameter itemID: Parent item identifier.
+    /// - Throws: A local database error when deletion fails.
+    internal func deleteVectors(itemID: UUID) throws {
+        let rowsStatement = try preparedStatement(SQLStatements.fetchChunkRowsForItem)
+        defer { sqlite3_finalize(rowsStatement) }
+        try bind(itemID.uuidString, at: 1, in: rowsStatement)
+        var rowIDs: [Int64] = []
+        while try step(rowsStatement) {
+            rowIDs.append(sqlite3_column_int64(rowsStatement, 0))
+        }
+        for rowID in rowIDs {
+            let deleteStatement = try preparedStatement(SQLStatements.deleteVector)
+            defer { sqlite3_finalize(deleteStatement) }
+            try bind(rowID, at: 1, in: deleteStatement)
+            try stepDone(deleteStatement)
+        }
+    }
+
+    /// Decodes one item from the standard item column layout.
+    /// - Parameter statement: Statement positioned on an item row.
+    /// - Returns: Typed indexed item metadata.
+    /// - Throws: A local database error when required identifiers are malformed.
+    internal func readIndexedItem(_ statement: OpaquePointer) throws -> IndexedItem {
+        guard let id = UUID(uuidString: requiredText(statement, column: 0)),
+              let rootID = UUID(uuidString: requiredText(statement, column: 1)) else {
+            throw LocalAssistantError.database(DatabaseConstants.missingRow)
+        }
+        let parentID = optionalText(statement, column: 2).flatMap(UUID.init(uuidString:))
+        let kind = IndexedItemKind(rawValue: requiredText(statement, column: 6)) ?? .other
+        return IndexedItem(
+            id: id,
+            rootID: rootID,
+            parentID: parentID,
+            url: URL(fileURLWithPath: requiredText(statement, column: 3)),
+            relativePath: requiredText(statement, column: 4),
+            displayName: requiredText(statement, column: 5),
+            kind: kind,
+            contentType: optionalText(statement, column: 7),
+            byteCount: sqlite3_column_int64(statement, 8),
+            createdAt: optionalDate(statement, column: 9),
+            modifiedAt: optionalDate(statement, column: 10),
+            contentHash: optionalText(statement, column: 11),
+            metadataHash: requiredText(statement, column: 12),
+            isDirectory: sqlite3_column_int(statement, 13) == DatabaseConstants.sqliteTrue,
+            isHidden: sqlite3_column_int(statement, 14) == DatabaseConstants.sqliteTrue
+        )
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "runtimeNetworkPolicy": "deny",
+  "allowedEntitlements": [
+    "com.apple.security.app-sandbox",
+    "com.apple.security.device.audio-input",
+    "com.apple.security.files.bookmarks.app-scope",
+    "com.apple.security.files.user-selected.read-only"
+  ],
+  "forbiddenEntitlements": [
+    "com.apple.security.network.client",
+    "com.apple.security.network.server",
+    "com.apple.security.files.user-selected.read-write"
+  ],
+  "writableScope": "private app container only",
+  "externalFileScope": "user-selected folders, read-only",
+  "runtimeDownloads": false,
+  "telemetry": false,
+  "automaticUpdates": false
+}

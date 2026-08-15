@@ -1,0 +1,4 @@
+module llama [system] {
+    header "../../../Vendor/llama.cpp/include/llama.h"
+    export *
+}

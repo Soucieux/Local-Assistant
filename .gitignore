@@ -1,0 +1,30 @@
+# macOS metadata
+.DS_Store
+
+# Xcode user and build data
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Swift build data
+.build/
+.swiftpm/
+
+# Built applications
+*.app/
+
+# Generated offline assets
+outputs/*
+!outputs/.gitkeep
+*.gguf
+*.mlmodelc/
+
+# Downloaded and generated dependencies
+Vendor/
+LocalAssistant/VendorBridge/sqlite-vec.c
+LocalAssistant/VendorBridge/sqlite-vec.h
+
+# Temporary files and logs
+*.log
+*.tmp
