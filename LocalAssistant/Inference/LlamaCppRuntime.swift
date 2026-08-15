@@ -10,11 +10,33 @@ private final class LlamaResources: @unchecked Sendable {
     var backendInitialized = false
 
     deinit {
-        if let chatContext { llama_free(chatContext) }
-        if let chatModel { llama_model_free(chatModel) }
-        if let embeddingContext { llama_free(embeddingContext) }
-        if let embeddingModel { llama_model_free(embeddingModel) }
-        if backendInitialized { llama_backend_free() }
+        release()
+    }
+
+    /// Releases every native resource before llama.cpp's process-global Metal teardown runs.
+    func release() {
+        if let chatContext {
+            llama_synchronize(chatContext)
+            llama_free(chatContext)
+            self.chatContext = nil
+        }
+        if let chatModel {
+            llama_model_free(chatModel)
+            self.chatModel = nil
+        }
+        if let embeddingContext {
+            llama_synchronize(embeddingContext)
+            llama_free(embeddingContext)
+            self.embeddingContext = nil
+        }
+        if let embeddingModel {
+            llama_model_free(embeddingModel)
+            self.embeddingModel = nil
+        }
+        if backendInitialized {
+            llama_backend_free()
+            backendInitialized = false
+        }
     }
 }
 
@@ -52,6 +74,11 @@ actor LlamaCppRuntime {
             resources.chatModel = nil
             throw error
         }
+    }
+
+    /// Releases contexts, models, and the backend before normal application termination.
+    internal func shutdown() {
+        resources.release()
     }
 
     /// Generates a local completion from an already-grounded prompt.

@@ -56,9 +56,7 @@ struct ChatView: View {
                         .padding(.vertical, DesignTokens.Spacing.xxLarge)
                         .frame(maxWidth: .infinity)
                     }
-                    .onAppear {
-                        scrollToBottom(using: proxy, animated: false)
-                    }
+                    .defaultScrollAnchor(.bottom)
                     .onChange(of: model.messages.count) { _, _ in
                         scrollToBottom(using: proxy, animated: true)
                     }

@@ -433,6 +433,26 @@ final class AppModel {
         }
     }
 
+    /// Stops process-lifetime monitors and outstanding indexing work during termination.
+    internal func shutdown() async {
+        let worker = indexingWorker
+        let activeTask = activeIndexingTask
+        indexingQueue = []
+        dirtyIndexRequests = [:]
+        worker?.cancel()
+        activeTask?.cancel()
+        for task in monitoringDebounceTasks.values { task.cancel() }
+        monitoringDebounceTasks = [:]
+        services.monitoring.stopAll()
+        monitoredRootIDs = []
+        if let activeTask { _ = await activeTask.result }
+        if let worker { await worker.value }
+        indexingWorker = nil
+        activeIndexingTask = nil
+        await services.voice.shutdown()
+        await services.runtime.shutdown()
+    }
+
     /// Records whether the global quick-call shortcut registered successfully.
     /// - Parameter isAvailable: Current in-process shortcut availability.
     internal func setShortcutAvailable(_ isAvailable: Bool) {

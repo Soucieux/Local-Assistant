@@ -5,6 +5,7 @@ import AppKit
 final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     private weak var model: AppModel?
     private var shortcutService: GlobalShortcutService?
+    private var terminationIsPending = false
 
     /// Connects shared app state and installs the fixed global quick-call shortcut once.
     /// - Parameter model: Main local assistant presentation state.
@@ -38,6 +39,24 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     ) -> Bool {
         presentAssistant()
         return true
+    }
+
+    /// Defers termination until native model and monitoring resources are released safely.
+    /// - Parameter sender: Application requesting normal termination.
+    /// - Returns: A deferred reply while orderly local-runtime shutdown completes.
+    internal func applicationShouldTerminate(
+        _ sender: NSApplication
+    ) -> NSApplication.TerminateReply {
+        guard terminationIsPending == false else { return .terminateLater }
+        terminationIsPending = true
+        let model = self.model
+        Task { @MainActor [weak self] in
+            await model?.shutdown()
+            self?.shortcutService?.unregister()
+            self?.shortcutService = nil
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 
     /// Releases the registered system hotkey when the application actually quits.

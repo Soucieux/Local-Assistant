@@ -116,6 +116,20 @@ actor LocalVoiceService {
         }
     }
 
+    /// Stops capture and releases the offline speech runtime before application termination.
+    internal func shutdown() {
+        if let audioEngine {
+            audioEngine.inputNode.removeTap(onBus: 0)
+            audioEngine.stop()
+        }
+        VoiceRecordingFiles.removeRecordingIfPresent(at: recordingURL)
+        audioEngine = nil
+        recordingURL = nil
+        recordingBox = nil
+        whisperKit = nil
+        modelURL = nil
+    }
+
     /// Creates an owner-only directory for ephemeral recordings.
     /// - Returns: Private voice directory URL.
     /// - Throws: A local permission error when creation fails.
