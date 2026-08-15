@@ -15,7 +15,7 @@ Choose the path that matches what you need. If Local Assistant is already instal
 1. Open **Local Assistant**.
 2. Open **Settings** and choose **Add Folder**.
 3. Select only the folder the assistant should read.
-4. Wait for local indexing to finish.
+4. Follow the folder's progress in Settings, or continue using the assistant while indexing runs in the background.
 5. Return to the assistant and type or speak a request.
 6. Review the answer and result cards before choosing **Open File** or **Reveal in Finder**.
 
@@ -111,7 +111,7 @@ The audit requires exactly the approved App Sandbox, microphone, application-sco
 2. In **Settings**, choose **Add Folder** and select only the folder the assistant should read.
 3. Return to the assistant after indexing finishes.
 
-Revoking a folder removes its bookmark and dependent private index records without changing the source folder. Saved result cards remain in history but become unavailable when their source authorization no longer exists.
+Revoking a folder removes its bookmark and dependent private index records without changing the source folder. Saved result cards remain in history but become unavailable when their source authorization no longer exists. Indexing activity remains available for its normal 30-day retention period.
 
 Writable application data remains inside the macOS sandbox's Application Support directory:
 
@@ -122,23 +122,38 @@ LocalAssistant/
 └── Voice/                       # Temporary recordings only
 ```
 
-SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. Index refresh is manual; the application has no persistent file watcher, login item, background helper, or localhost service.
+SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. While the application process is running, native macOS folder events schedule incremental updates; reopening the application performs a catch-up scan. Quitting stops monitoring completely. There is no login item, background helper, localhost service, or runtime network route.
 
 ## Release notes
 
 ### Current release status
 
-| Release area | v0.9 status | Meaning |
+| Release area | v1.1 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The exhaustive review, safe in-scope fixes, focused checks, and offline Release build were explicitly requested. |
-| Source implementation | Complete | The v0.9 audit corrections and documentation changes are present in source. |
-| Debug compilation | Not run | The exhaustive pass requires focused native checks and the offline Release build rather than a separate Debug build. |
-| Release build | Passed | The v0.9 offline Release build completed from the verified pinned local dependencies. |
-| Focused testing | Passed | The v0.9 native harness passed prompt, file-action, voice-file, constrained-retrieval, and SQLite failure checks; preparation-script safety fixtures also passed. |
-| Interface inspection | Not run | Computer Use was not approved for Local Assistant, so light, dark, and minimum-window screenshots still require review. |
-| Code review | Complete | The exhaustive whole-scope review and no-skips investigation are complete. |
+| Approved scope | Complete | The indexing controls, continuous monitoring, activity history, and exhaustive pass were explicitly requested. |
+| Source implementation | Complete | The v1.1 indexing controls, activity interface, navigation, and shutdown fixes are present in source. |
+| Debug compilation | Passed | The changed Swift sources compile in the native application target. |
+| Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
+| Focused testing | Passed | Retention, revocation, interrupted-state recovery, and indexing-state decisions passed focused checks. |
+| Interface inspection | Partial | The dark Settings layout was inspected; light appearance and minimum-window captures remain unavailable in this session. |
+| Code review | Complete | The requested exhaustive whole-scope review and simplification pass completed. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Installed stable bundle | Current v0.8 | The v0.9 source pass does not replace or claim verification of the installed v0.8 bundle. |
+| Installed stable bundle | Not changed | This source pass does not replace or claim verification of an installed bundle. |
+
+### v1.1 — Indexing controls and lifecycle reliability
+
+- Reworked file-state counts into compact metric tiles and consolidated each folder's automatic-update state and action into one control.
+- Added a dedicated pause action for an active indexing run and redesigned activity-history filters as consistent Source, Folder, and Status fields.
+- Anchored restored conversations at the newest message to prevent a visible top-to-bottom jump when returning to the assistant.
+- Added orderly llama.cpp, Metal, voice, monitoring, and indexing teardown so a normal Quit no longer produces an unexpected-termination report.
+
+### v1.0 — Continuous indexing and private activity history
+
+- Added pausable per-folder indexing with determinate progress, percentages, and clearly labeled new, modified, unchanged, removed, and skipped states.
+- Added process-lifetime native macOS folder monitoring, debounced incremental updates, and launch-time catch-up scans without a daemon, login item, server, or runtime network access.
+- Added a same-window Activity screen with run filters, automatic monitoring events, summary badges, expandable file details, and a rolling 30-day retention policy.
+- Kept retained activity after folder revocation while continuing to remove the bookmark and dependent searchable index records.
+- Added a background-indexing banner so silent automatic work remains visible without blocking conversation.
 
 ### v0.9 — Exhaustive correctness and privacy hardening
 
@@ -238,6 +253,9 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
 | Folder revocation | Available | Removes authorization and dependent private index records. |
 | Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
+| Continuous folder updates | Available in v1.0 source | Uses native macOS folder events while the application is running and performs a catch-up scan at launch. |
+| Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
+| Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
 | PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
 | Local voice input | Available | Loads the speech model when the microphone is first used. |
 | Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
@@ -268,7 +286,7 @@ Complex formulas, charts, comments, embedded objects, encrypted files, and propr
 | Chat and intent | Qwen3-4B Q4_K_M GGUF |
 | Embeddings | Qwen3-Embedding-0.6B Q8_0 GGUF |
 | Inference | Statically linked llama.cpp |
-| Relational metadata and history | Embedded SQLite |
+| Relational metadata, monitoring preferences, and history | Embedded SQLite |
 | Keyword retrieval | SQLite FTS5 |
 | Vector retrieval | Statically linked sqlite-vec |
 | Speech recognition | WhisperKit with local `openai_whisper-small` Core ML assets |
@@ -321,7 +339,7 @@ Local Assistant/
 │   ├── Retrieval/                # Hard filters, hybrid ranking, and explanations
 │   ├── Inference/                # Routing, prompts, llama.cpp, and grounding
 │   ├── Voice/                    # Recording and local transcription
-│   ├── Features/                 # Assistant, result cards, and Settings
+│   ├── Features/                 # Assistant, activity history, result cards, and Settings
 │   ├── Security/                 # Private application-container directories
 │   ├── Resources/                # Icon, property list, and sandbox entitlements
 │   └── VendorBridge/             # Static native-library bridges
@@ -355,6 +373,10 @@ Include a topic, filename fragment, folder, date, or file type. A singular under
 ### What should I do if indexing fails?
 
 Confirm that the folder remains readable and File search is ready in Settings, then choose **Update Index**. Preserve any macOS crash report together with the triggering folder and file type.
+
+### Why are automatic updates paused or unavailable?
+
+Choose **Resume Automatic Updates** for the folder in Settings. If monitoring remains unavailable, confirm that the folder or external volume is present and readable, then revoke and authorize it again if its macOS bookmark is stale.
 
 ### Why is the quick-call shortcut unavailable?
 
@@ -392,7 +414,7 @@ macOS remains the final authority. A bookmark cannot bypass system permissions, 
 - Chat and semantic search require verified local model assets.
 - Voice input requires the complete local speech model and macOS microphone permission.
 - Office and Pages extraction is intentionally best-effort.
-- Index refresh is manual.
+- Automatic refresh runs only while the application process is running; quitting stops every folder watcher until the next launch-time catch-up scan.
 - The global shortcut is fixed and works only while the application process is running.
 - Built-in conversational knowledge may be incomplete; file-specific answers remain bounded by displayed evidence.
 - No Feishu or other network bridge exists. Any future bridge requires a separately approved and isolated network boundary.

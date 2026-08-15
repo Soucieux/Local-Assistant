@@ -8,6 +8,9 @@ Local Assistant is one sandboxed macOS application process. It has no HTTP serve
 User-selected folders
 read-only security-scoped bookmarks
                 │
+       native macOS FSEvents
+  while the app process is running
+                │
                 ▼
        Read-only scanner
                 │
@@ -86,7 +89,7 @@ The app creates owner-only content below:
 
 SQLite WAL and shared-memory files may sit beside the database. Voice files are uniquely named, owner-only, removed after transcription, cleaned up after a failed capture start, and removed as stale data before the next recording.
 
-Revoking a root deletes its stored bookmark record and dependent private index rows. It does not alter the selected source folder.
+Revoking a root deletes its stored bookmark record and dependent private index rows. It does not alter the selected source folder. Indexing run and monitoring-event history remains in the private database until its rolling 30-day expiry or an explicit Clear Activity action.
 
 ### Network-denied zone
 
@@ -98,7 +101,7 @@ Connected preparation is confined to repository scripts run outside the app. The
 
 One embedded SQLite database provides:
 
-1. relational storage for authorized roots, indexed items, chunks, and local chat history;
+1. relational storage for authorized roots, monitoring preferences, indexed items, chunks, local chat history, and 30-day indexing activity;
 2. FTS5 indexing for names, paths, and extracted text; and
 3. a statically registered sqlite-vec table for 1,024-dimensional float embeddings.
 
@@ -142,11 +145,18 @@ Chat history is persisted in the private SQLite database. The current interface 
 10. Embed passages sequentially to bound memory use.
 11. Replace each file and its FTS/vector rows in a SQLite transaction.
 12. Prune items absent from a successfully completed snapshot.
-13. Release the security scope.
+13. Record final per-file states and run counts in private activity history.
+14. Release the indexing security scope.
+
+Manual actions, launch-time catch-up, and debounced native folder events enter one coalescing queue. Only one root indexes at a time. A second event for an active root schedules one follow-up pass instead of starting overlapping work. Each process-lifetime FSEvents stream retains its own read-only security scope and stops when the folder is paused, revoked, or the application quits.
+
+Pausing an active run cancels between traversal, extraction, embedding, and save boundaries. A paused run does not prune missing items or advance the root's last-indexed timestamp. The current file returns to its waiting label, automatic updates for that root are paused, and the next explicit resume schedules a catch-up pass. Runs interrupted by process termination are recorded as stopped at the next launch and any transient file labels are restored to waiting states.
 
 The token-capacity check and recursive subdivision prevent a passage larger than the native llama.cpp batch/context limit from reaching `llama_decode`, which was the cause of the newly added-folder crash in 0.1.0.
 
 If content extraction fails, metadata can remain searchable by name or path. A semantic model failure stops semantic indexing rather than silently marking an incomplete vector index as successful.
+
+An extractable file saved without a content hash after an earlier extraction failure is retried on the next scan even when its metadata is unchanged. Existing index rows under a temporarily unreadable path are retained rather than mistaken for deleted files.
 
 ## Voice lifecycle
 
@@ -173,6 +183,8 @@ The shortcut:
 - is fixed rather than user-configurable in the current release; and
 - reports registration failure in Settings if another process owns the combination.
 
+Folder monitoring follows the same process lifetime. It uses no helper, daemon, login item, server, or network route. Closing the window keeps monitoring active because the application remains running; fully quitting stops every watcher. The next launch starts fresh streams and schedules catch-up indexing for each enabled root.
+
 ## Key design decisions
 
 ### Embedded libraries instead of local servers
@@ -197,7 +209,7 @@ No Feishu integration exists in the current release. Adding a network entitlemen
 
 ## Release gates
 
-For v0.9, distinguish these activities:
+For v1.1, distinguish these activities:
 
 - **Build:** compile and link the Release application using resolved local dependencies.
 - **Focused testing:** launch, index a controlled folder, retrieve files/folders, exercise explicit actions, revoke access, inspect voice initialization, and check for new crash reports.
@@ -205,4 +217,4 @@ For v0.9, distinguish these activities:
 - **Code review:** a separate authorized source-review phase.
 - **Formal verification:** a separate authorized phase including offline runtime socket observation and broader format fixtures.
 
-The v0.9 source implementation contains the exhaustive-pass corrections. Its focused native checks, offline Release build, deep signature validation, and static offline-boundary audit passed. The built signature contains exactly the four approved sandbox entitlements. The installed v0.8 bundle remains separate. Automated visual acceptance could not run because Computer Use was not approved for Local Assistant, and formal offline runtime verification remains an independent gate; the passing build and focused checks are not evidence that either incomplete gate has passed.
+The v1.1 source contains continuous indexing, pausable progress, retained activity history, refined indexing controls, stable conversation restoration, and deterministic local-runtime shutdown. Fresh focused checks, the offline Release build, static boundary audit, and light/dark visual inspection are recorded in the release-status table in README. Formal disconnected runtime verification and any installed bundle remain independent gates; a passing source build is not evidence that either gate has passed.
