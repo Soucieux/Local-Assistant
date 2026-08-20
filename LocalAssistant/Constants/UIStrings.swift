@@ -67,9 +67,12 @@ enum UIStrings {
     static let modelsEverythingReady = "Everything is ready"
     static let modelsEverythingReadyDescription =
         "Chat, file search, and voice input are available."
-    static let modelsNeedAttention = "Some features need attention"
-    static let modelsNeedAttentionDescription =
-        "Reinstall the offline model package to restore unavailable features."
+    static let modelsMissing = "Some features are not installed"
+    static let modelsMissingDescription =
+        "Install the offline model package to turn on the features listed below."
+    static let modelsDamaged = "Some files are damaged"
+    static let modelsDamagedDescription =
+        "Reinstall the offline model package to replace files that no longer match what the app expects."
     static let modelsChecking = "Checking what is ready"
     static let modelsCheckingDescription =
         "Local Assistant checks its required files when the app opens."
@@ -83,7 +86,8 @@ enum UIStrings {
     static let modelVoiceCapabilityDescription =
         "Turns speech into text and loads when you use the microphone."
     static let modelCapabilityReady = "Ready"
-    static let modelCapabilityMissing = "Not ready"
+    static let modelCapabilityMissing = "Not installed"
+    static let modelCapabilityDamaged = "Damaged"
     static let modelCapabilityChecking = "Checking"
     static let modelStoragePrivate = "Private app storage"
     static let modelsCheckedOnLaunch = "Checked when the app opens"

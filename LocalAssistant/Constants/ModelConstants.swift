@@ -19,5 +19,11 @@ enum ModelConstants {
     enum Speech {
         static let directoryName = "openai_whisper-small"
         static let role = "speech"
+
+        /// Tokenizer files the speech runtime reads from the installed model directory.
+        ///
+        /// Without them the runtime has no way to turn audio into text offline, so voice
+        /// input is not installed even though the Core ML model directory is present.
+        static let requiredTokenizerFiles = ["tokenizer.json", "tokenizer_config.json"]
     }
 }

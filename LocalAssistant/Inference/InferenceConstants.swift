@@ -67,6 +67,8 @@ enum InferenceConstants {
     static let tokenizationFailure = "llama.cpp could not tokenize local text."
     static let decodeFailure = "llama.cpp could not process local text."
     static let embeddingFailure = "llama.cpp did not return the expected embedding."
+    static let verificationCacheFilename = "model-verification.json"
+    static let verificationValiditySeconds: TimeInterval = 604_800
     static let assetManifestPrefix = "Models/"
     static let speechAssetManifestPrefix = "Models/openai_whisper-small/"
     static let thinkingOpenTag = "<think>"

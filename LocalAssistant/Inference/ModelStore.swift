@@ -31,6 +31,18 @@ actor ModelStore {
         totalByteCount: 0
     )
 
+    /// One cached integrity result, trusted only while its file identity is unchanged.
+    private struct VerifiedAsset: Codable {
+        let size: Int64
+        let modifiedAt: Double
+        let digest: String
+        let verifiedAt: Double
+    }
+
+    private var verifiedAssets: [String: VerifiedAsset] = [:]
+    private var hasLoadedVerificationCache = false
+    private var verificationCacheChanged = false
+
     /// Recomputes model readiness using pinned filenames and SHA-256 values.
     /// - Returns: Current local model status.
     internal func refreshStatus() throws -> LocalModelStatus {
@@ -45,14 +57,15 @@ actor ModelStore {
         let chatExists = fileManager.fileExists(atPath: chatURL.path)
         let embeddingExists = fileManager.fileExists(atPath: embeddingURL.path)
         let speechExists = fileManager.fileExists(atPath: speechURL.path)
+            && hasRequiredTokenizer(at: speechURL)
         let manifestExists = fileManager.fileExists(atPath: try assetManifestURL().path)
         let chatVerified = if chatExists {
-            try FileHasher.sha256(of: chatURL) == ModelConstants.Chat.sha256
+            try matchesDigest(url: chatURL, expected: ModelConstants.Chat.sha256)
         } else {
             false
         }
         let embeddingVerified = if embeddingExists {
-            try FileHasher.sha256(of: embeddingURL) == ModelConstants.Embedding.sha256
+            try matchesDigest(url: embeddingURL, expected: ModelConstants.Embedding.sha256)
         } else {
             false
         }
@@ -99,7 +112,21 @@ actor ModelStore {
             capabilities: capabilities,
             totalByteCount: capabilities.reduce(0) { $0 + $1.byteCount }
         )
+        saveVerificationCacheIfNeeded()
         return status
+    }
+
+    /// Reports whether the installed speech model carries its own tokenizer.
+    ///
+    /// The Core ML directory alone is not enough to transcribe anything. Treating it as
+    /// enough previously let Settings report voice input as ready on an installation that
+    /// could only work by fetching the tokenizer from the network.
+    /// - Parameter speechURL: Installed speech model directory.
+    /// - Returns: `true` when every required tokenizer file is present.
+    private func hasRequiredTokenizer(at speechURL: URL) -> Bool {
+        ModelConstants.Speech.requiredTokenizerFiles.allSatisfy { filename in
+            FileManager.default.fileExists(atPath: speechURL.appendingPathComponent(filename).path)
+        }
     }
 
     /// Converts installation and integrity checks into one capability state.
@@ -181,9 +208,91 @@ actor ModelStore {
                 partial.appendingPathComponent(String(component))
             }
             guard FileManager.default.fileExists(atPath: fileURL.path),
-                  try FileHasher.sha256(of: fileURL) == expected else { return false }
+                  try matchesDigest(url: fileURL, expected: expected) else { return false }
             verifiedCount += 1
         }
         return verifiedCount > 0
+    }
+
+    /// Confirms one asset's digest, reusing a recent result while the file is untouched.
+    ///
+    /// Hashing every installed model on each launch reads gigabytes before the window
+    /// appears. A cached result is trusted only while the file's size and modification
+    /// time are unchanged and the check is recent, so replacement, truncation, and
+    /// partial installs still force a full re-read.
+    /// - Parameters:
+    ///   - url: Installed asset to verify.
+    ///   - expected: Pinned SHA-256 value.
+    /// - Returns: `true` when the asset matches its pinned digest.
+    /// - Throws: A local file-read or hash error.
+    private func matchesDigest(url: URL, expected: String) throws -> Bool {
+        loadVerificationCacheIfNeeded()
+        let identity = try fileIdentity(at: url)
+        if let cached = verifiedAssets[url.path],
+           cached.size == identity.size,
+           cached.modifiedAt == identity.modifiedAt,
+           cached.digest == expected,
+           Date().timeIntervalSince1970 - cached.verifiedAt < InferenceConstants.verificationValiditySeconds {
+            return true
+        }
+
+        let digest = try FileHasher.sha256(of: url)
+        verificationCacheChanged = true
+        guard digest == expected else {
+            verifiedAssets.removeValue(forKey: url.path)
+            return false
+        }
+        verifiedAssets[url.path] = VerifiedAsset(
+            size: identity.size,
+            modifiedAt: identity.modifiedAt,
+            digest: digest,
+            verifiedAt: Date().timeIntervalSince1970
+        )
+        return true
+    }
+
+    /// Reads the size and modification time used to detect any change to an asset.
+    /// - Parameter url: Installed asset to measure.
+    /// - Returns: Size in bytes and modification time as Unix seconds.
+    /// - Throws: A local metadata error when the asset cannot be inspected.
+    private func fileIdentity(at url: URL) throws -> (size: Int64, modifiedAt: Double) {
+        let values = try url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+        return (
+            Int64(values.fileSize ?? 0),
+            values.contentModificationDate?.timeIntervalSince1970 ?? 0
+        )
+    }
+
+    /// Loads the private verification cache once per process.
+    private func loadVerificationCacheIfNeeded() {
+        guard hasLoadedVerificationCache == false else { return }
+        hasLoadedVerificationCache = true
+        guard let url = try? verificationCacheURL(),
+              let data = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode([String: VerifiedAsset].self, from: data) else {
+            return
+        }
+        verifiedAssets = decoded
+    }
+
+    /// Writes the private verification cache with owner-only permissions when it changed.
+    private func saveVerificationCacheIfNeeded() {
+        guard verificationCacheChanged, let url = try? verificationCacheURL() else { return }
+        verificationCacheChanged = false
+        guard let data = try? JSONEncoder().encode(verifiedAssets) else { return }
+        try? data.write(to: url, options: [.atomic])
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: AppConstants.Storage.ownerOnlyFilePermissions],
+            ofItemAtPath: url.path
+        )
+    }
+
+    /// Returns the private verification cache URL beside the installed manifest.
+    /// - Returns: Cache location inside the app container.
+    /// - Throws: A local directory-resolution error.
+    private func verificationCacheURL() throws -> URL {
+        try AppDirectories.applicationSupport().appendingPathComponent(
+            InferenceConstants.verificationCacheFilename
+        )
     }
 }

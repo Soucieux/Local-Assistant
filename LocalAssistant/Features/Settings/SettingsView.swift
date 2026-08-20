@@ -721,7 +721,8 @@ struct SettingsView: View {
         switch model.offlineStatus {
         case .checking: UIStrings.modelsChecking
         case .ready: UIStrings.modelsEverythingReady
-        case .missingModels, .integrityFailure: UIStrings.modelsNeedAttention
+        case .missingModels: UIStrings.modelsMissing
+        case .integrityFailure: UIStrings.modelsDamaged
         }
     }
 
@@ -730,7 +731,8 @@ struct SettingsView: View {
         switch model.offlineStatus {
         case .checking: UIStrings.modelsCheckingDescription
         case .ready: UIStrings.modelsEverythingReadyDescription
-        case .missingModels, .integrityFailure: UIStrings.modelsNeedAttentionDescription
+        case .missingModels: UIStrings.modelsMissingDescription
+        case .integrityFailure: UIStrings.modelsDamagedDescription
         }
     }
 
@@ -757,7 +759,8 @@ struct SettingsView: View {
         switch state {
         case .ready: return UIStrings.modelCapabilityReady
         case .checking: return UIStrings.modelCapabilityChecking
-        case .missing, .integrityFailure: return UIStrings.modelCapabilityMissing
+        case .missing: return UIStrings.modelCapabilityMissing
+        case .integrityFailure: return UIStrings.modelCapabilityDamaged
         }
     }
 
