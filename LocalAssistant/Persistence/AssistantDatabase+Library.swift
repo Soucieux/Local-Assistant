@@ -1,30 +1,6 @@
 import Foundation
 
 extension AssistantDatabase {
-    /// Returns private phrase expansions in alphabetical order.
-    /// - Returns: Saved aliases.
-    /// - Throws: A local database error when rows cannot be read.
-    internal func fetchAliases() throws -> [PersonalAlias] {
-        let statement = try preparedStatement(SQLStatements.fetchAliases)
-        defer { sqlite3_finalize(statement) }
-        var aliases: [PersonalAlias] = []
-        while try step(statement) {
-            guard let id = UUID(uuidString: requiredText(statement, column: 0)) else {
-                throw LocalAssistantError.database(DatabaseConstants.missingRow)
-            }
-            aliases.append(
-                PersonalAlias(
-                    id: id,
-                    phrase: requiredText(statement, column: 1),
-                    expansion: requiredText(statement, column: 2),
-                    createdAt: requiredDate(statement, column: 3),
-                    updatedAt: requiredDate(statement, column: 4)
-                )
-            )
-        }
-        return aliases
-    }
-
     /// Appends one message to private local conversation history.
     /// - Parameter message: Message and bounded evidence list to persist.
     /// - Throws: A local database error when encoding or insertion fails.

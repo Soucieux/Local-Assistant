@@ -8,7 +8,6 @@ enum RetrievalStrings {
     static let keywordMatch = "the document text"
     static let semanticMatch = "the document meaning"
     static let fileTypeMatch = "Matches the requested file type."
-    static let aliasMatch = "your terminology"
     static let fallbackMatch = "Best available match from the current index."
     static let savedReference = "Referenced by this saved answer."
     static let insufficientEvidence = "I could not find enough indexed evidence to answer that."

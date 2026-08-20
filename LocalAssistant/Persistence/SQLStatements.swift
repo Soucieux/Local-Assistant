@@ -236,7 +236,23 @@ enum SQLStatements {
         """
     static let insertVector = "INSERT INTO chunk_vectors(rowid, embedding) VALUES (?, ?);"
     static let vectorCount = "SELECT COUNT(*) FROM chunk_vectors;"
-    static let fetchAliases = "SELECT id, phrase, expansion, created_at, updated_at FROM personal_aliases ORDER BY phrase COLLATE NOCASE;"
+
+    /// Counts vectors belonging to the requested item kinds.
+    ///
+    /// Adaptive neighbor expansion widens until it finds enough eligible matches, so a
+    /// kind with no vectors at all would otherwise widen until it had scanned every
+    /// vector, on every query. This count settles that in one cheap statement.
+    /// - Parameter kindCount: Number of kind values bound to the statement.
+    /// - Returns: Parameterized eligible-vector count SQL.
+    internal static func eligibleVectorCount(kindCount: Int) -> String {
+        """
+        SELECT COUNT(*)
+        FROM chunk_vectors AS v
+        JOIN content_chunks AS c ON c.row_id = v.rowid
+        JOIN indexed_items AS i ON i.id = c.item_id
+        WHERE \(kindPredicate(column: "i.kind", count: kindCount));
+        """
+    }
     static let insertChatMessage = "INSERT OR REPLACE INTO chat_messages (id, role, payload, created_at) VALUES (?, ?, ?, ?);"
     static let fetchChatMessages = "SELECT payload FROM chat_messages ORDER BY created_at DESC LIMIT ?;"
     static let clearChatMessages = "DELETE FROM chat_messages;"
@@ -310,20 +326,48 @@ enum SQLStatements {
     /// Builds metadata retrieval with hard item kinds applied before the row limit.
     /// - Parameter kindCount: Number of kind values that will be bound first.
     /// - Returns: Parameterized metadata search SQL.
-    internal static func metadataSearch(kindCount: Int) -> String {
+    internal static func metadataSearch(kindCount: Int, tokenCount: Int) -> String {
         """
         SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
                byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
         FROM indexed_items
         WHERE \(kindPredicate(column: "kind", count: kindCount))
-          AND (display_name LIKE ? ESCAPE '\\' OR relative_path LIKE ? ESCAPE '\\')
+          AND \(tokenPredicate(count: tokenCount))
         ORDER BY
             CASE WHEN lower(display_name) = lower(?) THEN 0
-                 WHEN lower(display_name) LIKE lower(?) THEN 1
+                 WHEN lower(display_name) LIKE lower(?) ESCAPE '\\' THEN 1
                  ELSE 2 END,
             modified_at DESC
         LIMIT ?;
         """
+    }
+
+    /// Builds a batched item lookup for a bounded set of identifiers.
+    ///
+    /// Resolving candidates one at a time costs a prepared statement and an actor hop per
+    /// item, which dominates both search and conversation restore once an index grows.
+    /// - Parameter idCount: Number of identifiers bound to the statement.
+    /// - Returns: Parameterized multi-item lookup SQL.
+    internal static func fetchItems(idCount: Int) -> String {
+        let placeholders = Array(repeating: "?", count: idCount).joined(separator: ", ")
+        return """
+            SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
+                   byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+            FROM indexed_items WHERE id IN (\(placeholders));
+            """
+    }
+
+    /// Requires every search token to appear in the display name or the relative path.
+    ///
+    /// One pattern built from the whole query only matches a name containing the words
+    /// contiguously and with identical spacing, which hyphenated and underscored
+    /// filenames never do.
+    /// - Parameter count: Number of tokens bound before the ordering parameters.
+    /// - Returns: An always-true predicate or a parameterized per-token predicate.
+    private static func tokenPredicate(count: Int) -> String {
+        guard count > 0 else { return "1 = 1" }
+        let clause = "(display_name LIKE ? ESCAPE '\\' OR relative_path LIKE ? ESCAPE '\\')"
+        return Array(repeating: clause, count: count).joined(separator: " AND ")
     }
 
     /// Builds FTS retrieval with hard item kinds applied before the row limit.

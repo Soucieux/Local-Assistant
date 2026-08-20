@@ -35,6 +35,38 @@ extension AssistantDatabase {
         return try readIndexedItem(statement)
     }
 
+    /// Returns every stored item matching a bounded set of identifiers.
+    ///
+    /// One statement per batch replaces a lookup per identifier, which otherwise costs an
+    /// actor hop and a prepared statement for every search candidate and restored card.
+    /// - Parameter ids: Identifiers to resolve.
+    /// - Returns: Items keyed by identifier, omitting identifiers with no stored row.
+    /// - Throws: A local database error when rows cannot be read.
+    internal func fetchItems(ids: Set<UUID>) throws -> [UUID: IndexedItem] {
+        guard ids.isEmpty == false else { return [:] }
+        let identifiers = Array(ids)
+        var items: [UUID: IndexedItem] = [:]
+        var lowerBound = 0
+        while lowerBound < identifiers.count {
+            let upperBound = min(
+                lowerBound + DatabaseConstants.maximumBoundIdentifiers,
+                identifiers.count
+            )
+            let batch = identifiers[lowerBound..<upperBound]
+            let statement = try preparedStatement(SQLStatements.fetchItems(idCount: batch.count))
+            defer { sqlite3_finalize(statement) }
+            for (offset, id) in batch.enumerated() {
+                try bind(id.uuidString, at: Int32(offset + 1), in: statement)
+            }
+            while try step(statement) {
+                let item = try readIndexedItem(statement)
+                items[item.id] = item
+            }
+            lowerBound = upperBound
+        }
+        return items
+    }
+
     /// Returns every item currently recorded for one authorized root.
     /// - Parameter rootID: Root identifier.
     /// - Returns: Current item metadata.

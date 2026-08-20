@@ -1,6 +1,6 @@
 import Foundation
 
-/// Combines filename, path, FTS5, vector, recency, and alias signals.
+/// Combines filename, path, FTS5, vector, and recency signals.
 actor HybridRetrievalService {
     private let database: AssistantDatabase
     private let embeddings: LocalEmbeddingService
@@ -19,32 +19,30 @@ actor HybridRetrievalService {
     /// - Returns: Ranked, source-cited file results.
     /// - Throws: A local database or inference error.
     internal func search(_ query: SearchQuery) async throws -> [SearchResult] {
-        let aliases = try await database.fetchAliases()
         let searchText = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let expandedText = expand(searchText, aliases: aliases)
         let candidateLimit = max(query.limit, AppConstants.Chat.retrievalCandidateLimit)
         let typeItems = try await database.items(kinds: query.filter.kinds, limit: candidateLimit)
-        let metadataItems: [IndexedItem] = if expandedText.isEmpty {
+        let metadataItems: [IndexedItem] = if searchText.isEmpty {
             []
         } else {
             try await database.metadataSearch(
-                text: expandedText,
+                text: searchText,
                 kinds: query.filter.kinds,
                 limit: candidateLimit
             )
         }
-        let keywordHits: [KeywordHit] = if expandedText.isEmpty {
+        let keywordHits: [KeywordHit] = if searchText.isEmpty {
             []
         } else {
             try await database.keywordSearch(
-                text: expandedText,
+                text: searchText,
                 kinds: query.filter.kinds,
                 limit: candidateLimit
             )
         }
         let semanticHits: [SemanticHit]
-        if expandedText.isEmpty == false {
-            let vector = try await embeddings.embedQuery(expandedText)
+        if searchText.isEmpty == false {
+            let vector = try await embeddings.embedQuery(searchText)
             semanticHits = try await database.semanticSearch(
                 embedding: vector,
                 kinds: query.filter.kinds,
@@ -60,35 +58,14 @@ actor HybridRetrievalService {
         addKeywords(hits: keywordHits, to: &accumulators)
         addSemantic(hits: semanticHits, to: &accumulators)
 
-        let matchedAlias = aliases.contains { alias in
-            searchText.localizedCaseInsensitiveContains(alias.phrase)
-        }
+        let candidateItems = try await database.fetchItems(ids: Set(accumulators.keys))
         var results: [SearchResult] = []
         for (itemID, accumulator) in accumulators {
-            guard let item = try await database.fetchItem(id: itemID),
+            guard let item = candidateItems[itemID],
                   matches(item: item, filter: query.filter) else { continue }
-            let scored = finalize(
-                accumulator: accumulator,
-                item: item,
-                queryText: searchText,
-                matchedAlias: matchedAlias
-            )
-            results.append(scored)
+            results.append(finalize(accumulator: accumulator, item: item))
         }
         return Array(results.sorted { $0.score.total > $1.score.total }.prefix(query.limit))
-    }
-
-    /// Adds private phrase expansions without replacing the user's original words.
-    /// - Parameters:
-    ///   - text: Original search text.
-    ///   - aliases: Private terminology mappings.
-    /// - Returns: Expanded query text.
-    private func expand(_ text: String, aliases: [PersonalAlias]) -> String {
-        let expansions = aliases.compactMap { alias in
-            text.localizedCaseInsensitiveContains(alias.phrase) ? alias.expansion : nil
-        }
-        guard expansions.isEmpty == false else { return text }
-        return ([text] + expansions).joined(separator: AppConstants.Text.space)
     }
 
     /// Adds hard file-type matches before relevance signals are fused.
@@ -168,24 +145,18 @@ actor HybridRetrievalService {
     /// - Parameters:
     ///   - accumulator: Raw fused signals.
     ///   - item: Matching indexed item.
-    ///   - queryText: Original user request.
-    ///   - matchedAlias: Whether private terminology expanded the query.
     /// - Returns: Calibrated search result with evidence.
     private func finalize(
         accumulator: ScoreAccumulator,
-        item: IndexedItem,
-        queryText: String,
-        matchedAlias: Bool
+        item: IndexedItem
     ) -> SearchResult {
         let recency = recencyScore(date: item.modifiedAt)
-        let alias = matchedAlias ? 1.0 : 0.0
         let total = accumulator.exactName * RetrievalConstants.exactNameWeight
             + accumulator.path * RetrievalConstants.pathWeight
             + accumulator.keyword * RetrievalConstants.keywordWeight
             + accumulator.semantic * RetrievalConstants.semanticWeight
             + accumulator.fileType * RetrievalConstants.fileTypeWeight
             + recency * RetrievalConstants.recencyWeight
-            + alias * RetrievalConstants.aliasWeight
             + accumulator.reciprocalRank
         let normalized = min(1, total / 10)
         let confidence: ConfidenceLevel = if normalized >= RetrievalConstants.highConfidenceThreshold {
@@ -221,15 +192,11 @@ actor HybridRetrievalService {
                 semantic: accumulator.semantic,
                 fileType: accumulator.fileType,
                 recency: recency,
-                personalAlias: alias,
                 reciprocalRank: accumulator.reciprocalRank,
                 total: total
             ),
             confidence: confidence,
-            explanation: explanation(
-                accumulator: accumulator,
-                matchedAlias: matchedAlias
-            ),
+            explanation: explanation(accumulator: accumulator),
             citations: citations
         )
     }
@@ -277,21 +244,15 @@ actor HybridRetrievalService {
     }
 
     /// Explains the strongest deterministic matching signals.
-    /// - Parameters:
-    ///   - accumulator: Raw fused signals.
-    ///   - matchedAlias: Whether a private alias contributed.
+    /// - Parameter accumulator: Raw fused signals.
     /// - Returns: Concise user-visible reason summary.
-    private func explanation(
-        accumulator: ScoreAccumulator,
-        matchedAlias: Bool
-    ) -> String {
+    private func explanation(accumulator: ScoreAccumulator) -> String {
         var reasons: [String] = []
         if accumulator.exactName == 1 { reasons.append(RetrievalStrings.exactNameMatch) }
         else if accumulator.exactName > 0 { reasons.append(RetrievalStrings.nameMatch) }
         if accumulator.path > 0 { reasons.append(RetrievalStrings.pathMatch) }
         if accumulator.keyword > 0 { reasons.append(RetrievalStrings.keywordMatch) }
         if accumulator.semantic > 0 { reasons.append(RetrievalStrings.semanticMatch) }
-        if matchedAlias { reasons.append(RetrievalStrings.aliasMatch) }
         return RetrievalStrings.matchSummary(
             reasons: reasons,
             matchesFileType: accumulator.fileType > 0

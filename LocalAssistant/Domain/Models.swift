@@ -91,7 +91,6 @@ struct ScoreBreakdown: Codable, Hashable, Sendable {
     let semantic: Double
     let fileType: Double
     let recency: Double
-    let personalAlias: Double
     let reciprocalRank: Double
     let total: Double
 
@@ -103,7 +102,6 @@ struct ScoreBreakdown: Codable, Hashable, Sendable {
         semantic: 0,
         fileType: 0,
         recency: 0,
-        personalAlias: 0,
         reciprocalRank: 0,
         total: 0
     )
@@ -243,15 +241,6 @@ struct AssistantResponse: Codable, Hashable, Sendable {
     let citations: [EvidenceCitation]
     let alternatives: [SearchResult]
     let confidence: ConfidenceLevel
-}
-
-/// Private terminology mapping used to improve ranking.
-struct PersonalAlias: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    var phrase: String
-    var expansion: String
-    let createdAt: Date
-    var updatedAt: Date
 }
 
 /// Live progress for a read-only indexing run.

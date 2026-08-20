@@ -9,6 +9,7 @@ enum DatabaseConstants {
     static let statementExecutionFailure = "A local database statement could not be executed."
     static let missingDatabase = "The private index is not open."
     static let missingRow = "The requested local database row was not found."
+    static let maximumBoundIdentifiers = 500
     static let sqliteTrue: Int32 = 1
     static let sqliteFalse: Int32 = 0
     static let writeAheadLogSuffix = "-wal"

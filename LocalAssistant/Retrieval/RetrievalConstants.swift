@@ -18,7 +18,6 @@ enum RetrievalConstants {
     static let semanticWeight = 3.0
     static let fileTypeWeight = 4.0
     static let recencyWeight = 0.5
-    static let aliasWeight = 1.0
     static let highConfidenceThreshold = 0.72
     static let mediumConfidenceThreshold = 0.42
     static let maximumExcerptCharacters = 480

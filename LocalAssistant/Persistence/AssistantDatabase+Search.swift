@@ -41,19 +41,21 @@ extension AssistantDatabase {
         limit: Int
     ) throws -> [IndexedItem] {
         guard limit > 0 else { return [] }
-        let escaped = escapedMetadataLike(text)
-        let containsPattern = RetrievalConstants.containsPattern(escaped)
-        let prefixPattern = RetrievalConstants.prefixPattern(escaped)
+        let tokens = SearchTextEscaping.tokens(text)
+        let prefixPattern = RetrievalConstants.prefixPattern(SearchTextEscaping.escapedLike(text))
         let orderedKinds = orderedKinds(kinds)
         let statement = try preparedStatement(
-            SQLStatements.metadataSearch(kindCount: orderedKinds.count)
+            SQLStatements.metadataSearch(kindCount: orderedKinds.count, tokenCount: tokens.count)
         )
         defer { sqlite3_finalize(statement) }
         var bindingIndex = try bindKinds(orderedKinds, in: statement)
-        try bind(containsPattern, at: bindingIndex, in: statement)
-        bindingIndex += 1
-        try bind(containsPattern, at: bindingIndex, in: statement)
-        bindingIndex += 1
+        for token in tokens {
+            let containsPattern = RetrievalConstants.containsPattern(SearchTextEscaping.escapedLike(token))
+            try bind(containsPattern, at: bindingIndex, in: statement)
+            bindingIndex += 1
+            try bind(containsPattern, at: bindingIndex, in: statement)
+            bindingIndex += 1
+        }
         try bind(text, at: bindingIndex, in: statement)
         bindingIndex += 1
         try bind(prefixPattern, at: bindingIndex, in: statement)
@@ -78,7 +80,7 @@ extension AssistantDatabase {
         kinds: Set<IndexedItemKind>,
         limit: Int
     ) throws -> [KeywordHit] {
-        let query = makeFTSQuery(text)
+        let query = SearchTextEscaping.ftsQuery(text)
         guard query.isEmpty == false, limit > 0 else { return [] }
         let orderedKinds = orderedKinds(kinds)
         let statement = try preparedStatement(
@@ -132,6 +134,7 @@ extension AssistantDatabase {
             )
         }
 
+        guard try eligibleVectorRowCount(orderedKinds) > 0 else { return [] }
         let totalVectorCount = try vectorRowCount()
         guard totalVectorCount > 0 else { return [] }
         var neighborLimit = min(limit, totalVectorCount)
@@ -205,6 +208,21 @@ extension AssistantDatabase {
         return Int(sqlite3_column_int64(statement, 0))
     }
 
+    /// Counts vectors eligible under the requested hard item kinds.
+    ///
+    /// A zero result means adaptive expansion could never succeed, so the caller can stop
+    /// before scanning the entire vector table.
+    /// - Parameter kinds: Stable ordered item kinds.
+    /// - Returns: Number of vectors belonging to those kinds.
+    /// - Throws: A local database error when the count cannot be read.
+    private func eligibleVectorRowCount(_ kinds: [IndexedItemKind]) throws -> Int {
+        let statement = try preparedStatement(SQLStatements.eligibleVectorCount(kindCount: kinds.count))
+        defer { sqlite3_finalize(statement) }
+        _ = try bindKinds(kinds, in: statement)
+        guard try step(statement) else { return 0 }
+        return Int(sqlite3_column_int64(statement, 0))
+    }
+
     /// Orders hard item kinds for deterministic SQL bindings.
     /// - Parameter kinds: Unordered hard file-type constraints.
     /// - Returns: Kinds ordered by their stored raw values.
@@ -226,31 +244,5 @@ extension AssistantDatabase {
             try bind(kind.rawValue, at: Int32(offset + 1), in: statement)
         }
         return Int32(kinds.count + 1)
-    }
-
-    /// Converts plain user terms to a literal-token FTS expression.
-    /// - Parameter text: Untrusted local search text.
-    /// - Returns: Quoted tokens joined with an AND operator.
-    private func makeFTSQuery(_ text: String) -> String {
-        text.split(whereSeparator: \.isWhitespace).map { token in
-            let escaped = token.replacingOccurrences(
-                of: RetrievalConstants.quote,
-                with: RetrievalConstants.doubledQuote
-            )
-            return RetrievalConstants.quotedToken(escaped)
-        }.joined(separator: RetrievalConstants.matchAllSeparator)
-    }
-
-    /// Escapes wildcard characters used in a metadata LIKE expression.
-    /// - Parameter value: Untrusted local search text.
-    /// - Returns: Escaped SQLite LIKE text.
-    private func escapedMetadataLike(_ value: String) -> String {
-        value
-            .replacingOccurrences(of: RetrievalConstants.likeEscape, with: RetrievalConstants.escapedLikeEscape)
-            .replacingOccurrences(of: RetrievalConstants.wildcard, with: RetrievalConstants.escapedWildcard)
-            .replacingOccurrences(
-                of: RetrievalConstants.singleCharacterWildcard,
-                with: RetrievalConstants.escapedSingleCharacterWildcard
-            )
     }
 }
