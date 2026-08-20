@@ -250,7 +250,7 @@ final class AppModel {
                 for await state in updates {
                     self?.voiceCapture = state
                 }
-                await self?.finishListeningAfterPause()
+                self?.finishListeningAfterPause()
             }
         } catch {
             handle(error)
@@ -258,9 +258,12 @@ final class AppModel {
     }
 
     /// Ends a recording that stopped on its own after the speaker paused.
-    private func finishListeningAfterPause() async {
+    ///
+    /// The finish runs in a new task because the caller is the capture-following task, which
+    /// stopping cancels. Submitting from a cancelled task abandons the request.
+    private func finishListeningAfterPause() {
         guard isListening else { return }
-        await stopListening()
+        Task { await stopListening() }
     }
 
     /// Stops local capture, then submits whatever was recognized.

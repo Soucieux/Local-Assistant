@@ -18,10 +18,13 @@ enum VoiceConstants {
     static let silenceSampleCount = 12
 
     /// Relative energy below which recent audio counts as a pause.
-    static let silenceEnergyThreshold: Float = 0.02
+    ///
+    /// Levels arrive as energy relative to recent loudness, where a quiet room still reports
+    /// well above zero. The speech library treats this same signal as silence below 0.3.
+    static let silenceEnergyThreshold: Float = 0.3
 
     /// Seconds of continuous quiet after speech that ends a recording on its own.
-    static let silenceTimeout: TimeInterval = 2.5
+    static let silenceTimeout: TimeInterval = 2
     static let missingSpeechModel = "The bundled speech model is not installed."
     static let speechInitializationFailure = "The local speech model could not be loaded."
 

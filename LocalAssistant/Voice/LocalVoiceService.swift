@@ -14,6 +14,8 @@ actor LocalVoiceService {
     private var updates: AsyncStream<VoiceCaptureState>.Continuation?
     private var latest: VoiceCaptureState = .preparing
     private var lastVoiceActivityAt: Date?
+    private var hasHeardSpeech = false
+    private var captureFailure: Error?
 
     /// Stores the verified local model location without loading it during app startup.
     /// - Parameter modelURL: Bundled Core ML model directory.
@@ -34,10 +36,15 @@ actor LocalVoiceService {
     private func load(modelURL: URL) async throws {
         guard whisperKit == nil else { return }
         do {
+            #if DEBUG
+            let logLevel = Logging.LogLevel.debug
+            #else
+            let logLevel = Logging.LogLevel.none
+            #endif
             let config = WhisperKitConfig(
                 modelFolder: modelURL.path,
                 verbose: false,
-                logLevel: .none,
+                logLevel: logLevel,
                 prewarm: true,
                 load: true,
                 download: false,
@@ -85,6 +92,8 @@ actor LocalVoiceService {
         updates = continuation
         latest = .preparing
         lastVoiceActivityAt = nil
+        hasHeardSpeech = false
+        captureFailure = nil
         continuation.yield(.preparing)
         beginLoadingModel()
         captureTask = Task { await self.runCapture() }
@@ -118,6 +127,7 @@ actor LocalVoiceService {
             transcriber = streamTranscriber
             try await streamTranscriber.startStreamTranscription()
         } catch {
+            captureFailure = error
             updates?.yield(latest)
         }
         updates?.finish()
@@ -162,15 +172,13 @@ actor LocalVoiceService {
     /// the speaker has said anything.
     /// - Parameter snapshot: Latest published capture state.
     private func endCaptureIfSpeakerStopped(_ snapshot: VoiceCaptureState) {
-        guard snapshot.hasTranscript else { return }
+        guard snapshot.levels.isEmpty == false else { return }
         guard snapshot.isSilent else {
+            hasHeardSpeech = true
             lastVoiceActivityAt = Date()
             return
         }
-        guard let since = lastVoiceActivityAt else {
-            lastVoiceActivityAt = Date()
-            return
-        }
+        guard hasHeardSpeech, let since = lastVoiceActivityAt else { return }
         guard Date().timeIntervalSince(since) >= VoiceConstants.silenceTimeout else { return }
         guard let transcriber else { return }
         Task { await transcriber.stopStreamTranscription() }
@@ -186,11 +194,15 @@ actor LocalVoiceService {
         await transcriber?.stopStreamTranscription()
         await captureTask.value
         let transcript = latest.transcript
+        let failure = captureFailure
         self.captureTask = nil
         transcriber = nil
         updates = nil
         latest = .preparing
         lastVoiceActivityAt = nil
+        hasHeardSpeech = false
+        captureFailure = nil
+        if let failure { throw failure }
         return transcript
     }
 

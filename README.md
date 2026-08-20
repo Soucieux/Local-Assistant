@@ -115,8 +115,13 @@ The test target builds and runs entirely from local sources and needs no network
 xcodebuild -project LocalAssistant.xcodeproj \
   -scheme LocalAssistantTests \
   -configuration Debug \
+  -derivedDataPath DerivedData \
   -destination 'platform=macOS' test
 ```
+
+`-derivedDataPath` keeps the test host beside the offline build. Without it the run writes a
+second application bundle into Xcode's own build directory, where it can be launched by
+mistake in place of the current one.
 
 Tests run only against the Debug configuration. The Release application built in Step 5 keeps its hardened runtime and sandbox unchanged and does not include the test bundle.
 
@@ -144,13 +149,14 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v1.4 status | Meaning |
+| Release area | v1.5 status | Meaning |
 |---|---|---|
 | Approved scope | Complete | The v1.3 conversation fix and the v1.4 live voice interface were both requested. |
 | Source implementation | Complete | The v1.3 conversation-history fix and the v1.4 streaming voice capture are present in source. |
 | Debug compilation | Passed | The changed Swift sources compile in the native application target without warnings. |
 | Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
 | Automated tests | Passed | The 61 tests in the `LocalAssistantTests` target passed against the Debug application. |
+| Voice runtime testing | Failed in v1.4, retest outstanding | Live text, automatic stop, and automatic send did not work when exercised. v1.5 corrects the causes; the retest has not been run. |
 | Focused testing | Passed | Indexing-state decisions, activity retention, and speech-model loading with no tokenizer cache present passed focused checks. |
 | Disconnected runtime testing | Partial | Indexing, chat, and voice were exercised with every network interface disabled. The conversation defect found there is fixed in v1.3; the retest is outstanding. |
 | Static privacy audit | Passed | The Release bundle carries only the four approved entitlements and links no networking library. |
@@ -168,6 +174,7 @@ so their build numbers are not recoverable.
 
 | Version | Build | Release |
 |---|---|---|
+| v1.5 | 15 | Voice capture corrections |
 | v1.4 | 14 | Live voice capture |
 | v1.3 | 13 | Conversation reliability |
 | v1.2 | 12 | Enforced offline boundary, extraction accuracy, and automated tests |
@@ -186,6 +193,15 @@ so their build numbers are not recoverable.
 Every release increments both the marketing version and the build number, so a build number
 identifies one release exactly. To confirm what an installed application is, read
 `CFBundleShortVersionString` and `CFBundleVersion` from its `Info.plist`.
+
+### v1.5 — Voice capture corrections
+
+- Fixed a spoken request never being sent after the recording ended on its own. Finishing ran inside the task that following the recording had just cancelled, so the request was abandoned silently.
+- Fixed the recording not ending after a pause. The level below which audio counted as quiet was far lower than a quiet room reports, so a pause was never recognized.
+- Ended a recording on a pause in the audio rather than on recognized text. Recognition lags speech by about a second, so waiting for text delayed the stop or prevented it.
+- Shortened the pause that ends a recording to two seconds.
+- Reported a capture that fails instead of ending silently. A failed stream previously left the interface showing a recording that was no longer running, with no message and no error.
+- Logged speech-library activity in Debug builds so a capture that produces no text can be diagnosed. Release builds stay silent.
 
 ### v1.4 — Live voice capture
 

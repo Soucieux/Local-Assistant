@@ -223,14 +223,14 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LocalAssistant/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				OTHER_CFLAGS = "$(inherited) -DSQLITE_CORE=1";
 				OTHER_LDFLAGS = "$(inherited) -lsqlite3 -Wl,-force_load,$(PROJECT_DIR)/Vendor/llama.cpp/build-localassistant-macos/Release/libllama-localassistant.a -framework Accelerate -framework Metal -framework Foundation -lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistant;
@@ -250,14 +250,14 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LocalAssistant/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				OTHER_CFLAGS = "$(inherited) -DSQLITE_CORE=1";
 				OTHER_LDFLAGS = "$(inherited) -lsqlite3 -Wl,-force_load,$(PROJECT_DIR)/Vendor/llama.cpp/build-localassistant-macos/Release/libllama-localassistant.a -framework Accelerate -framework Metal -framework Foundation -lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistant;
@@ -268,8 +268,8 @@
 			};
 			name = Release;
 		};
-		1A0000110000000000000005 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_IDENTITY = "-"; CODE_SIGN_STYLE = Manual; CURRENT_PROJECT_VERSION = 14; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 1.4; PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistantTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/LocalAssistant/VendorBridge/LlamaModule $(PROJECT_DIR)/Vendor/llama.cpp/ggml/include"; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocalAssistant.app/Contents/MacOS/LocalAssistant"; }; name = Debug; };
-		1A0000110000000000000006 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_IDENTITY = "-"; CODE_SIGN_STYLE = Manual; CURRENT_PROJECT_VERSION = 14; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 1.4; PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistantTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/LocalAssistant/VendorBridge/LlamaModule $(PROJECT_DIR)/Vendor/llama.cpp/ggml/include"; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocalAssistant.app/Contents/MacOS/LocalAssistant"; SWIFT_COMPILATION_MODE = wholemodule; }; name = Release; };
+		1A0000110000000000000005 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_IDENTITY = "-"; CODE_SIGN_STYLE = Manual; CURRENT_PROJECT_VERSION = 15; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 1.5; PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistantTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/LocalAssistant/VendorBridge/LlamaModule $(PROJECT_DIR)/Vendor/llama.cpp/ggml/include"; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocalAssistant.app/Contents/MacOS/LocalAssistant"; }; name = Debug; };
+		1A0000110000000000000006 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_IDENTITY = "-"; CODE_SIGN_STYLE = Manual; CURRENT_PROJECT_VERSION = 15; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 1.5; PRODUCT_BUNDLE_IDENTIFIER = com.soucieux.LocalAssistantTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/LocalAssistant/VendorBridge/LlamaModule $(PROJECT_DIR)/Vendor/llama.cpp/ggml/include"; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocalAssistant.app/Contents/MacOS/LocalAssistant"; SWIFT_COMPILATION_MODE = wholemodule; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
