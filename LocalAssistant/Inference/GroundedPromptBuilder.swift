@@ -78,12 +78,27 @@ struct GroundedPromptBuilder: Sendable {
                 ? InferenceConstants.userRoleLabel
                 : InferenceConstants.assistantRoleLabel
             let line = label
-                + sanitizedUntrustedText(message.text)
+                + historyText(for: message)
                 + AppConstants.Text.newline
             if output.count + line.count > InferenceConstants.maximumHistoryCharacters { break }
             output += line
         }
         return output
+    }
+
+    /// Returns the conversation text a prompt may show for one stored message.
+    ///
+    /// An acknowledgement this app generated is replaced by a bracketed note. Repeating the
+    /// sentence itself presents the app's own output as something the model said, which it
+    /// then imitates instead of answering the request.
+    /// - Parameter message: Stored conversation message.
+    /// - Returns: Sanitized text, or a note in place of a generated acknowledgement.
+    private func historyText(for message: ChatMessage) -> String {
+        guard message.role == .assistant,
+              RetrievalStrings.isFileCardSummary(message.text) else {
+            return sanitizedUntrustedText(message.text)
+        }
+        return InferenceConstants.historyFileResultsNote
     }
 
     /// Neutralizes model control markers inside user, history, path, and excerpt data.

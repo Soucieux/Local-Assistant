@@ -136,6 +136,8 @@ Type-constrained metadata and full-text candidates are filtered before candidate
 
 ## Grounding and generation
 
+Conversation history is not replayed to the model verbatim. When an answer duplicates visible card metadata it is replaced by a generated acknowledgement, and that acknowledgement is stored as the assistant's message. Feeding it back as recent conversation presents the app's own output as something the model said, which the model then imitates: after a few such turns it answers every request with that sentence and routes nothing to retrieval. `boundedHistory` therefore substitutes a bracketed note for a generated acknowledgement, keeping the fact that results were shown without supplying a sentence to copy. Only text the model or the user actually wrote is replayed.
+
 `GroundedPromptBuilder` sends only a bounded set of local ranked paths and excerpts plus a bounded recent local conversation to Qwen. Before insertion, it neutralizes Qwen chat-control markers in every untrusted question, history message, path, and excerpt. The prompt requires evidence-based responses, treats excerpts as data rather than instructions, and requires an admission when the index lacks enough evidence.
 
 Qwen3-4B and Qwen3-Embedding run through statically linked llama.cpp in the same process. Generated reasoning blocks are removed from visible output. Search results remain independently actionable even if generated prose is imperfect.
@@ -243,7 +245,7 @@ The Debug configuration therefore also carries `get-task-allow`, a test-manager 
 
 ## Release gates
 
-For v1.2, distinguish these activities:
+For v1.3, distinguish these activities:
 
 - **Build:** compile and link the Release application using resolved local dependencies.
 - **Automated tests:** run the `LocalAssistantTests` bundle against the Debug application.

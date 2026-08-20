@@ -14,6 +14,7 @@ enum RetrievalStrings {
     static let ambiguousFileRequest = "Which file do you mean? Add a topic, filename, folder, or date so I do not guess."
     static let singleFileCardReady = "I found one match. It is shown below."
     static let multipleFileCardsReadyFormat = "I found %d matches. They are shown below."
+    private static let countPlaceholder = "%d"
 
     /// Creates a concise acknowledgement for results already represented by file cards.
     /// - Parameter matchCount: Number of result cards shown beneath the assistant message.
@@ -21,6 +22,23 @@ enum RetrievalStrings {
     internal static func fileCardsReady(matchCount: Int) -> String {
         guard matchCount != 1 else { return singleFileCardReady }
         return String(format: multipleFileCardsReadyFormat, matchCount)
+    }
+
+    /// Reports whether text is an acknowledgement this app generated rather than model prose.
+    ///
+    /// These sentences are written by `fileCardsReady(matchCount:)`, not by the model. Feeding
+    /// one back as recent conversation teaches the model to repeat it as its own reply, after
+    /// which every request returns the same sentence and no results.
+    /// - Parameter text: Stored assistant message text.
+    /// - Returns: `true` when the text is a generated card acknowledgement.
+    internal static func isFileCardSummary(_ text: String) -> Bool {
+        if text == singleFileCardReady { return true }
+        let parts = multipleFileCardsReadyFormat.components(separatedBy: countPlaceholder)
+        guard parts.count == 2, text.hasPrefix(parts[0]), text.hasSuffix(parts[1]) else {
+            return false
+        }
+        let count = text.dropFirst(parts[0].count).dropLast(parts[1].count)
+        return count.isEmpty == false && count.allSatisfy(\.isNumber)
     }
 
     /// Combines the strongest retrieval signals into one readable sentence.

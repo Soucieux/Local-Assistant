@@ -143,19 +143,25 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v1.2 status | Meaning |
+| Release area | v1.3 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The phased review of correctness, the offline boundary, and automated coverage was explicitly requested. |
-| Source implementation | Complete | The v1.2 extraction, retrieval, voice, offline-boundary, and lifecycle corrections are present in source. |
+| Approved scope | Complete | The v1.3 conversation fix was requested after disconnected runtime testing found it. |
+| Source implementation | Complete | The v1.2 corrections and the v1.3 conversation-history fix are present in source. |
 | Debug compilation | Passed | The changed Swift sources compile in the native application target without warnings. |
 | Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
-| Automated tests | Passed | The 46 tests in the `LocalAssistantTests` target passed against the Debug application. |
+| Automated tests | Passed | The 53 tests in the `LocalAssistantTests` target passed against the Debug application. |
 | Focused testing | Passed | Indexing-state decisions, activity retention, and speech-model loading with no tokenizer cache present passed focused checks. |
+| Disconnected runtime testing | Partial | Indexing, chat, and voice were exercised with every network interface disabled. The conversation defect found there is fixed in v1.3; the retest is outstanding. |
 | Static privacy audit | Passed | The Release bundle carries only the four approved entitlements and links no networking library. |
 | Interface inspection | Not run | This pass changed Settings wording but no layout. Debug-only previews now render every model readiness state in light and dark at the minimum window size; reviewing them in Xcode's canvas remains an open gate. |
 | Code review | Complete | The requested phase-by-phase review covered the whole source tree and its findings were resolved. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
 | Installed stable bundle | Model assets updated | The installed application's speech tokenizer was installed and checksum-verified; the bundle itself was not replaced. |
+
+### v1.3 — Conversation reliability
+
+- Stopped the assistant repeating "I found N matches. They are shown below." for every request. When an answer duplicated card metadata, the app replaced it with that generated sentence, stored the sentence as the assistant's reply, and then showed it back to the model as recent conversation. After a few such turns the model reproduced the sentence as its own answer, so every later request returned the same text and no results.
+- Replaced a generated acknowledgement with a bracketed note wherever conversation history enters a prompt, so the model keeps the context that results were shown without a sentence to imitate.
 
 ### v1.2 — Enforced offline boundary, extraction accuracy, and automated tests
 
