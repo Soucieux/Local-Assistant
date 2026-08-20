@@ -5,6 +5,7 @@ import WhisperKit
 /// Records push-to-talk audio and transcribes it with a bundled offline Core ML model.
 actor LocalVoiceService {
     private var whisperKit: WhisperKit?
+    private var loadTask: Task<Void, Error>?
     private var modelURL: URL?
     private var audioEngine: AVAudioEngine?
     private var recordingURL: URL?
@@ -16,13 +17,20 @@ actor LocalVoiceService {
         self.modelURL = modelURL
     }
 
+    /// Starts loading the configured model without waiting for it to finish.
+    ///
+    /// Warming Core ML takes several seconds on the first press, so the load runs alongside
+    /// capture and is awaited only when the recording is transcribed.
+    private func beginLoadingModel() {
+        guard whisperKit == nil, loadTask == nil, let modelURL else { return }
+        loadTask = Task { try await self.load(modelURL: modelURL) }
+    }
+
     /// Loads the configured WhisperKit model with downloads disabled.
-    /// - Throws: A local voice error when the model is missing or loading fails.
-    private func prepare() async throws {
+    /// - Parameter modelURL: Verified local Core ML model directory.
+    /// - Throws: A local voice error when loading fails.
+    private func load(modelURL: URL) async throws {
         guard whisperKit == nil else { return }
-        guard let modelURL else {
-            throw LocalAssistantError.modelMissing(VoiceConstants.missingSpeechModel)
-        }
         do {
             let config = WhisperKitConfig(
                 modelFolder: modelURL.path,
@@ -41,11 +49,30 @@ actor LocalVoiceService {
         }
     }
 
+    /// Returns the speech model, awaiting a load that began when recording started.
+    /// - Returns: Loaded offline transcription runtime.
+    /// - Throws: A local voice or model error when the model cannot be loaded.
+    private func loadedModel() async throws -> WhisperKit {
+        if let whisperKit { return whisperKit }
+        beginLoadingModel()
+        guard let pendingLoad = loadTask else {
+            throw LocalAssistantError.modelMissing(VoiceConstants.missingSpeechModel)
+        }
+        defer { loadTask = nil }
+        try await pendingLoad.value
+        guard let whisperKit else {
+            throw LocalAssistantError.modelMissing(VoiceConstants.missingSpeechModel)
+        }
+        return whisperKit
+    }
+
     /// Starts a new microphone recording inside the private app container.
     /// - Throws: A local voice or permission error when capture cannot start.
     internal func startRecording() async throws {
         guard audioEngine == nil else { return }
-        try await prepare()
+        guard modelURL != nil else {
+            throw LocalAssistantError.modelMissing(VoiceConstants.missingSpeechModel)
+        }
         var engineWithTap: AVAudioEngine?
         var pendingRecordingURL: URL?
         do {
@@ -70,6 +97,7 @@ actor LocalVoiceService {
             audioEngine = engine
             recordingURL = url
             recordingBox = box
+            beginLoadingModel()
         } catch {
             engineWithTap?.inputNode.removeTap(onBus: 0)
             engineWithTap?.stop()
@@ -87,14 +115,13 @@ actor LocalVoiceService {
         }
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
+        recordingBox?.close()
         audioEngine = nil
         recordingBox = nil
         recordingURL = nil
         defer { VoiceRecordingFiles.removeRecordingIfPresent(at: url) }
 
-        guard let whisperKit else {
-            throw LocalAssistantError.modelMissing(VoiceConstants.missingSpeechModel)
-        }
+        let whisperKit = try await loadedModel()
         do {
             let options = DecodingOptions(
                 verbose: false,
@@ -118,10 +145,13 @@ actor LocalVoiceService {
 
     /// Stops capture and releases the offline speech runtime before application termination.
     internal func shutdown() {
+        loadTask?.cancel()
+        loadTask = nil
         if let audioEngine {
             audioEngine.inputNode.removeTap(onBus: 0)
             audioEngine.stop()
         }
+        recordingBox?.close()
         VoiceRecordingFiles.removeRecordingIfPresent(at: recordingURL)
         audioEngine = nil
         recordingURL = nil
