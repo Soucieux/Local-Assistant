@@ -73,7 +73,12 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Returns the singleton main window that hosts both assistant destinations.
+    ///
+    /// The scene identifier is matched instead of the visible title, which SwiftUI is free
+    /// to change as the window presents a different destination.
     private var mainWindow: NSWindow? {
-        NSApp.windows.first { $0.title == UIStrings.appName }
+        NSApp.windows.first {
+            $0.identifier?.rawValue == AppConstants.Identity.mainWindowIdentifier
+        }
     }
 }

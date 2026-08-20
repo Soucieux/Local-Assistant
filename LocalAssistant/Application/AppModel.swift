@@ -451,6 +451,7 @@ final class AppModel {
         activeIndexingTask = nil
         await services.voice.shutdown()
         await services.runtime.shutdown()
+        await services.database.close()
     }
 
     /// Records whether the global quick-call shortcut registered successfully.
@@ -763,13 +764,8 @@ final class AppModel {
         let itemIDs = Set(
             messages.flatMap(\.fileMatches).map(\.item.id)
         )
-        var availableItemIDs: Set<UUID> = []
-        for itemID in itemIDs {
-            if try await services.database.fetchItem(id: itemID) != nil {
-                availableItemIDs.insert(itemID)
-            }
-        }
-        availableFileMatchItemIDs = availableItemIDs
+        let storedItems = try await services.database.fetchItems(ids: itemIDs)
+        availableFileMatchItemIDs = Set(storedItems.keys)
     }
 
     /// Resolves one saved action against current authorization, index, and disk state.
