@@ -12,7 +12,6 @@ enum ExclusionReason: String, Sendable {
     case systemDirectory
     case credentialMaterial
     case symbolicLink
-    case packageDescendant
     case unreadable
 }
 

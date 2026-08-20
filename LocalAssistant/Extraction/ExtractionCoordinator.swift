@@ -62,7 +62,7 @@ struct ExtractionCoordinator: Sendable {
                 ).string
             } else {
                 let data = try Data(contentsOf: item.url, options: [.mappedIfSafe])
-                text = String(decoding: data, as: UTF8.self)
+                text = try decodedText(from: data, at: item.url)
             }
             return ExtractedDocument(
                 segments: [
@@ -76,5 +76,35 @@ struct ExtractionCoordinator: Sendable {
         } catch {
             throw LocalAssistantError.extraction(error.localizedDescription)
         }
+    }
+
+    /// Decodes text bytes using a detected encoding instead of assuming UTF-8.
+    ///
+    /// Assuming UTF-8 never fails: undecodable bytes become replacement characters, so a
+    /// file saved in another encoding is indexed as noise. Reporting the failure instead
+    /// keeps the file discoverable by name while leaving its text unindexed.
+    /// - Parameters:
+    ///   - data: Raw file bytes already bounded by the configured size limit.
+    ///   - url: Source path used for the diagnostic.
+    /// - Returns: Decoded text.
+    /// - Throws: A local extraction error when no candidate encoding applies.
+    private func decodedText(from data: Data, at url: URL) throws -> String {
+        for encoding in orderedEncodings(for: data) {
+            if let text = String(data: data, encoding: encoding) { return text }
+        }
+        throw LocalAssistantError.extraction(url.path)
+    }
+
+    /// Orders candidate encodings, letting a byte-order mark win before UTF-8 is tried.
+    ///
+    /// UTF-16 bytes also form valid UTF-8, so without this a UTF-16 export decodes into
+    /// text interleaved with null characters rather than failing over to UTF-16.
+    /// - Parameter data: Raw file bytes.
+    /// - Returns: Encodings to attempt, in order.
+    private func orderedEncodings(for data: Data) -> [String.Encoding] {
+        let hasUTF16Mark = FileConstants.utf16ByteOrderMarks.contains { data.starts(with: $0) }
+        return hasUTF16Mark
+            ? [.utf16] + FileConstants.textFallbackEncodings
+            : FileConstants.textFallbackEncodings
     }
 }

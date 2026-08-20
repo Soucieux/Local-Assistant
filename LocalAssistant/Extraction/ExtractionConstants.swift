@@ -2,6 +2,12 @@ import Foundation
 
 /// Local extraction paths, XML element names, and normalization values.
 enum ExtractionConstants {
+    /// Identifies the behavior of the current extraction pipeline.
+    ///
+    /// The value is folded into every file's metadata hash, so raising it re-extracts
+    /// already-indexed files once instead of leaving them on superseded results.
+    /// Raise it whenever an extraction fix changes the text produced for unchanged files.
+    static let extractionVersion = 2
     static let richTextExtension = "rtf"
     static let htmlExtension = "html"
     static let htmExtension = "htm"
@@ -27,6 +33,8 @@ enum ExtractionConstants {
     static let doubleNewline = "\n\n"
     static let indexingSeparator = "\u{1F}"
     static let minimumOCRDimension = 1
+    static let ocrBitsPerComponent = 8
+    static let ocrRecognitionLanguages = ["en-US", "zh-Hans"]
     static let pdfOCRThumbnailWidth = 2_000
     static let pdfOCRThumbnailHeight = 2_600
     static let unknownSection = "Extracted text"

@@ -11,8 +11,8 @@ struct TextChunker: Sendable {
         var result: [ContentChunk] = []
         var documentOffset = 0
         for segment in document.segments where segment.text.isEmpty == false {
-            let ranges = wordRanges(in: segment.text)
-            if ranges.isEmpty {
+            let positions = wordPositions(in: segment.text)
+            if positions.isEmpty {
                 result.append(
                     makeChunk(
                         text: segment.text,
@@ -25,24 +25,22 @@ struct TextChunker: Sendable {
                 )
             } else {
                 var lowerWord = 0
-                while lowerWord < ranges.count {
-                    let upperWord = min(lowerWord + AppConstants.Indexing.targetChunkWordCount, ranges.count)
-                    let lowerIndex = ranges[lowerWord].lowerBound
-                    let upperIndex = ranges[upperWord - 1].upperBound
-                    let chunkText = String(segment.text[lowerIndex..<upperIndex])
-                    let localStart = segment.text.distance(from: segment.text.startIndex, to: lowerIndex)
-                    let localEnd = segment.text.distance(from: segment.text.startIndex, to: upperIndex)
+                while lowerWord < positions.count {
+                    let upperWord = min(lowerWord + AppConstants.Indexing.targetChunkWordCount, positions.count)
+                    let lower = positions[lowerWord]
+                    let upper = positions[upperWord - 1]
+                    let chunkText = String(segment.text[lower.range.lowerBound..<upper.range.upperBound])
                     result.append(
                         makeChunk(
                             text: chunkText,
                             itemID: itemID,
                             ordinal: result.count,
-                            characterStart: documentOffset + localStart,
-                            characterEnd: documentOffset + localEnd,
+                            characterStart: documentOffset + lower.characterStart,
+                            characterEnd: documentOffset + upper.characterEnd,
                             segment: segment
                         )
                     )
-                    if upperWord == ranges.count { break }
+                    if upperWord == positions.count { break }
                     lowerWord = max(lowerWord + 1, upperWord - AppConstants.Indexing.overlapWordCount)
                 }
             }
@@ -51,16 +49,35 @@ struct TextChunker: Sendable {
         return result
     }
 
-    /// Enumerates language-aware word ranges.
+    /// One word range paired with its character offsets inside the segment.
+    private struct WordPosition {
+        let range: Range<String.Index>
+        let characterStart: Int
+        let characterEnd: Int
+    }
+
+    /// Enumerates language-aware words and their offsets in a single pass.
+    ///
+    /// Measuring each chunk boundary from the start of the segment walks the whole string
+    /// again per chunk, so a long document costs time proportional to its length squared.
+    /// Advancing one running cursor keeps the total cost proportional to the length.
     /// - Parameter text: Normalized segment text.
-    /// - Returns: Word ranges in source order.
-    private func wordRanges(in text: String) -> [Range<String.Index>] {
-        var ranges: [Range<String.Index>] = []
+    /// - Returns: Word positions in source order.
+    private func wordPositions(in text: String) -> [WordPosition] {
+        var positions: [WordPosition] = []
+        var cursor = text.startIndex
+        var offset = 0
         text.enumerateSubstrings(in: text.startIndex..<text.endIndex, options: [.byWords, .localized]) {
             _, range, _, _ in
-            ranges.append(range)
+            offset += text.distance(from: cursor, to: range.lowerBound)
+            let characterStart = offset
+            offset += text.distance(from: range.lowerBound, to: range.upperBound)
+            positions.append(
+                WordPosition(range: range, characterStart: characterStart, characterEnd: offset)
+            )
+            cursor = range.upperBound
         }
-        return ranges
+        return positions
     }
 
     /// Creates one stable source-aligned chunk.

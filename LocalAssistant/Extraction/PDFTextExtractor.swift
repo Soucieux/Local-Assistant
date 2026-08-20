@@ -18,12 +18,11 @@ struct PDFTextExtractor: Sendable {
         for index in 0..<document.pageCount {
             guard let page = document.page(at: index) else { continue }
             let extractedText = TextNormalizer.normalize(page.string ?? AppConstants.Text.empty)
-            let text: String
-            if extractedText.isEmpty {
-                text = try recognize(page: page)
-            } else {
-                text = extractedText
-            }
+            // A page that cannot be rendered or recognized contributes no text, but must
+            // never discard the pages that extracted correctly.
+            let text = extractedText.isEmpty
+                ? ((try? recognize(page: page)) ?? AppConstants.Text.empty)
+                : extractedText
             if text.isEmpty == false {
                 let pageNumber = index + 1
                 segments.append(

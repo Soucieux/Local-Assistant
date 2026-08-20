@@ -22,6 +22,9 @@ enum FileHasher {
     }
 
     /// Computes a stable hash for cheap file metadata comparisons.
+    ///
+    /// The extraction version participates so that an unchanged file is still re-read once
+    /// after the pipeline that produced its indexed text is corrected.
     /// - Parameters:
     ///   - path: Standardized absolute path.
     ///   - byteCount: File size.
@@ -38,7 +41,8 @@ enum FileHasher {
             path,
             String(byteCount),
             String(modifiedAt?.timeIntervalSince1970 ?? 0),
-            kind.rawValue
+            kind.rawValue,
+            String(ExtractionConstants.extractionVersion)
         ].joined(separator: FileConstants.Hash.fieldSeparator)
         let digest = SHA256.hash(data: Data(value.utf8))
         return digest.map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
