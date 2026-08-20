@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "dependency": "WhisperKit",
+  "revision": "ea872ffd35705aa757f33033500b9b0d40bd38df",
+  "reason": "Local Assistant must never open a network monitor or request a connection. Upstream WhisperKit starts an NWPathMonitor when a HubApi is constructed, and downloads the tokenizer from huggingface.co when it is not found locally.",
+  "requiredMarker": "LocalAssistant-modification",
+  "files": [
+    {
+      "path": "Sources/ArgmaxCore/External/Hub/HubApi.swift",
+      "forbidden": ["import Network", "NWPathMonitor", "NetworkMonitor"]
+    },
+    {
+      "path": "Sources/WhisperKit/Utilities/ModelUtilities.swift",
+      "forbidden": ["pretrained: tokenizerName"]
+    }
+  ]
+}

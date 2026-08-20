@@ -135,6 +135,12 @@ def main() -> int:
             vendor / directory_names[name],
         )
 
+    # A refreshed checkout restores upstream sources, so the offline patches that keep
+    # vendored code off the network are re-applied and verified on every run.
+    subprocess.check_call(
+        [sys.executable, str(pathlib.Path(__file__).resolve().parent / "apply_offline_patches.py")]
+    )
+
     sqlite_source = vendor / "sqlite-vec-source"
     generated = subprocess.check_output(
         [sys.executable, str(sqlite_source / "scripts" / "amalgamate.py"), str(sqlite_source / "sqlite-vec.c")]

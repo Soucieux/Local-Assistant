@@ -13,12 +13,15 @@ import urllib.request
 
 USER_AGENT = "LocalAssistant-Offline-Staging/1"
 BUFFER_BYTES = 1024 * 1024
+METADATA_TIMEOUT_SECONDS = 30
+DOWNLOAD_TIMEOUT_SECONDS = 300
+TREE_PAGE_LIMIT = 1000
 
 
 def request_json(url: str) -> object:
     """Read JSON from one HTTPS endpoint."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request) as response:
+    with urllib.request.urlopen(request, timeout=METADATA_TIMEOUT_SECONDS) as response:
         return json.load(response)
 
 
@@ -27,10 +30,23 @@ def download(url: str, destination: pathlib.Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_suffix(destination.suffix + ".partial")
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request) as response, partial.open("wb") as output:
-        while chunk := response.read(BUFFER_BYTES):
-            output.write(chunk)
+    try:
+        with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response, partial.open("wb") as output:
+            while chunk := response.read(BUFFER_BYTES):
+                output.write(chunk)
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        raise
     partial.replace(destination)
+
+
+def download_verified(url: str, destination: pathlib.Path, expected: str) -> None:
+    """Download one file and keep it only when it matches its pinned digest."""
+    download(url, destination)
+    actual = sha256(destination)
+    if actual != expected:
+        destination.unlink(missing_ok=True)
+        raise RuntimeError(f"Checksum mismatch for {destination.name}: {actual}")
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -50,16 +66,27 @@ def resolve_url(repository: str, revision: str, path: str) -> str:
 
 def download_file_model(model: dict[str, object], output: pathlib.Path) -> None:
     """Download and verify one pinned GGUF file."""
-    destination = output / str(model["installedName"])
-    download(
+    download_verified(
         resolve_url(str(model["repository"]), str(model["revision"]), str(model["sourcePath"])),
-        destination,
+        output / str(model["installedName"]),
+        str(model["sha256"]),
     )
-    expected = str(model["sha256"])
-    actual = sha256(destination)
-    if actual != expected:
-        destination.unlink(missing_ok=True)
-        raise RuntimeError(f"Checksum mismatch for {destination.name}: {actual}")
+
+
+def download_additional_files(model: dict[str, object], destination_root: pathlib.Path) -> None:
+    """Download pinned companion files into an already-downloaded model directory.
+
+    WhisperKit loads its tokenizer from the model directory and otherwise reaches out to
+    the Hugging Face Hub at first use, so these files must ship with the model.
+    """
+    for entry in model.get("additionalFiles", []):
+        if not isinstance(entry, dict):
+            raise RuntimeError(f"Malformed additionalFiles entry for {model['installedName']}")
+        download_verified(
+            resolve_url(str(entry["repository"]), str(entry["revision"]), str(entry["sourcePath"])),
+            destination_root / str(entry["installedName"]),
+            str(entry["sha256"]),
+        )
 
 
 def download_directory_model(model: dict[str, object], output: pathlib.Path) -> None:
@@ -70,12 +97,18 @@ def download_directory_model(model: dict[str, object], output: pathlib.Path) -> 
     api_path = urllib.parse.quote(source_path, safe="/")
     tree_url = (
         f"https://huggingface.co/api/models/{repository}/tree/{revision}/{api_path}"
-        "?recursive=true&expand=false&limit=1000"
+        f"?recursive=true&expand=false&limit={TREE_PAGE_LIMIT}"
     )
     entries = request_json(tree_url)
     if not isinstance(entries, list):
         raise RuntimeError(f"Unexpected model tree response for {repository}")
+    if len(entries) >= TREE_PAGE_LIMIT:
+        raise RuntimeError(
+            f"Model tree for {repository}/{source_path} may be truncated at "
+            f"{TREE_PAGE_LIMIT} entries; refusing to ship a partial model directory"
+        )
     destination_root = output / str(model["installedName"])
+    downloaded = 0
     for entry in entries:
         if not isinstance(entry, dict) or entry.get("type") != "file":
             continue
@@ -83,6 +116,10 @@ def download_directory_model(model: dict[str, object], output: pathlib.Path) -> 
         relative = pathlib.PurePosixPath(remote_path).relative_to(source_path)
         destination = destination_root.joinpath(*relative.parts)
         download(resolve_url(repository, revision, remote_path), destination)
+        downloaded += 1
+    if downloaded == 0:
+        raise RuntimeError(f"No files found for {repository}/{source_path}")
+    download_additional_files(model, destination_root)
 
 
 def main() -> int:
