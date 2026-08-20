@@ -62,7 +62,7 @@ The source repository intentionally excludes `Vendor`, generated application bun
 
 **Result:** The script recreates `Vendor` from pinned revisions and creates the transferable package under `outputs/LocalAssistant-OfflineKit`.
 
-If the WhisperKit model is downloaded manually, preserve the complete `openai_whisper-small` directory structure.
+If the speech model is downloaded manually, preserve the complete `openai_whisper-small` directory structure, including the `tokenizer.json` and `tokenizer_config.json` files recorded in `Config/ModelManifest.json`. The application has no route to fetch a missing tokenizer.
 
 #### Step 3 — Transfer and disconnect
 
@@ -101,9 +101,24 @@ Run the static boundary audit against the Release application:
   ./DerivedData/Build/Products/Release/LocalAssistant.app
 ```
 
-The audit requires exactly the approved App Sandbox, microphone, application-scoped bookmark, and user-selected read-only entitlements. It rejects every unexpected entitlement, inspects packaged resources for network-related implementation text, and lists linked libraries for review.
+The audit requires exactly the approved App Sandbox, microphone, application-scoped bookmark, and user-selected read-only entitlements, and rejects every unexpected entitlement. It then inspects the application executable and every bundled executable and fails if any of them links a networking library or imports a network symbol, because a binary that never links networking code cannot open a connection whatever its source might still say. It also inspects packaged resources for network-related implementation text.
+
+The audit reports, rather than rejects, an unreachable service hostname still compiled into the binary. A string literal in unreachable code proves nothing either way; the entitlement set is what the operating system enforces.
 
 > Static inspection is not full runtime verification. Formal verification should also exercise the signed application with every network interface disabled, inspect runtime sockets, and test indexing, chat, OCR, voice, Open, Reveal, and Revoke against controlled fixtures.
+
+#### Optional — run the automated tests
+
+The test target builds and runs entirely from local sources and needs no network access:
+
+```zsh
+xcodebuild -project LocalAssistant.xcodeproj \
+  -scheme LocalAssistantTests \
+  -configuration Debug \
+  -destination 'platform=macOS' test
+```
+
+Tests run only against the Debug configuration. The Release application built in Step 5 keeps its hardened runtime and sandbox unchanged and does not include the test bundle.
 
 #### Step 7 — Launch and authorize a folder
 
@@ -128,17 +143,57 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v1.1 status | Meaning |
+| Release area | v1.2 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The indexing controls, continuous monitoring, activity history, and exhaustive pass were explicitly requested. |
-| Source implementation | Complete | The v1.1 indexing controls, activity interface, navigation, and shutdown fixes are present in source. |
-| Debug compilation | Passed | The changed Swift sources compile in the native application target. |
+| Approved scope | Complete | The phased review of correctness, the offline boundary, and automated coverage was explicitly requested. |
+| Source implementation | Complete | The v1.2 extraction, retrieval, voice, offline-boundary, and lifecycle corrections are present in source. |
+| Debug compilation | Passed | The changed Swift sources compile in the native application target without warnings. |
 | Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
-| Focused testing | Passed | Retention, revocation, interrupted-state recovery, and indexing-state decisions passed focused checks. |
-| Interface inspection | Partial | The dark Settings layout was inspected; light appearance and minimum-window captures remain unavailable in this session. |
-| Code review | Complete | The requested exhaustive whole-scope review and simplification pass completed. |
+| Automated tests | Passed | The 46 tests in the `LocalAssistantTests` target passed against the Debug application. |
+| Focused testing | Passed | Indexing-state decisions, activity retention, and speech-model loading with no tokenizer cache present passed focused checks. |
+| Static privacy audit | Passed | The Release bundle carries only the four approved entitlements and links no networking library. |
+| Interface inspection | Not run | This pass changed Settings wording but no layout. Debug-only previews now render every model readiness state in light and dark at the minimum window size; reviewing them in Xcode's canvas remains an open gate. |
+| Code review | Complete | The requested phase-by-phase review covered the whole source tree and its findings were resolved. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Installed stable bundle | Not changed | This source pass does not replace or claim verification of an installed bundle. |
+| Installed stable bundle | Model assets updated | The installed application's speech tokenizer was installed and checksum-verified; the bundle itself was not replaced. |
+
+### v1.2 — Enforced offline boundary, extraction accuracy, and automated tests
+
+**Offline boundary**
+
+- Removed the network path monitor that the vendored speech dependency started whenever it constructed a model-hub client, so no code in the application observes network state.
+- Removed that dependency's fallback that downloaded a missing speech tokenizer from the internet, and moved the tokenizer into the verified offline model package instead. A missing tokenizer now reports a reinstall instruction rather than attempting a connection.
+- Stored both dependency modifications in the repository and re-applied and verified them during preparation, so refreshing a pinned checkout cannot silently restore the original network code.
+- Extended the boundary audit to reject any executable in the bundle that links a networking library or imports a network symbol, in addition to the existing entitlement checks.
+- Recorded the verified checksum and size of every added tokenizer file in the model manifest, and made the preparation download fail loudly on a timeout, a partial file, or a truncated file listing.
+
+**Search and extraction accuracy**
+
+- Made a multi-word file request match words individually instead of requiring the whole phrase to appear as one run of characters, so a request naming a topic and a folder can still find the file.
+- Treated `%` and `_` typed in a request as ordinary characters rather than as database wildcards.
+- Scaled an oversized photograph or scan down to the supported recognition size instead of rejecting it, so a high-resolution image is no longer indexed with no text at all.
+- Added Simplified Chinese alongside English to text recognition.
+- Kept the text of a PDF's readable pages when recognition fails on one page, instead of discarding the whole document's text.
+- Detected the encoding of a plain-text file rather than assuming UTF-8, so a file saved in another encoding is no longer indexed as replacement characters.
+- Excluded the real system and cache directories by absolute path, which a sandboxed application cannot identify by name alone.
+- Stopped a concise answer from being replaced by a match count when a result's name was an ordinary word, such as a folder named `Documents`.
+
+**Voice, models, and lifecycle**
+
+- Fixed voice capture discarding the first seconds of speech: the microphone now opens immediately while the speech model loads alongside it.
+- Fixed a recording being read back before macOS had finished writing it, which could truncate or empty a transcription.
+- Separated **Not installed** from **Damaged** in Settings so a missing model package and a file that no longer matches its checksum no longer share one recovery instruction.
+- Reported voice input as unavailable when its tokenizer is absent, instead of reporting it ready and failing at first use.
+- Re-verified model checksums on a weekly schedule rather than at every launch, and closed the private database when the application quits.
+- Added an extraction version to each file's fingerprint, so an extraction correction re-extracts already-indexed files once instead of leaving them on superseded text.
+
+**Performance and cleanup**
+
+- Replaced a repeated per-result database lookup with one batched read, and stopped semantic search from scanning the whole vector table when no vector can satisfy the requested file type.
+- Made passage splitting cost time proportional to a document's length rather than to its length squared.
+- Removed a retrieval lookup against an empty prototype table that ran on every search and could never affect a score.
+- Added a native test target with 46 automated tests covering request routing, search-text escaping, passage offsets, card-aware answers, and scanner exclusions.
+- Added previews for every model readiness state, so the not-installed and damaged wording can be reviewed in both appearances without removing or corrupting installed model files. They are excluded from the shipped application.
 
 ### v1.1 — Indexing controls and lifecycle reliability
 
@@ -257,7 +312,7 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
 | Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
 | PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
-| Local voice input | Available | Loads the speech model when the microphone is first used. |
+| Local voice input | Available | Begins recording immediately and loads the speech model alongside capture. |
 | Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
@@ -343,16 +398,18 @@ Local Assistant/
 │   ├── Security/                 # Private application-container directories
 │   ├── Resources/                # Icon, property list, and sandbox entitlements
 │   └── VendorBridge/             # Static native-library bridges
-├── Scripts/                      # Preparation, installation, build, and audit tools
+├── LocalAssistantTests/          # Automated tests for routing, retrieval, and exclusions
+├── Patches/                      # Offline modifications applied to pinned dependencies
+├── Scripts/                      # Preparation, installation, build, audit, and patch tools
 ├── Vendor/                       # Recreated pinned dependencies; excluded from Git
 └── outputs/                      # Generated offline transfer kit; excluded from Git
 ```
 
 ## Troubleshooting
 
-### Why does Settings say a feature is not ready?
+### Why does Settings say a feature is not installed or damaged?
 
-Open **Settings → Models**. If Chat and answers, File search, or Voice input is unavailable, reinstall the verified offline model package. Do not add runtime network access as a repair.
+Open **Settings → Models**. **Not installed** means the model files are absent, so install the verified offline model package. **Damaged** means a file no longer matches the checksum recorded at installation, so reinstall the package to replace it. Do not add runtime network access as a repair for either state.
 
 ### Why is an authorized folder unavailable?
 
@@ -384,7 +441,7 @@ Another application may already own `⌃⌥Space`. Quit or reconfigure the confl
 
 ### Why does voice input not start?
 
-Confirm that the complete `openai_whisper-small` directory is installed and microphone permission is allowed. The first use takes longer because the local speech model loads only when needed.
+Confirm that microphone permission is allowed and that **Settings → Models** reports Voice input as ready. Voice input is reported unavailable when the `openai_whisper-small` directory is incomplete, including a missing `tokenizer.json` or `tokenizer_config.json`; reinstall the verified offline model package to restore it. Recording begins immediately, but the first transcription of a session waits for the speech model to finish loading.
 
 ### Why does offline package resolution fail?
 
@@ -397,7 +454,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 These boundaries are product requirements rather than optional settings:
 
 - **No application network access.** The signed application must not have network client or server entitlements.
-- **No runtime downloads.** Required models and frameworks must already exist on the destination Mac.
+- **No runtime downloads.** Required models and frameworks must already exist on the destination Mac. Dependency code that could download or observe the network is removed from the vendored source and the removal is verified during preparation, so the guarantee does not rest on a configuration flag.
 - **Read-only source access.** Folder bookmarks are application-scoped and request read-only access.
 - **Explicit authorization.** The application can read only folders selected through the macOS folder picker and allowed by the operating system.
 - **Revocable access.** Revoking a folder removes its bookmark and dependent private index records without changing the source folder.
