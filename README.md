@@ -159,6 +159,34 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
 | Installed stable bundle | Model assets updated | The installed application's speech tokenizer was installed and checksum-verified; the bundle itself was not replaced. |
 
+### Version index
+
+Past application bundles are not retained, so this table and the notes below are the record of
+what each release contained. Build numbers from v0.9 onward are read from the project file in
+version control; v0.8 is recorded in its own notes. Earlier releases predate this repository,
+so their build numbers are not recoverable.
+
+| Version | Build | Release |
+|---|---|---|
+| v1.4 | 14 | Live voice capture |
+| v1.3 | 13 | Conversation reliability |
+| v1.2 | 12 | Enforced offline boundary, extraction accuracy, and automated tests |
+| v1.1 | 11 | Indexing controls and lifecycle reliability |
+| v1.0 | 10 | Continuous indexing and private activity history |
+| v0.9 | 9 | Exhaustive correctness and privacy hardening |
+| v0.8 | 8 | Settings hierarchy, styled messages, and documentation |
+| v0.7 | not recorded | Card-aware answers and project hygiene |
+| v0.6 | not recorded | Model clarity, durable result cards, and documentation |
+| v0.5 | not recorded | Conversation history and compact result cards |
+| v0.4 | not recorded | Settings hierarchy |
+| v0.3 | not recorded | Intent-aware retrieval and native interface |
+| v0.2.0 | not recorded | Focused assistant workflow |
+| v0.1.0 | not recorded | Initial prototype |
+
+Every release increments both the marketing version and the build number, so a build number
+identifies one release exactly. To confirm what an installed application is, read
+`CFBundleShortVersionString` and `CFBundleVersion` from its `Info.plist`.
+
 ### v1.4 — Live voice capture
 
 - Replaced the text field with a live waveform while the microphone is open, drawn from the audio levels the speech model reports rather than a decorative animation.
