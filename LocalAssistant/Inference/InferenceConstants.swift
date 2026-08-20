@@ -20,6 +20,9 @@ enum InferenceConstants {
     static let chatAssistantStart = "<|im_end|>\n<|im_start|>assistant\n"
     static let noThinkingInstruction = "/no_think"
     static let localSearchRoutingMarker = "[[SEARCH_LOCAL_FILES]]"
+    static let localSearchRoutingToken = "SEARCH_LOCAL_FILES"
+    static let routingMarkerLeadingCharacters: Set<Character> = ["[", " ", "\t", "\n"]
+    static let routingMarkerTrailingCharacters: Set<Character> = ["]", " ", "\t", "\n"]
     static let assistantSystemPrompt = """
         You are a private, fully offline personal assistant running entirely on this Mac.
         Answer ordinary conversation naturally and concisely using your built-in knowledge.
@@ -79,7 +82,8 @@ enum InferenceConstants {
         chatMessageEndToken,
         thinkingOpenTag,
         thinkingCloseTag,
-        localSearchRoutingMarker
+        localSearchRoutingMarker,
+        localSearchRoutingToken
     ]
     static let invalidModelOutput = "I could not produce a valid local response. Please try again."
 }

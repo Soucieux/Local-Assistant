@@ -149,14 +149,14 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v1.5 status | Meaning |
+| Release area | v1.6 status | Meaning |
 |---|---|---|
 | Approved scope | Complete | The v1.3 conversation fix and the v1.4 live voice interface were both requested. |
 | Source implementation | Complete | The v1.3 conversation-history fix and the v1.4 streaming voice capture are present in source. |
 | Debug compilation | Passed | The changed Swift sources compile in the native application target without warnings. |
 | Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
-| Automated tests | Passed | The 61 tests in the `LocalAssistantTests` target passed against the Debug application. |
-| Voice runtime testing | Failed in v1.4, retest outstanding | Live text, automatic stop, and automatic send did not work when exercised. v1.5 corrects the causes; the retest has not been run. |
+| Automated tests | Passed | The 66 tests in the `LocalAssistantTests` target passed against the Debug application. |
+| Voice runtime testing | Partial | Live levels and the automatic stop were confirmed working when exercised. Recognized text did not appear and no request was sent; v1.6 corrects the cause. The retest has not been run. |
 | Focused testing | Passed | Indexing-state decisions, activity retention, and speech-model loading with no tokenizer cache present passed focused checks. |
 | Disconnected runtime testing | Partial | Indexing, chat, and voice were exercised with every network interface disabled. The conversation defect found there is fixed in v1.3; the retest is outstanding. |
 | Static privacy audit | Passed | The Release bundle carries only the four approved entitlements and links no networking library. |
@@ -174,6 +174,7 @@ so their build numbers are not recoverable.
 
 | Version | Build | Release |
 |---|---|---|
+| v1.6 | 16 | Spoken text and routing corrections |
 | v1.5 | 15 | Voice capture corrections |
 | v1.4 | 14 | Live voice capture |
 | v1.3 | 13 | Conversation reliability |
@@ -193,6 +194,12 @@ so their build numbers are not recoverable.
 Every release increments both the marketing version and the build number, so a build number
 identifies one release exactly. To confirm what an installed application is, read
 `CFBundleShortVersionString` and `CFBundleVersion` from its `Info.plist`.
+
+### v1.6 — Spoken text and routing corrections
+
+- Fixed spoken words never appearing and no request being sent. Recognized text for a short phrase arrives as unconfirmed segments, which the app ignored: it read only the confirmed list, which fills once a recording is long enough to exceed the confirmation window, and the in-progress text, which is cleared as soon as each chunk finishes.
+- Fixed a routing instruction being shown as the assistant's answer. The model is asked for a doubled bracket marker and does not reliably reproduce the brackets, so a near miss was treated as ordinary conversation and the raw marker and payload were displayed. The marker is now matched by its token, whatever brackets surround it.
+- Neutralized that token wherever untrusted text enters a prompt, so an answer already stored in history cannot teach the model to repeat it.
 
 ### v1.5 — Voice capture corrections
 

@@ -95,4 +95,45 @@ struct AssistantRouteParserTests {
         let route = parser.parse(modelOutput: "A PDF is a document format.", originalQuestion: "what is a pdf")
         #expect(reply(route) == "A PDF is a document format.")
     }
+
+    @Test("A single bracketed marker routes to search instead of being shown as an answer")
+    func acceptsSingleBracketMarker() {
+        let output = #"[SEARCH_LOCAL_FILES]{"query":"","kinds":["pdf"]}"#
+        let route = parser.parse(modelOutput: output, originalQuestion: "show all pdf")
+        #expect(plan(route)?.filter.kinds == [.pdf])
+    }
+
+    @Test("A marker on its own line routes to search")
+    func acceptsMarkerOnSeparateLine() {
+        let output = "[SEARCH_LOCAL_FILES]\n{\"query\":\"budget\",\"kinds\":[]}"
+        let route = parser.parse(modelOutput: output, originalQuestion: "find the budget")
+        #expect(plan(route)?.text == "budget")
+    }
+
+    @Test("An unbracketed marker routes to search")
+    func acceptsUnbracketedMarker() {
+        let output = #"SEARCH_LOCAL_FILES {"query":"notes","kinds":[]}"#
+        let route = parser.parse(modelOutput: output, originalQuestion: "find my notes")
+        #expect(plan(route)?.text == "notes")
+    }
+
+    @Test("Ordinary prose containing braces is answered, not treated as a file request")
+    func answersProseContainingBraces() {
+        let output = "JSON looks like {\"key\": \"value\"} in most languages."
+        let route = parser.parse(modelOutput: output, originalQuestion: "what is json")
+        #expect(reply(route) == output)
+    }
+
+    @Test("A marker the reader would see raw never becomes the visible answer")
+    func neverShowsRawMarkerAsReply() {
+        for output in [
+            #"[SEARCH_LOCAL_FILES]{"query":"","kinds":["pdf"]}"#,
+            #"[[SEARCH_LOCAL_FILES]]{"query":"","kinds":["pdf"]}"#,
+            "[SEARCH_LOCAL_FILES]not json at all"
+        ] {
+            let route = parser.parse(modelOutput: output, originalQuestion: "show all pdf")
+            #expect(plan(route) != nil, "\(output) should route to search")
+            #expect(reply(route) == nil)
+        }
+    }
 }

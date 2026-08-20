@@ -12,12 +12,10 @@ struct AssistantRouteParser: Sendable {
         if requiresClarification(question: originalQuestion) {
             return .reply(RetrievalStrings.ambiguousFileRequest)
         }
-        guard output.hasPrefix(InferenceConstants.localSearchRoutingMarker) else {
+        guard let payload = searchPayload(in: output) else {
             return .reply(output)
         }
 
-        let payload = String(output.dropFirst(InferenceConstants.localSearchRoutingMarker.count))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let data = payload.data(using: .utf8),
               let encoded = try? JSONDecoder().decode(EncodedSearchPlan.self, from: data) else {
             return .search(fallbackPlan(for: originalQuestion))
@@ -30,6 +28,26 @@ struct AssistantRouteParser: Sendable {
                 filter: SearchFilter.with(kinds: kinds)
             )
         )
+    }
+
+    /// Extracts the structured payload when the model routed the request to local search.
+    ///
+    /// The model is asked for a doubled bracket marker but does not reliably reproduce the
+    /// brackets, so the marker is matched by its token instead of by literal text. Treating a
+    /// near miss as conversation showed the reader the raw marker and payload as the answer.
+    /// - Parameter output: Cleaned model output.
+    /// - Returns: The JSON payload, or `nil` when the output is ordinary conversation.
+    private func searchPayload(in output: String) -> String? {
+        let afterBrackets = output.drop {
+            InferenceConstants.routingMarkerLeadingCharacters.contains($0)
+        }
+        guard afterBrackets.hasPrefix(InferenceConstants.localSearchRoutingToken) else {
+            return nil
+        }
+        let payload = afterBrackets
+            .dropFirst(InferenceConstants.localSearchRoutingToken.count)
+            .drop { InferenceConstants.routingMarkerTrailingCharacters.contains($0) }
+        return String(payload)
     }
 
     /// Detects a singular file-type request that contains no distinguishing detail.

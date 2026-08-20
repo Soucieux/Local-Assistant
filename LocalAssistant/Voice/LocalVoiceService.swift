@@ -142,20 +142,33 @@ actor LocalVoiceService {
     private nonisolated static func snapshot(
         from state: AudioStreamTranscriber.State
     ) -> VoiceCaptureState {
-        let confirmed = state.confirmedSegments
-            .map(\.text)
-            .joined(separator: VoiceConstants.transcriptionSeparator)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let confirmed = joined(state.confirmedSegments)
+        // Short phrases never reach the confirmed list, which fills only once there are more
+        // segments than the confirmation window. Reading confirmed text alone therefore
+        // discarded every brief request. Text still being decoded arrives in `currentText`,
+        // which is cleared as soon as a chunk finishes.
+        let unconfirmed = joined(state.unconfirmedSegments)
         let current = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let tentative = current == VoiceConstants.libraryWaitingPlaceholder
+        let inProgress = current == VoiceConstants.libraryWaitingPlaceholder
             ? AppConstants.Text.empty
             : current
+        let tentative = unconfirmed.isEmpty ? inProgress : unconfirmed
         return VoiceCaptureState(
             phase: .listening,
             levels: Array(state.bufferEnergy.suffix(VoiceConstants.displayedLevelCount)),
             confirmedText: confirmed,
             tentativeText: tentative
         )
+    }
+
+    /// Joins one segment list into readable text.
+    /// - Parameter segments: Recognized transcription segments in order.
+    /// - Returns: Trimmed text, empty when the list holds nothing readable.
+    private nonisolated static func joined(_ segments: [TranscriptionSegment]) -> String {
+        segments
+            .map(\.text)
+            .joined(separator: VoiceConstants.transcriptionSeparator)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Publishes one capture snapshot and ends the recording after a long enough pause.
