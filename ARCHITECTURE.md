@@ -83,11 +83,10 @@ The app creates owner-only content below:
 ```text
 ~/Library/Containers/com.soucieux.LocalAssistant/Data/Library/Application Support/LocalAssistant/
 ├── Index/assistant.sqlite3
-├── Models/
-└── Voice/
+└── Models/
 ```
 
-SQLite WAL and shared-memory files may sit beside the database. Voice files are uniquely named, owner-only, removed after transcription, cleaned up after a failed capture start, and removed as stale data before the next recording.
+SQLite WAL and shared-memory files may sit beside the database. Microphone audio is never written to disk: samples pass from the microphone into the speech model in memory, so a recording cannot outlive the request that produced it. A `Voice` directory left by a version that did store recordings is deleted at startup.
 
 Revoking a root deletes its stored bookmark record and dependent private index rows. It does not alter the selected source folder. Indexing run and monitoring-event history remains in the private database until its rolling 30-day expiry or an explicit Clear Activity action.
 
@@ -175,17 +174,28 @@ An extractable file saved without a content hash after an earlier extraction fai
 
 ## Voice lifecycle
 
-Whisper is not loaded during normal application startup.
+Whisper is not loaded during normal application startup. Recognition is continuous: audio is
+recognized while it is spoken rather than recorded and transcribed afterwards.
 
 1. The user presses the microphone.
-2. `LocalVoiceService` confirms an installed model is present, then opens macOS microphone capture immediately, writing a temporary CAF file under the private Voice directory.
-3. Loading the already installed `openai_whisper-small` model runs concurrently with capture. Core ML warm-up takes seconds, so loading before opening the microphone would silently discard the beginning of the recording.
-4. The user presses the control again.
-5. Capture stops and the recording file is released. `AVAudioFile` finalizes its captured samples when it is released, so reading the file before that point can yield a truncated or empty recording.
-6. Transcription awaits an in-flight load, so a short press still transcribes rather than reporting a missing model.
-7. WhisperKit transcribes locally, using the tokenizer inside the installed model folder.
-8. The temporary file is removed.
-9. The transcription is submitted to the same local retrieval flow as typed input.
+2. `LocalVoiceService` confirms an installed model is present and returns a stream of capture
+   states, beginning with a preparing state.
+3. The already installed `openai_whisper-small` model loads. Continuous recognition needs the
+   model before samples can be interpreted, so the interface shows that it is preparing rather
+   than opening the microphone and discarding audio it cannot yet recognize.
+4. `AudioStreamTranscriber` streams microphone samples through the loaded model. Each update
+   carries relative audio levels and the text recognized so far.
+5. The composer replaces the text field with a waveform drawn from those levels, and the
+   conversation shows the recognized words as they arrive.
+6. Recognition revises its most recent words as more audio arrives, so settled and unsettled
+   text are published separately and rendered differently.
+7. The recording ends when the speaker pauses for the configured interval, or immediately when
+   the control is pressed. A pause before any speech never ends the recording.
+8. The transcription is submitted to the same local retrieval flow as typed input.
+
+Library state is converted to an app value where the library reports it, so a non-Sendable type
+never crosses an isolation boundary. The library writes an English placeholder into its own
+partial text before speech arrives; that placeholder is filtered rather than displayed.
 
 Settings reports voice input as unavailable when the installed model folder lacks its tokenizer files, rather than reporting readiness that fails at first use.
 
@@ -245,7 +255,7 @@ The Debug configuration therefore also carries `get-task-allow`, a test-manager 
 
 ## Release gates
 
-For v1.3, distinguish these activities:
+For v1.4, distinguish these activities:
 
 - **Build:** compile and link the Release application using resolved local dependencies.
 - **Automated tests:** run the `LocalAssistantTests` bundle against the Debug application.

@@ -133,9 +133,10 @@ Writable application data remains inside the macOS sandbox's Application Support
 ```text
 LocalAssistant/
 ├── Index/assistant.sqlite3
-├── Models/
-└── Voice/                       # Temporary recordings only
+└── Models/
 ```
+
+Microphone audio is never written to disk. Speech is recognized from memory while it is spoken, so no recording file exists to retain or clean up.
 
 SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. While the application process is running, native macOS folder events schedule incremental updates; reopening the application performs a catch-up scan. Quitting stops monitoring completely. There is no login item, background helper, localhost service, or runtime network route.
 
@@ -143,20 +144,28 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v1.3 status | Meaning |
+| Release area | v1.4 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The v1.3 conversation fix was requested after disconnected runtime testing found it. |
-| Source implementation | Complete | The v1.2 corrections and the v1.3 conversation-history fix are present in source. |
+| Approved scope | Complete | The v1.3 conversation fix and the v1.4 live voice interface were both requested. |
+| Source implementation | Complete | The v1.3 conversation-history fix and the v1.4 streaming voice capture are present in source. |
 | Debug compilation | Passed | The changed Swift sources compile in the native application target without warnings. |
 | Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
-| Automated tests | Passed | The 53 tests in the `LocalAssistantTests` target passed against the Debug application. |
+| Automated tests | Passed | The 61 tests in the `LocalAssistantTests` target passed against the Debug application. |
 | Focused testing | Passed | Indexing-state decisions, activity retention, and speech-model loading with no tokenizer cache present passed focused checks. |
 | Disconnected runtime testing | Partial | Indexing, chat, and voice were exercised with every network interface disabled. The conversation defect found there is fixed in v1.3; the retest is outstanding. |
 | Static privacy audit | Passed | The Release bundle carries only the four approved entitlements and links no networking library. |
-| Interface inspection | Not run | This pass changed Settings wording but no layout. Debug-only previews now render every model readiness state in light and dark at the minimum window size; reviewing them in Xcode's canvas remains an open gate. |
+| Interface inspection | Not run | v1.4 adds a waveform composer and a live transcript bubble, neither reviewed in either appearance. Debug-only previews render every model readiness state in light and dark at the minimum window size. This is the main open gate. |
 | Code review | Complete | The requested phase-by-phase review covered the whole source tree and its findings were resolved. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
 | Installed stable bundle | Model assets updated | The installed application's speech tokenizer was installed and checksum-verified; the bundle itself was not replaced. |
+
+### v1.4 — Live voice capture
+
+- Replaced the text field with a live waveform while the microphone is open, drawn from the audio levels the speech model reports rather than a decorative animation.
+- Showed recognized words in the conversation as they are spoken, so it is clear what the app has captured and when to stop. Settled words are shown plainly and words still being revised are dimmed, because continuous recognition rewrites its most recent words as more audio arrives.
+- Ended a recording automatically after a pause, while the microphone control still stops it immediately.
+- Stopped writing microphone audio to disk. Speech is recognized from memory as it arrives, so no recording file is created, and any file left by an earlier version is deleted at startup.
+- Added a preparing state shown before capture begins. Continuous recognition needs the speech model loaded first, so the interface says so instead of opening the microphone and discarding what it cannot yet recognize.
 
 ### v1.3 — Conversation reliability
 
@@ -318,7 +327,7 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
 | Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
 | PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
-| Local voice input | Available | Begins recording immediately and loads the speech model alongside capture. |
+| Local voice input | Available in v1.4 | Shows a live waveform and the recognized words while speaking, and ends on a pause or an explicit stop. |
 | Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |

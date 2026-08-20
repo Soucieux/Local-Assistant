@@ -22,6 +22,12 @@ final class AppModel {
     var modelStorageByteCount: Int64 = 0
     var isBusy = false
     var isListening = false
+
+    /// Live audio levels and recognized text while the microphone is open.
+    private(set) var voiceCapture: VoiceCaptureState = .preparing
+
+    /// Follows the capture stream and ends the recording when it finishes on its own.
+    @ObservationIgnored private var voiceUpdatesTask: Task<Void, Never>?
     var isShortcutAvailable = false
     var inputFocusRequest = 0
     var conversationClearConfirmationIsPresented = false
@@ -230,29 +236,49 @@ final class AppModel {
         requestInputFocus()
     }
 
-    /// Starts local microphone capture after loading Whisper on first use.
+    /// Starts local microphone capture and follows its live levels and text.
+    ///
+    /// Capture is not treated as busy work, because the composer shows the waveform and the
+    /// recognized text while it runs.
     internal func startListening() async {
         guard isListening == false, isBusy == false else { return }
-        isBusy = true
-        defer { isBusy = false }
         do {
-            try await services.voice.startRecording()
+            let updates = try await services.voice.startRecording()
+            voiceCapture = .preparing
             isListening = true
+            voiceUpdatesTask = Task { [weak self] in
+                for await state in updates {
+                    self?.voiceCapture = state
+                }
+                await self?.finishListeningAfterPause()
+            }
         } catch {
             handle(error)
         }
     }
 
-    /// Stops local capture, transcribes it, and immediately submits the request.
+    /// Ends a recording that stopped on its own after the speaker paused.
+    private func finishListeningAfterPause() async {
+        guard isListening else { return }
+        await stopListening()
+    }
+
+    /// Stops local capture, then submits whatever was recognized.
     internal func stopListening() async {
-        guard isListening, isBusy == false else { return }
+        guard isListening else { return }
         isListening = false
+        voiceUpdatesTask?.cancel()
+        voiceUpdatesTask = nil
         isBusy = true
         do {
-            queryText = try await services.voice.stopAndTranscribe()
+            let transcript = try await services.voice.stopAndTranscribe()
+            voiceCapture = .preparing
             isBusy = false
+            guard transcript.isEmpty == false else { return }
+            queryText = transcript
             await submit()
         } catch {
+            voiceCapture = .preparing
             isBusy = false
             handle(error)
         }
@@ -449,6 +475,8 @@ final class AppModel {
         if let worker { await worker.value }
         indexingWorker = nil
         activeIndexingTask = nil
+        voiceUpdatesTask?.cancel()
+        voiceUpdatesTask = nil
         await services.voice.shutdown()
         await services.runtime.shutdown()
         await services.database.close()

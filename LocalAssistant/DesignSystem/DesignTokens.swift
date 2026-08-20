@@ -55,6 +55,17 @@ enum DesignTokens {
     enum Motion {
         static let scrollDuration = 0.22
         static let controlDuration = 0.12
+        static let waveformDuration = 0.1
+    }
+
+    /// Geometry for the live microphone level meter shown in place of the composer field.
+    enum Waveform {
+        static let barWidth: CGFloat = 3
+        static let barSpacing: CGFloat = 3
+        static let minimumBarHeight: CGFloat = 3
+        static let maximumBarHeight: CGFloat = 24
+        static let height: CGFloat = 30
+        static let restingOpacity = 0.35
     }
 
     enum Color {

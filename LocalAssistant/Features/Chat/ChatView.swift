@@ -47,6 +47,9 @@ struct ChatView: View {
                                     }
                                 }
                             }
+                            if model.isListening {
+                                LiveTranscriptBubble(capture: model.voiceCapture)
+                            }
                             Color.clear
                                 .frame(height: DesignTokens.Spacing.xSmall)
                                 .id(ChatScrollTarget.bottom)
@@ -64,6 +67,9 @@ struct ChatView: View {
                         if isBusy == false {
                             scrollToBottom(using: proxy, animated: true)
                         }
+                    }
+                    .onChange(of: model.voiceCapture.transcript) { _, _ in
+                        scrollToBottom(using: proxy, animated: true)
                     }
                 }
                 composer
@@ -244,34 +250,41 @@ struct ChatView: View {
                         : UIStrings.startListening
                 )
 
-                TextField(
-                    UIStrings.searchPlaceholder,
-                    text: $model.queryText,
-                    axis: .vertical
-                )
-                .focused($queryIsFocused)
-                .textFieldStyle(.plain)
-                .lineLimit(1...4)
-                .padding(.vertical, DesignTokens.Spacing.small)
-                .onSubmit { Task { await model.submit() } }
-
-                Button {
-                    Task { await model.submit() }
-                } label: {
-                    Image(systemName: SystemImages.send)
-                }
-                .buttonStyle(
-                    IconActionButtonStyle(
-                        tint: .white,
-                        fill: DesignTokens.Color.primaryAction
+                if model.isListening {
+                    VoiceWaveformView(
+                        levels: model.voiceCapture.levels,
+                        isPreparing: model.voiceCapture.phase == .preparing
                     )
-                )
-                .disabled(
-                    model.queryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        || model.isBusy
-                )
-                .accessibilityLabel(UIStrings.answerWithEvidence)
-                .help(UIStrings.answerWithEvidence)
+                } else {
+                    TextField(
+                        UIStrings.searchPlaceholder,
+                        text: $model.queryText,
+                        axis: .vertical
+                    )
+                    .focused($queryIsFocused)
+                    .textFieldStyle(.plain)
+                    .lineLimit(1...4)
+                    .padding(.vertical, DesignTokens.Spacing.small)
+                    .onSubmit { Task { await model.submit() } }
+
+                    Button {
+                        Task { await model.submit() }
+                    } label: {
+                        Image(systemName: SystemImages.send)
+                    }
+                    .buttonStyle(
+                        IconActionButtonStyle(
+                            tint: .white,
+                            fill: DesignTokens.Color.primaryAction
+                        )
+                    )
+                    .disabled(
+                        model.queryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            || model.isBusy
+                    )
+                    .accessibilityLabel(UIStrings.answerWithEvidence)
+                    .help(UIStrings.answerWithEvidence)
+                }
             }
             .padding(DesignTokens.Spacing.small)
             .background(
