@@ -175,33 +175,33 @@ full notes.
 
 | Version | What changed |
 |---|---|
-| v1.6 | [Spoken text and routing corrections](#v16--spoken-text-and-routing-corrections) |
-| v1.5 | [Voice capture corrections](#v15--voice-capture-corrections) |
-| v1.4 | [Live voice capture](#v14--live-voice-capture) |
-| v1.3 | [Conversation reliability](#v13--conversation-reliability) |
-| v1.2 | [Enforced offline boundary, correctness fixes, and automated tests](#v12--enforced-offline-boundary-correctness-fixes-and-automated-tests) |
-| v1.1 | [Indexing controls and lifecycle reliability](#v11--indexing-controls-and-lifecycle-reliability) |
-| v1.0 | [Continuous indexing and private activity history](#v10--continuous-indexing-and-private-activity-history) |
-| v0.9 | [Exhaustive correctness and privacy hardening](#v09--exhaustive-correctness-and-privacy-hardening) |
-| v0.8 | [Settings hierarchy, styled messages, and documentation](#v08--settings-hierarchy-styled-messages-and-documentation) |
-| v0.7 | [Card-aware answers and project hygiene](#v07--card-aware-answers-and-project-hygiene) |
-| v0.6 | [Model clarity, durable result cards, and naming](#v06--model-clarity-durable-result-cards-and-naming) |
-| v0.5 | [Conversation history and compact result cards](#v05--conversation-history-and-compact-result-cards) |
-| v0.4 | [Settings hierarchy](#v04--settings-hierarchy) |
-| v0.3 | [Intent-aware retrieval and native interface](#v03--intent-aware-retrieval-and-native-interface) |
-| v0.2.0 | [Focused assistant workflow](#v020--focused-assistant-workflow) |
-| v0.1.0 | [Initial prototype](#v010--initial-prototype) |
+| v1.6 | [Spoken words appear and send, and the routing marker stays hidden](#v16--spoken-words-appear-and-send-and-the-routing-marker-stays-hidden) |
+| v1.5 | [Recordings end on a pause and send what was said](#v15--recordings-end-on-a-pause-and-send-what-was-said) |
+| v1.4 | [Live waveform and on-screen speech, with no audio written to disk](#v14--live-waveform-and-on-screen-speech-with-no-audio-written-to-disk) |
+| v1.3 | [The assistant stopped repeating its own result sentence](#v13--the-assistant-stopped-repeating-its-own-result-sentence) |
+| v1.2 | [Vendored network code removed, with correctness fixes and automated tests](#v12--vendored-network-code-removed-with-correctness-fixes-and-automated-tests) |
+| v1.1 | [Simpler indexing controls and a clean shutdown on quit](#v11--simpler-indexing-controls-and-a-clean-shutdown-on-quit) |
+| v1.0 | [Continuous folder monitoring, pausable indexing, and 30-day activity](#v10--continuous-folder-monitoring-pausable-indexing-and-30-day-activity) |
+| v0.9 | [Hard file-type filters, prompt safety, and tightened entitlements](#v09--hard-file-type-filters-prompt-safety-and-tightened-entitlements) |
+| v0.8 | [Settings reordered, conversation text styled, and the README rewritten](#v08--settings-reordered-conversation-text-styled-and-the-readme-rewritten) |
+| v0.7 | [Answers stopped repeating details already shown in the cards](#v07--answers-stopped-repeating-details-already-shown-in-the-cards) |
+| v0.6 | [Plain-language model readiness and result cards that survive relaunch](#v06--plain-language-model-readiness-and-result-cards-that-survive-relaunch) |
+| v0.5 | [Message timestamps, Clear Conversation, and shorter result cards](#v05--message-timestamps-clear-conversation-and-shorter-result-cards) |
+| v0.4 | [Settings reorganized around status, folder access, and privacy](#v04--settings-reorganized-around-status-folder-access-and-privacy) |
+| v0.3 | [Local routing between chat, clarification, and file search](#v03--local-routing-between-chat-clarification-and-file-search) |
+| v0.2.0 | [Focused interface with crash-safe indexing and folder revocation](#v020--focused-interface-with-crash-safe-indexing-and-folder-revocation) |
+| v0.1.0 | [First sandboxed assistant with local indexing, retrieval, and voice](#v010--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice) |
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
 
-### v1.6 — Spoken text and routing corrections
+### v1.6 — Spoken words appear and send, and the routing marker stays hidden
 
 - Fixed spoken words never appearing and no request being sent. Recognized text for a short phrase arrives as unconfirmed segments, which the app ignored: it read only the confirmed list, which fills once a recording is long enough to exceed the confirmation window, and the in-progress text, which is cleared as soon as each chunk finishes.
 - Fixed a routing instruction being shown as the assistant's answer. The model is asked for a doubled bracket marker and does not reliably reproduce the brackets, so a near miss was treated as ordinary conversation and the raw marker and payload were displayed. The marker is now matched by its token, whatever brackets surround it.
 - Neutralized that token wherever untrusted text enters a prompt, so an answer already stored in history cannot teach the model to repeat it.
 
-### v1.5 — Voice capture corrections
+### v1.5 — Recordings end on a pause and send what was said
 
 - Fixed a spoken request never being sent after the recording ended on its own. Finishing ran inside the task that following the recording had just cancelled, so the request was abandoned silently.
 - Fixed the recording not ending after a pause. The level below which audio counted as quiet was far lower than a quiet room reports, so a pause was never recognized.
@@ -210,7 +210,7 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Reported a capture that fails instead of ending silently. A failed stream previously left the interface showing a recording that was no longer running, with no message and no error.
 - Logged speech-library activity in Debug builds so a capture that produces no text can be diagnosed. Release builds stay silent.
 
-### v1.4 — Live voice capture
+### v1.4 — Live waveform and on-screen speech, with no audio written to disk
 
 - Replaced the text field with a live waveform while the microphone is open, drawn from the audio levels the speech model reports rather than a decorative animation.
 - Showed recognized words in the conversation as they are spoken, so it is clear what the app has captured and when to stop. Settled words are shown plainly and words still being revised are dimmed, because continuous recognition rewrites its most recent words as more audio arrives.
@@ -218,12 +218,12 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Stopped writing microphone audio to disk. Speech is recognized from memory as it arrives, so no recording file is created, and any file left by an earlier version is deleted at startup.
 - Added a preparing state shown before capture begins. Continuous recognition needs the speech model loaded first, so the interface says so instead of opening the microphone and discarding what it cannot yet recognize.
 
-### v1.3 — Conversation reliability
+### v1.3 — The assistant stopped repeating its own result sentence
 
 - Stopped the assistant repeating "I found N matches. They are shown below." for every request. When an answer duplicated card metadata, the app replaced it with that generated sentence, stored the sentence as the assistant's reply, and then showed it back to the model as recent conversation. After a few such turns the model reproduced the sentence as its own answer, so every later request returned the same text and no results.
 - Replaced a generated acknowledgement with a bracketed note wherever conversation history enters a prompt, so the model keeps the context that results were shown without a sentence to imitate.
 
-### v1.2 — Enforced offline boundary, correctness fixes, and automated tests
+### v1.2 — Vendored network code removed, with correctness fixes and automated tests
 
 **Offline boundary**
 
@@ -261,14 +261,14 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Added a native test target with 46 automated tests covering request routing, search-text escaping, passage offsets, card-aware answers, and scanner exclusions.
 - Added previews for every model readiness state, so the not-installed and damaged wording can be reviewed in both appearances without removing or corrupting installed model files. They are excluded from the shipped application.
 
-### v1.1 — Indexing controls and lifecycle reliability
+### v1.1 — Simpler indexing controls and a clean shutdown on quit
 
 - Reworked file-state counts into compact metric tiles and consolidated each folder's automatic-update state and action into one control.
 - Added a dedicated pause action for an active indexing run and redesigned activity-history filters as consistent Source, Folder, and Status fields.
 - Anchored restored conversations at the newest message to prevent a visible top-to-bottom jump when returning to the assistant.
 - Added orderly llama.cpp, Metal, voice, monitoring, and indexing teardown so a normal Quit no longer produces an unexpected-termination report.
 
-### v1.0 — Continuous indexing and private activity history
+### v1.0 — Continuous folder monitoring, pausable indexing, and 30-day activity
 
 - Added pausable per-folder indexing with determinate progress, percentages, and clearly labeled new, modified, unchanged, removed, and skipped states.
 - Added process-lifetime native macOS folder monitoring, debounced incremental updates, and launch-time catch-up scans without a daemon, login item, server, or runtime network access.
@@ -276,7 +276,7 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Kept retained activity after folder revocation while continuing to remove the bookmark and dependent searchable index records.
 - Added a background-indexing banner so silent automatic work remains visible without blocking conversation.
 
-### v0.9 — Exhaustive correctness and privacy hardening
+### v0.9 — Hard file-type filters, prompt safety, and tightened entitlements
 
 - Applied requested file-type constraints inside metadata and full-text queries before candidate limits, and added adaptive vector-neighbor expansion so valid constrained semantic matches are not hidden behind other file types.
 - Neutralized Qwen chat-control markers in questions, local history, paths, and excerpts before untrusted text enters a parsed chat template.
@@ -288,7 +288,7 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Restricted Release signing to the four approved sandbox entitlements and made the static audit reject every unexpected entitlement.
 - Hardened connected dependency archive extraction on older system Python versions while preserving safe in-repository symbolic links.
 
-### v0.8 — Settings hierarchy, styled messages, and documentation
+### v0.8 — Settings reordered, conversation text styled, and the README rewritten
 
 - Reordered Settings around Privacy, Folder Access, Models, and Assistant Status.
 - Updated the Settings introduction to follow the same information hierarchy.
@@ -307,14 +307,14 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - The installed application launched successfully and remained running during the startup smoke check.
 - Automated visual capture was unavailable because the current macOS environment did not grant accessibility or screen-recording permission; no permission boundary was widened to bypass that restriction.
 
-### v0.7 — Card-aware answers and project hygiene
+### v0.7 — Answers stopped repeating details already shown in the cards
 
 - Stopped grounded replies from repeating filenames, paths, source numbers, or file-by-file lists already presented in result cards.
 - Added a deterministic local safeguard that replaces duplicated card metadata with a concise match count when necessary.
 - Applied the same safeguard to restored conversation history while preserving reusable cards.
 - Added project-hygiene rules and removed obsolete build caches, historical application bundles, Finder metadata, and download-state files while preserving installed offline models and dependency pins.
 
-### v0.6 — Model clarity, durable result cards, and naming
+### v0.6 — Plain-language model readiness and result cards that survive relaunch
 
 - Redesigned **Models** as a plain-language readiness summary for Chat and answers, File search, and Voice input.
 - Added overall readiness, private model-storage usage, launch-check acknowledgement, and actionable recovery wording without exposing model filenames in the interface.
@@ -324,33 +324,33 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Prevented result actions from collapsing into narrow vertical controls.
 - Standardized human-facing release labels with a `v` prefix and aligned the project folder name with the application name.
 
-### v0.5 — Conversation history and compact result cards
+### v0.5 — Message timestamps, Clear Conversation, and shorter result cards
 
 - Added local timestamps below user and assistant messages.
 - Added a confirmed Clear Conversation action in the assistant header and application menu.
 - Limited history deletion to saved messages and current results; folders, permissions, models, index records, and source files remain unchanged.
 - Reduced result-card height and replaced stacked ranking signals with one concise **Why it matches** explanation.
 
-### v0.4 — Settings hierarchy
+### v0.4 — Settings reorganized around status, folder access, and privacy
 
 - Reorganized Settings around assistant status, shortcut availability, folder access, and one focused privacy statement.
 - Styled Control, Option, and Space as separate accessible keycaps.
 - Kept an individual **Update Index** action on every folder and showed **Update All Folders** only when multiple folders were authorized.
 - Reduced repeated privacy wording while retaining read-only access and explicit revocation controls.
 
-### v0.3 — Intent-aware retrieval and native interface
+### v0.3 — Local routing between chat, clarification, and file search
 
 - Added local routing between ordinary conversation, clarification, and structured file search.
 - Made requested file types hard constraints instead of filename keywords.
 - Added deterministic clarification for singular, underspecified file requests while retaining broad listing requests such as “Show me PDFs.”
 - Added automatic bottom scrolling, corrected message alignment, a richer native visual system, in-window Settings, responsive result cards, and the selected blue folder-and-sparkle icon.
 
-### v0.2.0 — Focused assistant workflow
+### v0.2.0 — Focused interface with crash-safe indexing and folder revocation
 
 - Simplified the interface around conversation, file retrieval, voice input, shortcut access, and Settings.
 - Added crash-safe sequential indexing, folder revocation, local conversation, and lazy local speech-model loading.
 
-### v0.1.0 — Initial prototype
+### v0.1.0 — First sandboxed assistant with local indexing, retrieval, and voice
 
 - Established the sandboxed SwiftUI application, read-only folder authorization, local indexing, embedded inference, hybrid retrieval, OCR, and local voice foundation.
 
