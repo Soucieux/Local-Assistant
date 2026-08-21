@@ -90,7 +90,9 @@ Build only from the prepared local dependencies:
 ./Scripts/build_offline.sh
 ```
 
-**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution.
+**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution, and a copy is placed at the top of the project as `LocalAssistant.app` so it can be opened directly.
+
+Any earlier copy is removed before the build starts, so a build that fails leaves no application at the top level rather than an older one that still appears current.
 
 #### Step 6 — Audit the offline boundary
 
