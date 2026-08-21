@@ -189,8 +189,8 @@ full notes.
 | v0.5 | [Message timestamps, Clear Conversation, and shorter result cards](#v05--message-timestamps-clear-conversation-and-shorter-result-cards) |
 | v0.4 | [Settings reorganized around status, folder access, and privacy](#v04--settings-reorganized-around-status-folder-access-and-privacy) |
 | v0.3 | [Local routing between chat, clarification, and file search](#v03--local-routing-between-chat-clarification-and-file-search) |
-| v0.2.0 | [Focused interface with crash-safe indexing and folder revocation](#v020--focused-interface-with-crash-safe-indexing-and-folder-revocation) |
-| v0.1.0 | [First sandboxed assistant with local indexing, retrieval, and voice](#v010--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice) |
+| v0.2 | [Focused interface with crash-safe indexing and folder revocation](#v02--focused-interface-with-crash-safe-indexing-and-folder-revocation) |
+| v0.1 | [First sandboxed assistant with local indexing, retrieval, and voice](#v01--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice) |
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
@@ -345,12 +345,12 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Added deterministic clarification for singular, underspecified file requests while retaining broad listing requests such as “Show me PDFs.”
 - Added automatic bottom scrolling, corrected message alignment, a richer native visual system, in-window Settings, responsive result cards, and the selected blue folder-and-sparkle icon.
 
-### v0.2.0 — Focused interface with crash-safe indexing and folder revocation
+### v0.2 — Focused interface with crash-safe indexing and folder revocation
 
 - Simplified the interface around conversation, file retrieval, voice input, shortcut access, and Settings.
 - Added crash-safe sequential indexing, folder revocation, local conversation, and lazy local speech-model loading.
 
-### v0.1.0 — First sandboxed assistant with local indexing, retrieval, and voice
+### v0.1 — First sandboxed assistant with local indexing, retrieval, and voice
 
 - Established the sandboxed SwiftUI application, read-only folder authorization, local indexing, embedded inference, hybrid retrieval, OCR, and local voice foundation.
 
