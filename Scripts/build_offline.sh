@@ -13,7 +13,9 @@ fi
 
 PROJECT_DIR="${PROJECT_DIR:A}"
 BUILT_APP="${PROJECT_DIR}/DerivedData/Build/Products/Release/LocalAssistant.app"
-TOP_LEVEL_APP="${PROJECT_DIR}/LocalAssistant.app"
+# The copy is named for the product rather than the Xcode target, so the application reads
+# as "Local Assistant" wherever it is opened from.
+TOP_LEVEL_APP="${PROJECT_DIR}/Local Assistant.app"
 
 # The previous application is removed before building rather than overwritten afterwards. A
 # build that fails then leaves no application at the top level, which is visibly wrong, instead
