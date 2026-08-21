@@ -90,7 +90,7 @@ Build only from the prepared local dependencies:
 ./Scripts/build_offline.sh
 ```
 
-**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution, and a copy is placed at the top of the project as `LocalAssistant.app` so it can be opened directly.
+**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution, and a copy is placed at the top of the project as `Local Assistant.app` so it can be opened directly.
 
 Any earlier copy is removed before the build starts, so a build that fails leaves no application at the top level rather than an older one that still appears current.
 
@@ -170,32 +170,30 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 ### Version index
 
 Past application bundles are not retained, so this table and the notes below are the record of
-what each release contained. Build numbers from v0.9 onward are read from the project file in
-version control; v0.8 is recorded in its own notes. Earlier releases predate this repository,
-so their build numbers are not recoverable.
+what each release contained. Each summary describes what changed from the release before it,
+and links to its full notes.
 
-| Version | Build | Release |
-|---|---|---|
-| v1.6 | 16 | Spoken text and routing corrections |
-| v1.5 | 15 | Voice capture corrections |
-| v1.4 | 14 | Live voice capture |
-| v1.3 | 13 | Conversation reliability |
-| v1.2 | 12 | Enforced offline boundary, extraction accuracy, and automated tests |
-| v1.1 | 11 | Indexing controls and lifecycle reliability |
-| v1.0 | 10 | Continuous indexing and private activity history |
-| v0.9 | 9 | Exhaustive correctness and privacy hardening |
-| v0.8 | 8 | Settings hierarchy, styled messages, and documentation |
-| v0.7 | not recorded | Card-aware answers and project hygiene |
-| v0.6 | not recorded | Model clarity, durable result cards, and documentation |
-| v0.5 | not recorded | Conversation history and compact result cards |
-| v0.4 | not recorded | Settings hierarchy |
-| v0.3 | not recorded | Intent-aware retrieval and native interface |
-| v0.2.0 | not recorded | Focused assistant workflow |
-| v0.1.0 | not recorded | Initial prototype |
+| Version | Release |
+|---|---|
+| v1.6 | [Made spoken words appear as they are said, and stopped a routing instruction being shown as an answer](#v16--spoken-text-and-routing-corrections) |
+| v1.5 | [Made a recording end on a pause and actually send what was said](#v15--voice-capture-corrections) |
+| v1.4 | [Added a live waveform and on-screen text while speaking, and stopped writing audio to disk](#v14--live-voice-capture) |
+| v1.3 | [Stopped the assistant answering every request with the same result sentence](#v13--conversation-reliability) |
+| v1.2 | [Removed the vendored network code, corrected extraction and retrieval, and added automated tests](#v12--enforced-offline-boundary-correctness-fixes-and-automated-tests) |
+| v1.1 | [Simplified the indexing controls and made quitting shut every local service down cleanly](#v11--indexing-controls-and-lifecycle-reliability) |
+| v1.0 | [Added continuous folder monitoring, pausable indexing, and a 30-day activity history](#v10--continuous-indexing-and-private-activity-history) |
+| v0.9 | [Hardened retrieval constraints, prompt safety, database error handling, and signing](#v09--exhaustive-correctness-and-privacy-hardening) |
+| v0.8 | [Reordered Settings, styled conversation text, and rewrote the README](#v08--settings-hierarchy-styled-messages-and-documentation) |
+| v0.7 | [Stopped answers repeating file details already shown in the result cards](#v07--card-aware-answers-and-project-hygiene) |
+| v0.6 | [Rewrote Models as plain-language readiness and made result cards survive relaunch](#v06--model-clarity-durable-result-cards-and-naming) |
+| v0.5 | [Added message timestamps, a confirmed Clear Conversation action, and shorter cards](#v05--conversation-history-and-compact-result-cards) |
+| v0.4 | [Reorganized Settings around status, shortcut, folder access, and privacy](#v04--settings-hierarchy) |
+| v0.3 | [Added local routing between conversation, clarification, and file search](#v03--intent-aware-retrieval-and-native-interface) |
+| v0.2.0 | [Focused the interface and added crash-safe indexing and folder revocation](#v020--focused-assistant-workflow) |
+| v0.1.0 | [Established the sandboxed application with local indexing, retrieval, and voice](#v010--initial-prototype) |
 
-Every release increments both the marketing version and the build number, so a build number
-identifies one release exactly. To confirm what an installed application is, read
-`CFBundleShortVersionString` and `CFBundleVersion` from its `Info.plist`.
+To confirm which release an application is, read `CFBundleShortVersionString` from its
+`Info.plist`. Every release increments it, so it identifies one release exactly.
 
 ### v1.6 — Spoken text and routing corrections
 
@@ -225,7 +223,7 @@ identifies one release exactly. To confirm what an installed application is, rea
 - Stopped the assistant repeating "I found N matches. They are shown below." for every request. When an answer duplicated card metadata, the app replaced it with that generated sentence, stored the sentence as the assistant's reply, and then showed it back to the model as recent conversation. After a few such turns the model reproduced the sentence as its own answer, so every later request returned the same text and no results.
 - Replaced a generated acknowledgement with a bracketed note wherever conversation history enters a prompt, so the model keeps the context that results were shown without a sentence to imitate.
 
-### v1.2 — Enforced offline boundary, extraction accuracy, and automated tests
+### v1.2 — Enforced offline boundary, correctness fixes, and automated tests
 
 **Offline boundary**
 
@@ -316,7 +314,7 @@ identifies one release exactly. To confirm what an installed application is, rea
 - Applied the same safeguard to restored conversation history while preserving reusable cards.
 - Added project-hygiene rules and removed obsolete build caches, historical application bundles, Finder metadata, and download-state files while preserving installed offline models and dependency pins.
 
-### v0.6 — Model clarity, durable result cards, and documentation
+### v0.6 — Model clarity, durable result cards, and naming
 
 - Redesigned **Models** as a plain-language readiness summary for Chat and answers, File search, and Voice input.
 - Added overall readiness, private model-storage usage, launch-check acknowledgement, and actionable recovery wording without exposing model filenames in the interface.
