@@ -147,6 +147,31 @@ extension AppModel {
         }
     }
 
+    /// Requests confirmation before every indexed file, passage, and vector is deleted.
+    internal func requestSearchIndexClearConfirmation() {
+        guard isIndexing == false else { return }
+        searchIndexClearConfirmationIsPresented = true
+    }
+
+    /// Dismisses the search-index-clear confirmation without deleting anything.
+    internal func dismissSearchIndexClearConfirmation() {
+        searchIndexClearConfirmationIsPresented = false
+    }
+
+    /// Clears the search index, then immediately re-indexes every authorized folder.
+    internal func confirmSearchIndexClear() async {
+        searchIndexClearConfirmationIsPresented = false
+        do {
+            try await services.database.clearSearchIndex()
+            indexedFileCount = try await services.database.indexedFileCount()
+            indexStorageByteCount = try await services.database.databaseByteCount()
+            try await refreshFileMatchAvailability()
+            indexAll()
+        } catch {
+            handle(error)
+        }
+    }
+
     /// Loads file-level details for one expanded activity run.
     internal func loadIndexingItems(runID: UUID) async {
         guard indexingItemsByRun[runID] == nil else { return }

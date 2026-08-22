@@ -212,6 +212,29 @@ extension AssistantDatabase {
         try stepDone(statement)
     }
 
+    /// Deletes every indexed file, passage, and vector without touching folder
+    /// authorizations, monitoring preferences, or conversation history.
+    /// - Throws: A local database error when the search index cannot be cleared.
+    internal func clearSearchIndex() throws {
+        try inTransaction {
+            try execute(SQLStatements.clearChunkVectors)
+            try execute(SQLStatements.clearChunkFTS)
+            try execute(SQLStatements.clearContentChunks)
+            try execute(SQLStatements.clearIndexedItems)
+        }
+        try execute(SQLStatements.vacuum)
+    }
+
+    /// Returns the number of indexed files currently searchable, excluding folder entries.
+    /// - Returns: Current indexed file count.
+    /// - Throws: A local database error when the count cannot be read.
+    internal func indexedFileCount() throws -> Int {
+        let statement = try preparedStatement(SQLStatements.countIndexedFiles)
+        defer { sqlite3_finalize(statement) }
+        guard try step(statement) else { return 0 }
+        return Int(sqlite3_column_int64(statement, 0))
+    }
+
     /// Deletes vector rows before their parent passage rows disappear.
     /// - Parameter itemID: Parent item identifier.
     /// - Throws: A local database error when deletion fails.

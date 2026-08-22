@@ -62,32 +62,35 @@ extension SettingsView {
                         .stroke(DesignTokens.Color.hairline)
                 )
 
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: DesignTokens.Spacing.large) {
-                        Label(
-                            UIStrings.modelStorageUsage(model.modelStorageByteCount),
-                            systemImage: SystemImages.localDatabase
-                        )
-                        Spacer()
-                        Label(
-                            UIStrings.modelsCheckedOnLaunch,
-                            systemImage: SystemImages.localVerified
-                        )
-                    }
-
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
-                        Label(
-                            UIStrings.modelStorageUsage(model.modelStorageByteCount),
-                            systemImage: SystemImages.localDatabase
-                        )
-                        Label(
-                            UIStrings.modelsCheckedOnLaunch,
-                            systemImage: SystemImages.localVerified
-                        )
-                    }
+                destructiveActionRow(
+                    title: UIStrings.removeDownloadedModels,
+                    systemImage: SystemImages.model,
+                    actionLabel: UIStrings.removeDownloadedModelsAction,
+                    detail: UIStrings.modelStorageUsage(model.modelStorageByteCount),
+                    isDisabled: model.isBusy || model.isIndexing || model.isListening
+                ) {
+                    model.requestModelRemovalConfirmation()
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+
+                Divider()
+
+                HStack(spacing: DesignTokens.Spacing.small) {
+                    Label(
+                        UIStrings.modelsCheckedOnLaunch,
+                        systemImage: SystemImages.localVerified
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Button {
+                        Task { await model.checkSystemStatus() }
+                    } label: {
+                        Label(UIStrings.checkNow, systemImage: SystemImages.refresh)
+                    }
+                    .buttonStyle(SecondaryActionButtonStyle())
+                }
             }
         }
     }
@@ -150,6 +153,24 @@ extension SettingsView {
                 }
             }
 
+            Divider()
+
+            Label(
+                UIStrings.indexedFileCount(model.indexedFileCount),
+                systemImage: SystemImages.localDatabase
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            destructiveActionRow(
+                title: UIStrings.clearSearchIndex,
+                systemImage: SystemImages.localDatabase,
+                actionLabel: UIStrings.clearSearchIndexAction,
+                detail: UIStrings.indexStorageUsage(model.indexStorageByteCount),
+                isDisabled: model.isIndexing
+            ) {
+                model.requestSearchIndexClearConfirmation()
+            }
         }
     }
 
@@ -384,6 +405,53 @@ extension SettingsView {
             )
         }
         .padding(DesignTokens.Spacing.medium)
+    }
+
+    /// Builds one destructive Settings action as an icon, name, and confirmation-triggering button.
+    /// - Parameters:
+    ///   - title: Bold action name.
+    ///   - systemImage: Symbol representing the action.
+    ///   - actionLabel: Short trailing button label.
+    ///   - detail: Storage figure shown beside the button.
+    ///   - isDisabled: Whether the action is currently unavailable.
+    ///   - action: Confirmation request triggered by the button.
+    /// - Returns: One row; the full effect is explained in the confirmation alert.
+    private func destructiveActionRow(
+        title: String,
+        systemImage: String,
+        actionLabel: String,
+        detail: String,
+        isDisabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: DesignTokens.Spacing.medium) {
+            Image(systemName: systemImage)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(DesignTokens.Color.destructive)
+                .frame(width: 28, height: 28)
+
+            Text(title)
+                .font(.callout.weight(.semibold))
+
+            Spacer(minLength: DesignTokens.Spacing.small)
+
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Button(actionLabel, action: action)
+                .buttonStyle(DestructiveActionButtonStyle())
+                .disabled(isDisabled)
+        }
+        .padding(DesignTokens.Spacing.medium)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                .fill(DesignTokens.Color.subtleFill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                .stroke(DesignTokens.Color.hairline)
+        )
     }
 
     /// Returns every required capability in a stable display order.

@@ -385,6 +385,25 @@ actor AssistantDatabase {
         return requiredDate(statement, column: column)
     }
 
+    /// Returns the total on-disk size of the private index database and its sidecar files.
+    /// - Returns: Combined byte count of the main database, write-ahead log, and shared-memory files.
+    /// - Throws: A local directory-resolution error when the database location cannot be resolved.
+    internal func databaseByteCount() throws -> Int64 {
+        let databaseURL = try resolvedDatabaseURL()
+        let candidates = [
+            databaseURL,
+            URL(fileURLWithPath: databaseURL.path + DatabaseConstants.writeAheadLogSuffix),
+            URL(fileURLWithPath: databaseURL.path + DatabaseConstants.sharedMemorySuffix)
+        ]
+        let fileManager = FileManager.default
+        return candidates.reduce(Int64(0)) { total, url in
+            guard let size = try? fileManager.attributesOfItem(atPath: url.path)[.size] as? NSNumber else {
+                return total
+            }
+            return total + size.int64Value
+        }
+    }
+
     /// Enforces owner-only permissions on current SQLite files.
     /// - Throws: A local permission error when attributes cannot be set.
     private func protectDatabaseFiles() throws {

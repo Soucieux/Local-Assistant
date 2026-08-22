@@ -92,9 +92,9 @@ Build only from the prepared local dependencies:
 ./Scripts/build_offline.sh
 ```
 
-**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution, and the new version is placed at the top of the project as `Local Assistant.app` so it can be opened directly.
+**Result:** The Release application is built under `DerivedData/Build/Products/Release` without automatic package resolution, then copied to the top of the project as `Local Assistant.app` so it can be opened directly.
 
-Before a higher-version rebuild, the current top-level application becomes `Previous Local Assistant.app`, replacing any older backup. A successful build places only the new application at the top level and retains that single recoverable prior version.
+A successful build removes any existing `Local Assistant.app` first and deletes the entire `DerivedData` build cache once the copy at the project root is verified, so the project root always holds exactly the one latest application and no build artifact is left behind.
 
 #### Step 6 — Audit the offline boundary
 
@@ -153,31 +153,37 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v2.5 status | Meaning |
+| Release area | v3.1 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The approved scope makes folder hierarchy available before content extraction, confines literal folder matches to their own tree, recovers explicit searches when the routing marker is missing, and shows the installed version in Settings. |
-| Source implementation | Complete | Scans publish complete metadata without discarding prior passages, then process folders before files. Literal folder evidence excludes unrelated semantic candidates. |
-| Semantic capability audit | Complete | Global semantic retrieval remains available when no folder matches, while a literal folder name or path becomes the bounded hierarchy scope. |
-| Debug compilation | Passed | The focused XCTest runs compiled the v2.5 source, persistence changes, retrieval changes, and Settings interface. |
-| Release build | Passed | A clean offline Release build produced the signed v2.5 build 25 application. |
-| Automated tests | Passed | Explicit folder/file routing, metadata-only hierarchy search, descendant lookup, and preservation of existing searchable passages passed their focused tests. |
+| Approved scope | Complete | The approved scope moves each storage figure from a separate line into the reset row itself, sitting directly beside the button inside the same bordered, grey-filled box. |
+| Source implementation | Complete | The shared destructive-action row now takes a `detail` parameter rendered between the title and the button; the standalone storage labels above each row were removed since the row now carries that figure itself. |
+| Semantic capability audit | Complete | No retrieval, indexing, or model behavior changed; this release is a Settings layout change only. |
+| Debug compilation | Passed | The focused XCTest runs compiled the v3.1 source and Settings interface. |
+| Release build | Passed | A clean offline Release build produced the signed v3.1 build 31 application. |
+| Automated tests | Passed | Every existing focused test, including search-index clearing and the index-storage measurement, passed unchanged. |
 | Voice runtime testing | Pending manual check | Live multilingual speech, final transcription, silence sending, and hold-Space sending still require manual inspection. |
-| Focused testing | Passed | The two reported “school” request forms now normalize to `school`; folder hierarchy is searchable before extracted content completes. |
-| Disconnected runtime testing | Not run | The v2.5 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Passed | The v2.5 Release bundle passed the offline-boundary audit; no reachable network code path was found. |
-| Interface inspection | Pending manual check | The Settings version badge and live School-folder results require inspection in the built v2.5 application. |
+| Focused testing | Passed | A rebuild was confirmed to leave only the new application at the project root, with no previous-bundle copy created. |
+| Disconnected runtime testing | Not run | The v3.1 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Passed | The v3.1 Release bundle passed the offline-boundary audit; no reachable network code path was found. |
+| Interface inspection | Pending manual check | The relocated storage figures require inspection in the built v3.1 application. |
 | Code review | Not run | Code review remains an optional phase after testing and local delivery. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Installed stable bundle | Complete | The project root contains v2.5 build 25, with v2.4 build 24 retained as the single recoverable prior application. |
+| Installed stable bundle | Complete | The project root contains only v3.1 build 31; no prior build is retained. |
 
 ### Version index
 
 The table and notes below are the durable record of what each release contained. Only the
-immediately previous project-root application is retained as a recoverable local backup. Each
+current project-root application is retained; rebuilding never leaves a previous copy. Each
 entry names what that release changed and links to its full notes.
 
 | Version | What changed |
 |---|---|
+| v3.1 | [Storage figures moved beside each button](#v31--storage-figures-moved-beside-each-button) |
+| v3.0 | [Storage figures next to each reset action](#v30--storage-figures-next-to-each-reset-action) |
+| v2.9 | [Bordered reset rows matching the folder-card style](#v29--bordered-reset-rows-matching-the-folder-card-style) |
+| v2.8 | [Simplified reset rows and corrected model-removal placement](#v28--simplified-reset-rows-and-corrected-model-removal-placement) |
+| v2.7 | [Reset controls integrated into their owning sections](#v27--reset-controls-integrated-into-their-owning-sections) |
+| v2.6 | [On-demand model removal, search-index reset, and status check](#v26--on-demand-model-removal-search-index-reset-and-status-check) |
 | v2.5 | [Complete folder hierarchy and precise folder-scoped results](#v25--complete-folder-hierarchy-and-precise-folder-scoped-results) |
 | v2.4 | [Reliable type-only listings and idle command pulse](#v24--reliable-type-only-listings-and-idle-command-pulse) |
 | v2.3 | [Folder-aware retrieval and coordinated interface motion](#v23--folder-aware-retrieval-and-coordinated-interface-motion) |
@@ -206,6 +212,41 @@ entry names what that release changed and links to its full notes.
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v3.1 — Storage figures moved beside each button
+
+- Moved the model-storage figure off its own line and into the **Remove Downloaded Models** row, right beside the button, inside the same grey-filled box.
+- Moved the index-storage figure off its own line and into the **Clear Search Index** row the same way; the indexed-file count keeps its own separate line above the row.
+
+### v3.0 — Storage figures next to each reset action
+
+- Added an index-storage figure next to the indexed-file count in Folder Access, showing the actual on-disk size of the search index (database, passages, and vectors) beside **Clear Search Index**.
+- The existing model-storage figure now sits directly beside **Remove Downloaded Models** instead of near the launch-check row.
+- Dropped the "#" symbol from the version badge in the Settings header; it now reads as plain text (e.g. "v3.0").
+
+### v2.9 — Bordered reset rows matching the folder-card style
+
+- Gave **Remove Downloaded Models** and **Clear Search Index** their own grey-filled, bordered row, matching the visual treatment already used for each authorized folder.
+- Moved **Remove Downloaded Models** to sit directly under the model capability list as its own row, rather than as a fourth entry sharing that list's box.
+
+### v2.8 — Simplified reset rows and corrected model-removal placement
+
+- Moved **Remove Downloaded Models** into the model capability list itself, directly below Chat/File search/Voice input, instead of sitting apart near the bottom of the Models section.
+- Dropped the inline explanation text under **Clear Search Index** and **Remove Downloaded Models**; each row is now an icon, name, and button, with the full effect still explained in the confirmation alert before anything is deleted.
+- Fixed a left-alignment inconsistency that made Clear Search Index appear indented relative to the folder list above it.
+
+### v2.7 — Reset controls integrated into their owning sections
+
+- Moved **Remove Downloaded Models** into the Models section, next to the capability list and storage details it affects.
+- Moved **Clear Search Index** (and the indexed-file count) into Folder Access, next to the folder list and indexing controls it affects, instead of sharing a block with model controls.
+- Removed automatic previous-build retention from the offline build script; a rebuild now always leaves exactly one application at the project root.
+
+### v2.6 — On-demand model removal, search-index reset, and status check
+
+- Added **Check Now** to Settings, re-verifying installed models and re-counting indexed files on demand instead of only at launch.
+- Added **Clear Search Index**, deleting every indexed file, passage, and vector, then immediately re-indexing every authorized folder. Folder access, monitoring preferences, and conversation history are untouched.
+- Added **Remove Downloaded Models**, deleting every installed model file and its verification cache so a reinstall starts from a clean slate without deleting the application itself.
+- Both destructive actions require confirmation and are disabled while indexing, a request, or voice capture is active.
 
 ### v2.5 — Complete folder hierarchy and precise folder-scoped results
 

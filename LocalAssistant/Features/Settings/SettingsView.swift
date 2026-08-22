@@ -96,11 +96,19 @@ struct SettingsView: View {
 
             Spacer()
 
-            StatusPill(
-                title: UIStrings.displayVersion(settingsVersion),
-                systemImage: SystemImages.version,
-                tint: DesignTokens.Color.commandAccent
-            )
+            Text(UIStrings.displayVersion(settingsVersion))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(DesignTokens.Color.commandAccent)
+                .padding(.horizontal, DesignTokens.Spacing.small)
+                .padding(.vertical, DesignTokens.Spacing.xSmall)
+                .background(
+                    RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                        .fill(DesignTokens.Color.commandAccent.opacity(0.10))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                        .stroke(DesignTokens.Color.commandAccent.opacity(0.20))
+                )
         }
         .padding(.horizontal, DesignTokens.Spacing.xLarge)
         .padding(.vertical, DesignTokens.Spacing.medium)

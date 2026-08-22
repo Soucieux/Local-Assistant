@@ -51,7 +51,7 @@ enum SystemImages {
     static let text = "doc.plaintext.fill"
     static let archive = "archivebox.fill"
     static let other = "doc.fill"
-    static let version = "number"
+    static let refresh = "arrow.clockwise"
 
     /// Returns the most recognizable SF Symbol for an indexed item category.
     /// - Parameter kind: Indexed file or folder category.

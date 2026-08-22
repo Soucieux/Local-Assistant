@@ -117,6 +117,17 @@ enum UIStrings {
     static let modelCapabilityChecking = "Checking"
     static let modelStoragePrivate = "Private app storage"
     static let modelsCheckedOnLaunch = "Checked when the app opens"
+    static let checkNow = "Check Now"
+    static let removeDownloadedModels = "Remove Downloaded Models"
+    static let removeDownloadedModelsAction = "Remove Models"
+    static let removeDownloadedModelsTitle = "Remove downloaded models?"
+    static let removeDownloadedModelsMessage =
+        "This deletes every installed model file. Chat, file search, and voice input become unavailable until the models are reinstalled and Local Assistant is reopened."
+    static let clearSearchIndex = "Clear Search Index"
+    static let clearSearchIndexAction = "Clear Index"
+    static let clearSearchIndexTitle = "Clear the search index?"
+    static let clearSearchIndexMessage =
+        "This deletes every indexed file, passage, and vector, then immediately re-indexes your authorized folders. Folder access, conversations, and models are not changed."
     static let listening = "Listening…"
     static let voicePreparing = "Getting the speech model ready…"
     static let voiceListening = "Listening. Speak now, then stop when you are done."
@@ -329,6 +340,24 @@ enum UIStrings {
             countStyle: .file
         )
         return "\(formatted) in \(modelStoragePrivate.lowercased())"
+    }
+
+    /// Formats the total on-disk size of the private search index.
+    /// - Parameter byteCount: Total number of bytes used by the index database.
+    /// - Returns: Human-readable index storage usage.
+    internal static func indexStorageUsage(_ byteCount: Int64) -> String {
+        let formatted = ByteCountFormatter.string(
+            fromByteCount: byteCount,
+            countStyle: .file
+        )
+        return "\(formatted) search index"
+    }
+
+    /// Formats the number of files currently searchable in the private index.
+    /// - Parameter count: Current indexed file count, excluding folders.
+    /// - Returns: Singular or plural indexed-file count.
+    internal static func indexedFileCount(_ count: Int) -> String {
+        count == 1 ? "1 file indexed" : "\(count) files indexed"
     }
 
     /// Returns a short visible label for an indexed item category.

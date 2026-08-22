@@ -220,11 +220,17 @@ enum SQLStatements {
         ORDER BY modified_at DESC, display_name COLLATE NOCASE
         LIMIT ?;
         """
+    static let countIndexedFiles = "SELECT COUNT(*) FROM indexed_items WHERE is_directory = 0;"
     static let deleteItem = "DELETE FROM indexed_items WHERE id = ?;"
     static let deleteChunksForItem = "DELETE FROM content_chunks WHERE item_id = ?;"
     static let deleteFTSForItem = "DELETE FROM chunk_fts WHERE item_id = ?;"
     static let fetchChunkRowsForItem = "SELECT row_id FROM content_chunks WHERE item_id = ?;"
     static let deleteVector = "DELETE FROM chunk_vectors WHERE rowid = ?;"
+    static let clearChunkVectors = "DELETE FROM chunk_vectors;"
+    static let clearChunkFTS = "DELETE FROM chunk_fts;"
+    static let clearContentChunks = "DELETE FROM content_chunks;"
+    static let clearIndexedItems = "DELETE FROM indexed_items;"
+    static let vacuum = "VACUUM;"
     static let insertChunk = """
         INSERT INTO content_chunks (
             id, item_id, ordinal, text, character_start, character_end, page_number, section_name

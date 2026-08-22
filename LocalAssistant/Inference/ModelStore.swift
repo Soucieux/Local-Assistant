@@ -116,6 +116,37 @@ actor ModelStore {
         return status
     }
 
+    /// Deletes every installed model file and clears cached verification state.
+    /// - Returns: Freshly recomputed status reporting every capability as missing.
+    /// - Throws: A local error when installed files cannot be removed or re-created.
+    internal func removeInstalledModels() throws -> LocalModelStatus {
+        let modelsDirectory = try AppDirectories.modelsDirectory()
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: modelsDirectory.path) {
+            try fileManager.removeItem(at: modelsDirectory)
+        }
+        try fileManager.createDirectory(
+            at: modelsDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: AppConstants.Storage.ownerOnlyDirectoryPermissions]
+        )
+        try fileManager.setAttributes(
+            [.posixPermissions: AppConstants.Storage.ownerOnlyDirectoryPermissions],
+            ofItemAtPath: modelsDirectory.path
+        )
+        let manifestURL = try assetManifestURL()
+        if fileManager.fileExists(atPath: manifestURL.path) {
+            try fileManager.removeItem(at: manifestURL)
+        }
+        let cacheURL = try verificationCacheURL()
+        if fileManager.fileExists(atPath: cacheURL.path) {
+            try fileManager.removeItem(at: cacheURL)
+        }
+        verifiedAssets = [:]
+        verificationCacheChanged = false
+        return try refreshStatus()
+    }
+
     /// Reports whether the installed speech model carries its own tokenizer.
     ///
     /// The Core ML directory alone is not enough to transcribe anything. Treating it as

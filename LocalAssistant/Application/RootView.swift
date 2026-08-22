@@ -67,5 +67,31 @@ struct RootView: View {
             } message: {
                 Text(UIStrings.clearActivityMessage)
             }
+            .alert(
+                UIStrings.clearSearchIndexTitle,
+                isPresented: $model.searchIndexClearConfirmationIsPresented
+            ) {
+                Button(UIStrings.clearSearchIndex, role: .destructive) {
+                    Task { await model.confirmSearchIndexClear() }
+                }
+                Button(UIStrings.cancel, role: .cancel) {
+                    model.dismissSearchIndexClearConfirmation()
+                }
+            } message: {
+                Text(UIStrings.clearSearchIndexMessage)
+            }
+            .alert(
+                UIStrings.removeDownloadedModelsTitle,
+                isPresented: $model.modelRemovalConfirmationIsPresented
+            ) {
+                Button(UIStrings.removeDownloadedModels, role: .destructive) {
+                    Task { await model.confirmModelRemoval() }
+                }
+                Button(UIStrings.cancel, role: .cancel) {
+                    model.dismissModelRemovalConfirmation()
+                }
+            } message: {
+                Text(UIStrings.removeDownloadedModelsMessage)
+            }
     }
 }

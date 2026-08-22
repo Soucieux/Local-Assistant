@@ -193,6 +193,82 @@ struct FolderIndexingTests {
         #expect(keywordHits.first?.itemID == transcript.id)
     }
 
+    @Test("Clearing the search index removes indexed content but keeps folders and conversations")
+    internal func clearsSearchIndexWithoutTouchingRootsOrConversations() async throws {
+        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
+        let database = AssistantDatabase(databaseURL: databaseURL)
+        try await database.open()
+        let root = AuthorizedRoot(
+            id: FolderIndexTestConstants.rootID,
+            displayName: FolderIndexTestConstants.schoolName,
+            lastKnownPath: FolderIndexTestConstants.schoolPath,
+            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
+            addedAt: Date(),
+            lastIndexedAt: nil,
+            isAvailable: true
+        )
+        try await database.upsertRoot(root)
+        let transcript = folderItems()[2]
+        let chunk = ContentChunk(
+            id: UUID(),
+            itemID: transcript.id,
+            ordinal: 0,
+            text: FolderIndexTestConstants.transcriptSearchText,
+            characterStart: 0,
+            characterEnd: FolderIndexTestConstants.transcriptSearchText.count,
+            pageNumber: nil,
+            sectionName: nil,
+            embedding: nil
+        )
+        try await database.replaceItem(transcript, chunks: [chunk])
+        try await database.insertChatMessage(.user(FolderIndexTestConstants.schoolSearchTerm))
+
+        let countBeforeClear = try await database.indexedFileCount()
+        try await database.clearSearchIndex()
+        let countAfterClear = try await database.indexedFileCount()
+        let remainingRoots = try await database.fetchRoots()
+        let remainingMessages = try await database.fetchChatMessages(
+            limit: AppConstants.Chat.historyLimit
+        )
+        await database.close()
+        removeDatabaseFiles(at: databaseURL)
+
+        #expect(countBeforeClear == 1)
+        #expect(countAfterClear == 0)
+        #expect(remainingRoots.map(\.id) == [root.id])
+        #expect(remainingMessages.isEmpty == false)
+    }
+
+    @Test("Database storage size reflects the file actually written to disk")
+    internal func reportsDatabaseByteCountFromDisk() async throws {
+        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
+        let database = AssistantDatabase(databaseURL: databaseURL)
+        try await database.open()
+        let root = AuthorizedRoot(
+            id: FolderIndexTestConstants.rootID,
+            displayName: FolderIndexTestConstants.schoolName,
+            lastKnownPath: FolderIndexTestConstants.schoolPath,
+            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
+            addedAt: Date(),
+            lastIndexedAt: nil,
+            isAvailable: true
+        )
+        try await database.upsertRoot(root)
+
+        let byteCount = try await database.databaseByteCount()
+        await database.close()
+        let onDiskSize = try FileManager.default
+            .attributesOfItem(atPath: databaseURL.path)[.size] as? Int64
+        removeDatabaseFiles(at: databaseURL)
+
+        #expect(byteCount > 0)
+        #expect(byteCount >= onDiskSize ?? 0)
+    }
+
     /// Creates one root folder, one direct folder, and one direct PDF fixture.
     /// - Returns: Hierarchical indexed items in root-first order.
     private func folderItems() -> [IndexedItem] {

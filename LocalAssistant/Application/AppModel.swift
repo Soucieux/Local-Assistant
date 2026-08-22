@@ -20,6 +20,8 @@ final class AppModel {
     var offlineStatus: OfflineStatus = .checking
     var modelCapabilities: [LocalModelCapabilityStatus] = []
     var modelStorageByteCount: Int64 = 0
+    var indexedFileCount = 0
+    var indexStorageByteCount: Int64 = 0
     private(set) var voiceInputMode: VoiceInputMode
     var isBusy = false
     var isListening = false
@@ -36,6 +38,8 @@ final class AppModel {
     var inputFocusRequest = 0
     var conversationClearConfirmationIsPresented = false
     var activityClearConfirmationIsPresented = false
+    var modelRemovalConfirmationIsPresented = false
+    var searchIndexClearConfirmationIsPresented = false
     var presentedError: LocalAssistantError?
     private(set) var availableFileMatchItemIDs: Set<UUID> = []
     private var hasStarted = false
@@ -97,6 +101,8 @@ final class AppModel {
             offlineStatus = status.state
             modelCapabilities = status.capabilities
             modelStorageByteCount = status.totalByteCount
+            indexedFileCount = try await services.database.indexedFileCount()
+            indexStorageByteCount = try await services.database.databaseByteCount()
             indexedRoots = try await services.database.fetchRoots()
             pausedMonitoringRootIDs = try await services.database.fetchPausedMonitoringRootIDs()
             try await services.database.stopInterruptedIndexingRuns(at: Date())
@@ -125,6 +131,44 @@ final class AppModel {
                 }
             }
             try await refreshIndexActivity()
+        } catch {
+            handle(error)
+        }
+    }
+
+    /// Re-verifies installed models and re-counts indexed files on demand.
+    internal func checkSystemStatus() async {
+        do {
+            let status = try await services.modelStore.refreshStatus()
+            offlineStatus = status.state
+            modelCapabilities = status.capabilities
+            modelStorageByteCount = status.totalByteCount
+            indexedFileCount = try await services.database.indexedFileCount()
+            indexStorageByteCount = try await services.database.databaseByteCount()
+        } catch {
+            handle(error)
+        }
+    }
+
+    /// Requests confirmation before every installed model file is deleted.
+    internal func requestModelRemovalConfirmation() {
+        guard isBusy == false, isIndexing == false, isListening == false else { return }
+        modelRemovalConfirmationIsPresented = true
+    }
+
+    /// Dismisses the model-removal confirmation without deleting anything.
+    internal func dismissModelRemovalConfirmation() {
+        modelRemovalConfirmationIsPresented = false
+    }
+
+    /// Deletes every installed model file and refreshes readiness for all three capabilities.
+    internal func confirmModelRemoval() async {
+        modelRemovalConfirmationIsPresented = false
+        do {
+            let status = try await services.modelStore.removeInstalledModels()
+            offlineStatus = status.state
+            modelCapabilities = status.capabilities
+            modelStorageByteCount = status.totalByteCount
         } catch {
             handle(error)
         }
