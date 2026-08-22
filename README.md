@@ -2,9 +2,9 @@
 
 > A private macOS assistant for conversation and evidence-backed file search, with no runtime network access.
 
-Local Assistant is designed for one person and one Mac. Open the application normally or press **Control–Option–Space**, then type or speak. It can answer ordinary questions, ask for clarification when a file request is ambiguous, and search only the folders explicitly authorized through macOS.
+Local Assistant is designed for one person and one Mac. Open the application normally or press **Control–Option–Space**, then type or speak through its focused light command surface. Voice input can use a click followed by automatic sending after a pause, or hold-to-talk with the Space bar. The main screen presents only the current request, response, and file findings; the complete retained conversation remains available from **History**. It can answer ordinary questions, retain recent conversational context for follow-up requests, ask for clarification when a file request is ambiguous, and search only the folders explicitly authorized through macOS.
 
-Conversation, retrieval, embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Search answers stay concise while reusable result cards present paths, matching evidence, and explicit Open or Reveal actions. The runtime does not depend on a local server, a cloud service, telemetry, or an updater.
+Conversation, retrieval, text embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Semantic search compares plain-language requests with text extracted from files, including OCR text from images and image-only PDF pages. Authorized roots and descendant folders are also indexed with local context, so a request such as “files for school” can use the matching folder as the scope even when individual files do not contain the word “school.” Search answers stay concise while reusable result modules present item identity, matching evidence, and explicit Open or Reveal actions. The runtime does not depend on a local server, a cloud service, telemetry, or an updater.
 
 ## Quick start
 
@@ -16,8 +16,9 @@ Choose the path that matches what you need. If Local Assistant is already instal
 2. Open **Settings** and choose **Add Folder**.
 3. Select only the folder the assistant should read.
 4. Follow the folder's progress in Settings, or continue using the assistant while indexing runs in the background.
-5. Return to the assistant and type or speak a request.
-6. Review the answer and result cards before choosing **Open File** or **Reveal in Finder**.
+5. In **Voice input**, choose **Click to speak** or **Hold Space**, then return to the assistant and type or speak a request.
+6. Review the centered answer and responsive findings before choosing **Open File**, **Open Folder**, or **Reveal in Finder**.
+7. Open **History** to review the complete retained conversation, including the current session.
 
 Press **Control–Option–Space** (`⌃⌥Space`) while the application is running to bring its window forward and focus the composer. Closing the window keeps the shortcut available; quitting the application disables it.
 
@@ -31,6 +32,7 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the application is runn
 | `Find the automotive consulting PDF` | Applies a PDF constraint and ranks the remaining topic terms. |
 | `Which PDF?` | Requests a topic, filename, folder, or date instead of guessing. |
 | `Find the latest budget spreadsheet` | Applies a spreadsheet constraint and hybrid relevance ranking. |
+| `Find my school files` | Matches an indexed School folder, then promotes files and folders contained inside it. |
 
 ---
 
@@ -90,9 +92,9 @@ Build only from the prepared local dependencies:
 ./Scripts/build_offline.sh
 ```
 
-**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution, and a copy is placed at the top of the project as `Local Assistant.app` so it can be opened directly.
+**Result:** The Release application is created under `DerivedData/Build/Products/Release` without automatic package resolution, and the new version is placed at the top of the project as `Local Assistant.app` so it can be opened directly.
 
-Any earlier copy is removed before the build starts, so a build that fails leaves no application at the top level rather than an older one that still appears current.
+Before a higher-version rebuild, the current top-level application becomes `Previous Local Assistant.app`, replacing any older backup. A successful build places only the new application at the top level and retains that single recoverable prior version.
 
 #### Step 6 — Audit the offline boundary
 
@@ -143,7 +145,7 @@ LocalAssistant/
 └── Models/
 ```
 
-Microphone audio is never written to disk. Speech is recognized from memory while it is spoken, so no recording file exists to retain or clean up.
+Microphone audio is never written to disk. Speech is recognized from memory while it is spoken, then the complete in-memory utterance receives one final multilingual transcription pass before it is sent. No recording file exists to retain or clean up.
 
 SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. While the application process is running, native macOS folder events schedule incremental updates; reopening the application performs a catch-up scan. Quitting stops monitoring completely. There is no login item, background helper, localhost service, or runtime network route.
 
@@ -151,30 +153,40 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v1.6 status | Meaning |
+| Release area | v2.5 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The v1.3 conversation fix and the v1.4 live voice interface were both requested. |
-| Source implementation | Complete | The v1.3 conversation-history fix and the v1.4 streaming voice capture are present in source. |
-| Debug compilation | Passed | The changed Swift sources compile in the native application target without warnings. |
-| Release build | Passed | A clean offline Release build completed with pinned local dependencies. |
-| Automated tests | Passed | The 66 tests in the `LocalAssistantTests` target passed against the Debug application. |
-| Voice runtime testing | Partial | Live levels and the automatic stop were confirmed working when exercised. Recognized text did not appear and no request was sent; v1.6 corrects the cause. The retest has not been run. |
-| Focused testing | Passed | Indexing-state decisions, activity retention, and speech-model loading with no tokenizer cache present passed focused checks. |
-| Disconnected runtime testing | Partial | Indexing, chat, and voice were exercised with every network interface disabled. The conversation defect found there is fixed in v1.3; the retest is outstanding. |
-| Static privacy audit | Passed | The Release bundle carries only the four approved entitlements and links no networking library. |
-| Interface inspection | Not run | v1.4 adds a waveform composer and a live transcript bubble, neither reviewed in either appearance. Debug-only previews render every model readiness state in light and dark at the minimum window size. This is the main open gate. |
-| Code review | Complete | The requested phase-by-phase review covered the whole source tree and its findings were resolved. |
+| Approved scope | Complete | The approved scope makes folder hierarchy available before content extraction, confines literal folder matches to their own tree, recovers explicit searches when the routing marker is missing, and shows the installed version in Settings. |
+| Source implementation | Complete | Scans publish complete metadata without discarding prior passages, then process folders before files. Literal folder evidence excludes unrelated semantic candidates. |
+| Semantic capability audit | Complete | Global semantic retrieval remains available when no folder matches, while a literal folder name or path becomes the bounded hierarchy scope. |
+| Debug compilation | Passed | The focused XCTest runs compiled the v2.5 source, persistence changes, retrieval changes, and Settings interface. |
+| Release build | Passed | A clean offline Release build produced the signed v2.5 build 25 application. |
+| Automated tests | Passed | Explicit folder/file routing, metadata-only hierarchy search, descendant lookup, and preservation of existing searchable passages passed their focused tests. |
+| Voice runtime testing | Pending manual check | Live multilingual speech, final transcription, silence sending, and hold-Space sending still require manual inspection. |
+| Focused testing | Passed | The two reported “school” request forms now normalize to `school`; folder hierarchy is searchable before extracted content completes. |
+| Disconnected runtime testing | Not run | The v2.5 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Passed | The v2.5 Release bundle passed the offline-boundary audit; no reachable network code path was found. |
+| Interface inspection | Pending manual check | The Settings version badge and live School-folder results require inspection in the built v2.5 application. |
+| Code review | Not run | Code review remains an optional phase after testing and local delivery. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Installed stable bundle | Model assets updated | The installed application's speech tokenizer was installed and checksum-verified; the bundle itself was not replaced. |
+| Installed stable bundle | Complete | The project root contains v2.5 build 25, with v2.4 build 24 retained as the single recoverable prior application. |
 
 ### Version index
 
-Past application bundles are not retained, so this table and the notes below are the record of
-what each release contained. Each entry names what that release changed and links to its
-full notes.
+The table and notes below are the durable record of what each release contained. Only the
+immediately previous project-root application is retained as a recoverable local backup. Each
+entry names what that release changed and links to its full notes.
 
 | Version | What changed |
 |---|---|
+| v2.5 | [Complete folder hierarchy and precise folder-scoped results](#v25--complete-folder-hierarchy-and-precise-folder-scoped-results) |
+| v2.4 | [Reliable type-only listings and idle command pulse](#v24--reliable-type-only-listings-and-idle-command-pulse) |
+| v2.3 | [Folder-aware retrieval and coordinated interface motion](#v23--folder-aware-retrieval-and-coordinated-interface-motion) |
+| v2.2 | [Evidence-backed result cards and honest visual-search limits](#v22--evidence-backed-result-cards-and-honest-visual-search-limits) |
+| v2.1 | [Bounded vector search, visible button hover states, and clarified semantic-image limits](#v21--bounded-vector-search-visible-button-hover-states-and-clarified-semantic-image-limits) |
+| v2.0 | [Selectable voice interactions, finalized speech, and conversational follow-ups](#v20--selectable-voice-interactions-finalized-speech-and-conversational-follow-ups) |
+| v1.9 | [One light visual family across every screen](#v19--one-light-visual-family-across-every-screen) |
+| v1.8 | [Light command interface with acquired-file modules](#v18--light-command-interface-with-acquired-file-modules) |
+| v1.7 | [Current command presentation with complete conversation History](#v17--current-command-presentation-with-complete-conversation-history) |
 | v1.6 | [Spoken words appear and send, and the routing marker stays hidden](#v16--spoken-words-appear-and-send-and-the-routing-marker-stays-hidden) |
 | v1.5 | [Recordings end on a pause and send what was said](#v15--recordings-end-on-a-pause-and-send-what-was-said) |
 | v1.4 | [Live waveform and on-screen speech, with no audio written to disk](#v14--live-waveform-and-on-screen-speech-with-no-audio-written-to-disk) |
@@ -194,6 +206,68 @@ full notes.
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v2.5 — Complete folder hierarchy and precise folder-scoped results
+
+- Published every scanned file and folder as searchable metadata before expensive extraction begins, while preserving previously indexed passages. Interrupted runs no longer leave later folders absent from the hierarchy.
+- Processed folder context before file contents and made a literal folder name or path the retrieval boundary, preventing unrelated semantic candidates outside that folder from being presented as its contents.
+- Recovered explicit file and folder requests when the local routing model returns only a generic results acknowledgement, avoiding a response that claims matches while showing no cards.
+- Added the installed release number to the Settings header.
+
+### v2.4 — Reliable type-only listings and idle command pulse
+
+- Normalized broad requests such as “Any PDFs?” into type-only listings so conversational filler no longer becomes a false semantic-evidence requirement.
+- Preserved meaningful topics in requests such as “PDFs about insurance” and kept the requested file type as a hard constraint.
+- Replaced the state-changing triangle phase collection with one stable continuous loop and increased the bright-to-dim contrast while retaining a static full-red Reduce Motion presentation.
+
+### v2.3 — Folder-aware retrieval and coordinated interface motion
+
+- Indexed each authorized root and descendant folder as a first-class result with a bounded, locally embedded context derived from its name, relative path, and direct children.
+- Added hierarchy-aware retrieval so a strongly matched folder promotes contained files and folders, while requested file types remain hard constraints within that scope.
+- Prioritized exact folder and path evidence over unrelated document passages and explained scoped results with the folder that qualified them.
+- Added folder-aware Open actions, response and screen crossfades, staggered result acquisition, and a slow idle pulse for the red command triangle. Reduce Motion keeps these states legible without movement.
+
+### v2.2 — Evidence-backed result cards and honest visual-search limits
+
+- Stopped a hard file-type constraint from qualifying otherwise unrelated files when a request also contains a topic or content description. A non-empty search now requires filename, path, keyword, or semantic evidence.
+- Derived hard file-type filters from the user's own words instead of trusting a model-generated kind. Requests for files containing images no longer become an invented PDF or image-file constraint.
+- Replaced generic content-search reasons with the strongest concrete evidence, including a bounded indexed passage for keyword and semantic matches and calibrated wording for uncertain semantic relations.
+- Reported requests that require recognizing visual subjects or embedded images as unsupported by the current text-and-OCR index. This prevents false result cards while preserving the separately scoped path to local multimodal retrieval.
+
+### v2.1 — Bounded vector search, visible button hover states, and clarified semantic-image limits
+
+- Capped every sqlite-vec nearest-neighbor request at the embedded extension's 4,096-result limit and stopped adaptive file-type expansion at the same boundary, preventing large indexes from producing a 5,120-neighbor database error.
+- Added restrained hover feedback to every custom in-window button while preserving disabled states, keyboard focus, stable layout, and reduced-motion behavior. Native macOS alert and menu buttons retain their system-provided pointer states.
+- Confirmed that extracted passages are embedded with the local Qwen text model, stored in sqlite-vec, and combined with filename, path, keyword, type, and recency signals during ranking.
+- Clarified that standalone images and image-only PDF pages contribute OCR text, not a visual embedding. A chart can be found from its labels, caption, or surrounding extracted text; recognizing an unlabeled histogram by shape requires a future local image-text model or image-captioning stage.
+
+### v2.0 — Selectable voice interactions, finalized speech, and conversational follow-ups
+
+- Added a persistent Voice input setting with **Click to speak** and **Hold Space** choices. Click mode sends after two seconds of silence; hold mode records while Space is held and sends on release without taking over the Space key during text editing.
+- Kept live multilingual recognition for immediate feedback, then added one complete in-memory transcription pass before sending so the newest words and language decision are no longer limited to the last streaming hypothesis.
+- Reframed recent history as actual user and assistant turns for the local Qwen model, bounded each retained message, and prioritized the newest turns so long older responses cannot remove the context needed by a follow-up.
+- Cleared the previous displayed request when a new text or voice interaction begins while preserving a draft that is already being edited.
+
+### v1.9 — One light visual family across every screen
+
+- Extended the warm light canvas, restrained scan texture, graphite hierarchy, signal-red identity, and sharper surfaces from the command screen into History, Activity, file results, and Settings.
+- Kept each destination purpose-specific: History remains a chronological conversation archive, Activity remains a filterable indexing ledger, and Settings retains every native control, status, confirmation, recovery path, and privacy explanation.
+- Preserved natural capitalization in assistant responses and file explanations while reserving uppercase treatment for short telemetry and interface labels.
+- Kept the application intentionally light-only, including when macOS uses Dark appearance.
+
+### v1.8 — Light command interface with acquired-file modules
+
+- Rebuilt the main screen around the approved light-only command design: a warm off-white canvas, restrained scan texture, compact local-status rail, black monospaced hierarchy, and signal-red command markers.
+- Replaced rounded command cards and material controls with square-edged file modules, acquisition corners, section rules, and plain Open and Reveal actions. Main-screen modules omit absolute paths while retained History preserves the established record.
+- Kept the idle prompt centered, moved the current request control to the bottom after interaction, and preserved live voice text, local processing state, responsive file wrapping, reduced-motion behavior, and the separate History screen.
+- Restyled background indexing as a compact command strip without removing its percentage, folder state, Activity navigation, or safe Pause action.
+
+### v1.7 — Current command presentation with complete conversation History
+
+- Replaced the accumulating main chat with a voice-first command surface that starts centered and moves its live voice or text input to the bottom after the first request.
+- Presents only the current processing state, latest response, and latest file findings on the main screen; beginning another request replaces that presentation instead of adding another bubble.
+- Displays file findings in a centered adaptive grid with a restrained acquisition animation, while retaining explicit Open and Reveal actions and a reduced-motion fallback.
+- Moved the established chronological message layout to an in-window History screen. It includes restored messages and new requests from the current launch, while reopening the application resets only the main command presentation.
 
 ### v1.6 — Spoken words appear and send, and the routing marker stays hidden
 
@@ -361,10 +435,13 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 | Capability | Availability | Notes |
 |---|---|---|
 | Local conversation | Available | Runs through an embedded model in the application process. |
+| Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
+| Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
 | Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
-| Hard file-type filtering | Available in v0.9 source | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives, with constraints applied before per-channel candidate limits. |
-| Hybrid retrieval | Available | Combines filename, path, keyword, semantic, recency, and reciprocal-rank signals. |
-| Explainable result cards | Available | Shows file type, confidence, path, a concise match reason, and explicit actions. |
+| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
+| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
+| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
+| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
 | Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
 | Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
 | Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
@@ -378,7 +455,7 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 | Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
 | Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
 | PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
-| Local voice input | Available in v1.4 | Shows a live waveform and the recognized words while speaking, and ends on a pause or an explicit stop. |
+| Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
 | Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
@@ -390,12 +467,13 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 |---|---|
 | Plain text and common source files | Text extraction and chunking |
 | PDF | PDFKit extraction; Vision OCR for image-only pages |
-| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR |
+| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR; labels and visible text become searchable, but visual objects and chart shapes are not captioned |
 | DOCX | Visible Open XML text |
 | XLSX | Visible worksheet and shared-string XML text |
 | PPTX | Visible slide XML text |
 | Pages | OCR from an available local preview |
-| Other files and folders | Name, path, type, and metadata search |
+| Folders | Name, relative path, direct-child context, local embedding, and descendant scoping |
+| Other files | Name, path, type, and metadata search |
 
 Complex formulas, charts, comments, embedded objects, encrypted files, and proprietary Pages IWA bodies are not fully reconstructed. The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
 
@@ -534,6 +612,7 @@ macOS remains the final authority. A bookmark cannot bypass system permissions, 
 
 - Every searchable root must be selected explicitly; the application cannot silently read the whole disk.
 - Search quality depends on successful extraction and indexing.
+- Semantic search currently embeds extracted text, not image pixels. An unlabeled chart or photograph with no useful OCR or surrounding text cannot be identified reliably by its visual appearance alone.
 - Chat and semantic search require verified local model assets.
 - Voice input requires the complete local speech model and macOS microphone permission.
 - Office and Pages extraction is intentionally best-effort.

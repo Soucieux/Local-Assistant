@@ -9,9 +9,10 @@
 - Preserve a focused single-column assistant. The interface may feel rich through hierarchy, typography, icons, restrained color, and depth, but must not become visually overwhelming.
 - Keep folder access, revocation, indexing, model state, shortcut state, and privacy details in Settings.
 - Write Settings copy for the person using the app: describe what is ready, what it enables, and how to recover. Keep model filenames and implementation terminology in documentation or diagnostics.
+- Preserve natural capitalization in responses, explanations, filenames, and other content. Reserve uppercase styling for short telemetry and interface labels.
 - Update `README.md` and its release-status table whenever a user-facing capability, version, privacy boundary, or validation status changes.
 - Every user-facing implementation must increment both the marketing version and build number.
 - Prefix human-facing release labels with `v`; keep Xcode marketing and bundle version values numeric.
 - Distinguish source implementation, build, testing, code review, formal verification, and installed-bundle status. Never present one phase as evidence for another.
-- Do not mark user-facing UI work release-ready until screenshots from the built app have been reviewed in both light and dark appearances. Check message alignment, control states, contrast, spacing, truncation, and the smallest supported window size.
-- Do not accumulate versioned DerivedData snapshots or multiple pre-release app bundles in the project. After a replacement is confirmed, remove stale generated data and retain at most one recoverable previous app bundle.
+- Keep the application light-only. Do not mark user-facing UI work release-ready until screenshots from the built app have been reviewed in the intended light appearance, including while macOS uses Dark appearance. Check message alignment, control states, contrast, spacing, truncation, and the smallest supported window size.
+- For every higher-version rebuild, place the new `Local Assistant.app` at the project root, remove stale generated versions, and retain at most one recoverable prior bundle as `Previous Local Assistant.app`.

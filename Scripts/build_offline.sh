@@ -16,11 +16,13 @@ BUILT_APP="${PROJECT_DIR}/DerivedData/Build/Products/Release/LocalAssistant.app"
 # The copy is named for the product rather than the Xcode target, so the application reads
 # as "Local Assistant" wherever it is opened from.
 TOP_LEVEL_APP="${PROJECT_DIR}/Local Assistant.app"
+PREVIOUS_APP="${PROJECT_DIR}/Previous Local Assistant.app"
 
-# The previous application is removed before building rather than overwritten afterwards. A
-# build that fails then leaves no application at the top level, which is visibly wrong, instead
-# of an older build that still looks current.
-/bin/rm -rf "${TOP_LEVEL_APP}"
+# Keep one recoverable build while ensuring the project root never accumulates stale versions.
+if [[ -d "${TOP_LEVEL_APP}" ]]; then
+  /bin/rm -rf "${PREVIOUS_APP}"
+  /bin/mv "${TOP_LEVEL_APP}" "${PREVIOUS_APP}"
+fi
 
 LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_static.sh"
 
