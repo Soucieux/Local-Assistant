@@ -25,6 +25,13 @@ enum VoiceConstants {
 
     /// Seconds of continuous quiet after speech that ends a recording on its own.
     static let silenceTimeout: TimeInterval = 2
+
+    /// Longest a single capture may run before it ends itself.
+    ///
+    /// Hold-to-talk ends on the key release and does not stop on a pause, so a release that
+    /// never arrives would otherwise leave the microphone open indefinitely. This bound
+    /// applies in every mode, so no single failure keeps capture running.
+    static let maximumCaptureSeconds: TimeInterval = 120
     static let missingSpeechModel = "The bundled speech model is not installed."
     static let speechInitializationFailure = "The local speech model could not be loaded."
 

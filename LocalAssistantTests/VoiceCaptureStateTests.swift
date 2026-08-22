@@ -73,4 +73,10 @@ struct VoiceCaptureStateTests {
         #expect(VoiceCaptureState.preparing.hasTranscript == false)
         #expect(VoiceCaptureState.preparing.levels.isEmpty)
     }
+
+    @Test("click mode ends on silence while hold mode waits for release")
+    internal func selectsVoiceCompletionPolicy() {
+        #expect(VoiceInputMode.clickToSpeak.stopsAfterSilence)
+        #expect(VoiceInputMode.holdSpace.stopsAfterSilence == false)
+    }
 }

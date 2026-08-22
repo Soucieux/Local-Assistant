@@ -15,6 +15,8 @@ actor LocalVoiceService {
     private var latest: VoiceCaptureState = .preparing
     private var lastVoiceActivityAt: Date?
     private var hasHeardSpeech = false
+    private var captureStartedAt: Date?
+    private var stopsAfterSilence = true
     private var captureFailure: Error?
 
     /// Stores the verified local model location without loading it during app startup.
@@ -79,9 +81,12 @@ actor LocalVoiceService {
     ///
     /// The stream finishes when the speaker pauses long enough to end the recording, when
     /// capture is stopped explicitly, or when capture cannot start.
+    /// - Parameter stopsAfterSilence: Whether two seconds of quiet should finish capture.
     /// - Returns: Capture states in order, beginning with the preparing state.
     /// - Throws: A local model error when no speech model is installed.
-    internal func startRecording() async throws -> AsyncStream<VoiceCaptureState> {
+    internal func startRecording(
+        stopsAfterSilence: Bool
+    ) async throws -> AsyncStream<VoiceCaptureState> {
         guard captureTask == nil else {
             throw LocalAssistantError.voice(VoiceConstants.missingRecording)
         }
@@ -93,6 +98,8 @@ actor LocalVoiceService {
         latest = .preparing
         lastVoiceActivityAt = nil
         hasHeardSpeech = false
+        captureStartedAt = Date()
+        self.stopsAfterSilence = stopsAfterSilence
         captureFailure = nil
         continuation.yield(.preparing)
         beginLoadingModel()
@@ -185,6 +192,12 @@ actor LocalVoiceService {
     /// the speaker has said anything.
     /// - Parameter snapshot: Latest published capture state.
     private func endCaptureIfSpeakerStopped(_ snapshot: VoiceCaptureState) {
+        if let startedAt = captureStartedAt,
+           Date().timeIntervalSince(startedAt) >= VoiceConstants.maximumCaptureSeconds {
+            endCapture()
+            return
+        }
+        guard stopsAfterSilence else { return }
         guard snapshot.levels.isEmpty == false else { return }
         guard snapshot.isSilent else {
             hasHeardSpeech = true
@@ -193,6 +206,11 @@ actor LocalVoiceService {
         }
         guard hasHeardSpeech, let since = lastVoiceActivityAt else { return }
         guard Date().timeIntervalSince(since) >= VoiceConstants.silenceTimeout else { return }
+        endCapture()
+    }
+
+    /// Stops the running stream so the recording finishes and the microphone closes.
+    private func endCapture() {
         guard let transcriber else { return }
         Task { await transcriber.stopStreamTranscription() }
     }
@@ -206,7 +224,12 @@ actor LocalVoiceService {
         }
         await transcriber?.stopStreamTranscription()
         await captureTask.value
-        let transcript = latest.transcript
+        let streamingTranscript = latest.transcript
+        let samples = whisperKit.map { Array($0.audioProcessor.audioSamples) } ?? []
+        let transcript = await finalizedTranscript(
+            samples: samples,
+            fallback: streamingTranscript
+        )
         let failure = captureFailure
         self.captureTask = nil
         transcriber = nil
@@ -214,9 +237,39 @@ actor LocalVoiceService {
         latest = .preparing
         lastVoiceActivityAt = nil
         hasHeardSpeech = false
+        captureStartedAt = nil
+        stopsAfterSilence = true
         captureFailure = nil
         if let failure { throw failure }
         return transcript
+    }
+
+    /// Reprocesses the complete in-memory utterance before it is sent.
+    ///
+    /// Streaming hypotheses favor responsiveness and may still be revising the newest words
+    /// when capture ends. A final full-buffer pass improves the returned text and gives
+    /// automatic language detection the complete utterance without writing audio to disk.
+    /// - Parameters:
+    ///   - samples: Captured microphone samples retained by the local audio processor.
+    ///   - fallback: Latest readable streaming hypothesis.
+    /// - Returns: Finalized local transcription, or the streaming text if finalization fails.
+    private func finalizedTranscript(
+        samples: [Float],
+        fallback: String
+    ) async -> String {
+        guard samples.isEmpty == false, let whisperKit else { return fallback }
+        let results = await whisperKit.transcribe(
+            audioArrays: [samples],
+            decodeOptions: Self.finalizationOptions
+        )
+        guard let transcriptionResults = results.first.flatMap({ $0 }) else {
+            return fallback
+        }
+        let finalized = transcriptionResults
+            .map(\.text)
+            .joined(separator: VoiceConstants.transcriptionSeparator)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return finalized.isEmpty ? fallback : finalized
     }
 
     /// Stops capture and releases the offline speech runtime before application termination.
@@ -231,6 +284,8 @@ actor LocalVoiceService {
         updates = nil
         latest = .preparing
         lastVoiceActivityAt = nil
+        captureStartedAt = nil
+        stopsAfterSilence = true
         whisperKit = nil
         modelURL = nil
     }
@@ -260,6 +315,18 @@ actor LocalVoiceService {
         detectLanguage: true,
         skipSpecialTokens: true,
         withoutTimestamps: false,
+        wordTimestamps: false
+    )
+
+    /// Full-utterance decoding used only after capture has stopped.
+    private static let finalizationOptions = DecodingOptions(
+        verbose: false,
+        task: .transcribe,
+        language: nil,
+        usePrefillPrompt: true,
+        detectLanguage: true,
+        skipSpecialTokens: true,
+        withoutTimestamps: true,
         wordTimestamps: false
     )
 }
