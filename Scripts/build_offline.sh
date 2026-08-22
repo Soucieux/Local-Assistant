@@ -12,17 +12,14 @@ else
 fi
 
 PROJECT_DIR="${PROJECT_DIR:A}"
-BUILT_APP="${PROJECT_DIR}/DerivedData/Build/Products/Release/LocalAssistant.app"
+DERIVED_DATA="${PROJECT_DIR}/DerivedData"
+BUILT_APP="${DERIVED_DATA}/Build/Products/Release/LocalAssistant.app"
 # The copy is named for the product rather than the Xcode target, so the application reads
 # as "Local Assistant" wherever it is opened from.
 TOP_LEVEL_APP="${PROJECT_DIR}/Local Assistant.app"
-PREVIOUS_APP="${PROJECT_DIR}/Previous Local Assistant.app"
 
-# Keep one recoverable build while ensuring the project root never accumulates stale versions.
-if [[ -d "${TOP_LEVEL_APP}" ]]; then
-  /bin/rm -rf "${PREVIOUS_APP}"
-  /bin/mv "${TOP_LEVEL_APP}" "${PREVIOUS_APP}"
-fi
+# Keep only the latest build; the project root never accumulates stale versions.
+/bin/rm -rf "${TOP_LEVEL_APP}"
 
 LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_static.sh"
 
@@ -30,7 +27,7 @@ LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_stat
   -project "${PROJECT_DIR}/LocalAssistant.xcodeproj" \
   -scheme LocalAssistant \
   -configuration Release \
-  -derivedDataPath "${PROJECT_DIR}/DerivedData" \
+  -derivedDataPath "${DERIVED_DATA}" \
   -clonedSourcePackagesDirPath "${PROJECT_DIR}/Vendor/ResolvedPackages" \
   -disableAutomaticPackageResolution \
   CODE_SIGN_STYLE=Automatic \
@@ -44,5 +41,9 @@ LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_stat
 APP_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${TOP_LEVEL_APP}/Contents/Info.plist")"
 APP_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${TOP_LEVEL_APP}/Contents/Info.plist")"
 
-print "Offline build completed under ${PROJECT_DIR}/DerivedData."
+# The verified copy is now at the project root; the build cache (Debug or Release, from this
+# run or an earlier manual test build) is no longer needed and would otherwise read as a
+# second and third copy of the app.
+/bin/rm -rf "${DERIVED_DATA}"
+
 print "Open v${APP_VERSION} (${APP_BUILD}) directly at ${TOP_LEVEL_APP}"

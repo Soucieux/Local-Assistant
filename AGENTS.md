@@ -15,4 +15,4 @@
 - Prefix human-facing release labels with `v`; keep Xcode marketing and bundle version values numeric.
 - Distinguish source implementation, build, testing, code review, formal verification, and installed-bundle status. Never present one phase as evidence for another.
 - Keep the application light-only. Do not mark user-facing UI work release-ready until screenshots from the built app have been reviewed in the intended light appearance, including while macOS uses Dark appearance. Check message alignment, control states, contrast, spacing, truncation, and the smallest supported window size.
-- For every higher-version rebuild, place the new `Local Assistant.app` at the project root, remove stale generated versions, and retain at most one recoverable prior bundle as `Previous Local Assistant.app`.
+- For every rebuild, place the new `Local Assistant.app` at the project root and remove stale generated versions. Do not retain a previous-bundle copy, and remove the `DerivedData` build cache once that copy is verified, so the project root is the only place the built app exists.
