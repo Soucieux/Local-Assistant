@@ -19,8 +19,8 @@ enum InferenceConstants {
     static let chatUserStart = "<|im_end|>\n<|im_start|>user\n"
     static let chatAssistantStart = "<|im_end|>\n<|im_start|>assistant\n"
     static let noThinkingInstruction = "/no_think"
-    static let localSearchRoutingMarker = "[[SEARCH_LOCAL_FILES]]"
     static let localSearchRoutingToken = "SEARCH_LOCAL_FILES"
+    static let localSearchAcknowledgement = "matching results are shown below"
     static let routingMarkerLeadingCharacters: Set<Character> = ["[", " ", "\t", "\n"]
     static let routingMarkerTrailingCharacters: Set<Character> = ["]", " ", "\t", "\n"]
     static let assistantSystemPrompt = """
@@ -34,6 +34,7 @@ enum InferenceConstants {
         {"query":"short distinguishing search terms only","kinds":["pdf"]}
         The query must remove conversational filler and file-type words. Use an empty query for a clear request that lists a file type without a topic.
         Allowed kinds are folder, document, spreadsheet, presentation, pdf, image, code, text, archive, and other. Use an empty kinds array when no file type was requested.
+        Include a kind only when the user explicitly asks for the matching item itself to have that type. For example, "PDFs about budgets" uses pdf, while "files containing images" uses no kind and keeps image-related words in the query.
         Never claim to have searched or read local files unless local evidence is supplied in a later prompt.
         Preserve the user's language.
         """
@@ -50,9 +51,6 @@ enum InferenceConstants {
         """
     static let contextHeader = "Local evidence:\n"
     static let questionHeader = "\nQuestion: "
-    static let recentConversationHeader = "\nRecent conversation:\n"
-    static let userRoleLabel = "User: "
-    static let assistantRoleLabel = "Assistant: "
     static let sourcePrefix = "["
     static let sourceSuffix = "]"
     static let sourcePathLabel = " path: "
@@ -60,6 +58,7 @@ enum InferenceConstants {
     static let sourceSeparator = "\n\n"
     static let recentMessageLimit = 8
     static let maximumHistoryCharacters = 4_000
+    static let maximumHistoryMessageCharacters = 1_500
     static let maximumEvidenceCharacters = 12_000
     static let missingChatModel = "The chat model is not installed or verified."
     static let missingEmbeddingModel = "The embedding model is not installed or verified."
@@ -82,7 +81,6 @@ enum InferenceConstants {
         chatMessageEndToken,
         thinkingOpenTag,
         thinkingCloseTag,
-        localSearchRoutingMarker,
         localSearchRoutingToken
     ]
     static let invalidModelOutput = "I could not produce a valid local response. Please try again."

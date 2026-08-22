@@ -13,7 +13,7 @@ enum RetrievalConstants {
     static let escapedSingleCharacterWildcard = "\\_"
     static let reciprocalRankConstant = 60.0
     static let exactNameWeight = 4.0
-    static let pathWeight = 1.5
+    static let pathWeight = 5.0
     static let keywordWeight = 2.5
     static let semanticWeight = 3.0
     static let fileTypeWeight = 4.0
@@ -22,6 +22,15 @@ enum RetrievalConstants {
     static let mediumConfidenceThreshold = 0.42
     static let maximumExcerptCharacters = 480
     static let minimumSemanticSimilarity = 0.18
+    static let minimumFolderScopeSemanticSimilarity = 0.50
+    static let metadataTokenMatch = 0.35
+    static let metadataPathMatch = 1.20
+    static let metadataPathTokenMatch = 0.80
+    static let exactFolderScopeMatch = 1.25
+    static let nameFolderScopeMatch = 1.10
+    static let pathFolderScopeMatch = 1.00
+    static let maximumFolderScopeCount = 3
+    static let maximumExplanationEvidenceCharacters = 180
     static let fileTypeTerms: [IndexedItemKind: Set<String>] = [
         .folder: ["folder", "folders", "directory", "directories"],
         .document: ["document", "documents", "doc", "docx", "word"],
@@ -34,9 +43,10 @@ enum RetrievalConstants {
         .archive: ["archive", "archives", "zip", "compressed"]
     ]
     static let searchFillerTerms: Set<String> = [
-        "a", "an", "compare", "file", "files", "find", "for", "give", "is", "locate",
-        "me", "my", "of", "open", "please", "reveal", "show", "summarize", "that", "the",
-        "to", "what", "which"
+        "a", "about", "all", "an", "any", "are", "available", "compare", "do", "file",
+        "files", "find", "for", "give", "have", "i", "if", "is", "know", "list", "locate", "me", "my", "of",
+        "open", "please", "reveal", "show", "summarize", "that", "the", "there", "to", "what",
+        "want", "which", "you"
     ]
     static let singularFileTypeTerms: Set<String> = [
         "archive", "code", "directory", "doc", "docx", "document", "excel", "folder",
@@ -44,12 +54,29 @@ enum RetrievalConstants {
         "script", "source", "spreadsheet", "text", "txt", "word", "xlsx", "zip"
     ]
     static let listIntentTerms: Set<String> = ["all", "list", "show"]
+    static let localSearchIntentTerms: Set<String> = [
+        "any", "available", "find", "have", "list", "locate", "open", "reveal", "show"
+    ]
     static let definitionQuestionMinimumTokenCount = 3
     static let definitionQuestionPrefixLength = 2
     static let definitionQuestionFirstToken = "what"
     static let definitionQuestionSecondToken = "is"
     static let singularFileToken = "file"
     static let pluralFileToken = "files"
+    static let containerTerms: Set<String> = [
+        "document", "documents", "file", "files", "pdf", "pdfs", "presentation",
+        "presentations", "spreadsheet", "spreadsheets"
+    ]
+    static let embeddedContentRelationTerms: Set<String> = [
+        "contain", "containing", "contains", "embedded", "has", "include", "includes",
+        "including", "inside", "with"
+    ]
+    static let visualSubjectRelationTerms: Set<String> = [
+        "depicting", "of", "showing"
+    ]
+    static let visualItemTerms: Set<String> = [
+        "image", "images", "photo", "photos", "picture", "pictures"
+    ]
     static let definitionArticles: Set<String> = ["a", "an", "the"]
 
     /// Wraps text in SQLite wildcard markers.

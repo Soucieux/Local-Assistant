@@ -21,7 +21,63 @@ actor HybridRetrievalService {
     internal func search(_ query: SearchQuery) async throws -> [SearchResult] {
         let searchText = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
         let candidateLimit = max(query.limit, AppConstants.Chat.retrievalCandidateLimit)
-        let typeItems = try await database.items(kinds: query.filter.kinds, limit: candidateLimit)
+        let queryEmbedding: [Float]? = if searchText.isEmpty {
+            nil
+        } else {
+            try await embeddings.embedQuery(searchText)
+        }
+
+        var accumulators = try await baseAccumulators(
+            query: query,
+            searchText: searchText,
+            queryEmbedding: queryEmbedding,
+            candidateLimit: candidateLimit
+        )
+        if let queryEmbedding {
+            try await applyFolderScope(
+                query: query,
+                searchText: searchText,
+                embedding: queryEmbedding,
+                candidateLimit: candidateLimit,
+                accumulators: &accumulators
+            )
+        }
+
+        let candidateItems = try await database.fetchItems(ids: Set(accumulators.keys))
+        var results: [SearchResult] = []
+        for (itemID, accumulator) in accumulators {
+            guard let item = candidateItems[itemID],
+                  matches(item: item, filter: query.filter) else { continue }
+            let result = finalize(
+                accumulator: accumulator,
+                item: item,
+                matchesFileType: query.filter.kinds.isEmpty == false
+            )
+            guard searchText.isEmpty || result.score.hasQueryEvidence else { continue }
+            results.append(result)
+        }
+        return Array(results.sorted { $0.score.total > $1.score.total }.prefix(query.limit))
+    }
+
+    /// Fetches every retrieval channel and fuses their signals into per-item scores.
+    /// - Parameters:
+    ///   - query: Normalized search request and filters.
+    ///   - searchText: Trimmed query text, empty for a broad type-only listing.
+    ///   - queryEmbedding: Local embedding of the query, absent for a broad listing.
+    ///   - candidateLimit: Maximum candidates requested per channel.
+    /// - Returns: Per-item accumulators before folder scoping is applied.
+    /// - Throws: A local database or inference error.
+    private func baseAccumulators(
+        query: SearchQuery,
+        searchText: String,
+        queryEmbedding: [Float]?,
+        candidateLimit: Int
+    ) async throws -> [UUID: ScoreAccumulator] {
+        let typeItems: [IndexedItem] = if searchText.isEmpty {
+            try await database.items(kinds: query.filter.kinds, limit: candidateLimit)
+        } else {
+            []
+        }
         let metadataItems: [IndexedItem] = if searchText.isEmpty {
             []
         } else {
@@ -41,10 +97,9 @@ actor HybridRetrievalService {
             )
         }
         let semanticHits: [SemanticHit]
-        if searchText.isEmpty == false {
-            let vector = try await embeddings.embedQuery(searchText)
+        if let queryEmbedding {
             semanticHits = try await database.semanticSearch(
-                embedding: vector,
+                embedding: queryEmbedding,
                 kinds: query.filter.kinds,
                 limit: candidateLimit
             )
@@ -57,18 +112,63 @@ actor HybridRetrievalService {
         addMetadata(items: metadataItems, queryText: searchText, to: &accumulators)
         addKeywords(hits: keywordHits, to: &accumulators)
         addSemantic(hits: semanticHits, to: &accumulators)
-
-        let candidateItems = try await database.fetchItems(ids: Set(accumulators.keys))
-        var results: [SearchResult] = []
-        for (itemID, accumulator) in accumulators {
-            guard let item = candidateItems[itemID],
-                  matches(item: item, filter: query.filter) else { continue }
-            results.append(finalize(accumulator: accumulator, item: item))
-        }
-        return Array(results.sorted { $0.score.total > $1.score.total }.prefix(query.limit))
+        return accumulators
     }
 
-    /// Adds hard file-type matches before relevance signals are fused.
+    /// Promotes items inside a strongly matched folder and restricts results to it when named.
+    /// - Parameters:
+    ///   - query: Normalized search request and filters.
+    ///   - searchText: Trimmed query text used to find candidate folder scopes.
+    ///   - embedding: Local query embedding reused from ordinary semantic retrieval.
+    ///   - candidateLimit: Maximum descendants requested per matched folder.
+    ///   - accumulators: Per-item score state updated in place.
+    /// - Throws: A local database error when folder or descendant lookups fail.
+    private func applyFolderScope(
+        query: SearchQuery,
+        searchText: String,
+        embedding: [Float],
+        candidateLimit: Int,
+        accumulators: inout [UUID: ScoreAccumulator]
+    ) async throws {
+        let folderScopes = try await folderScopeMatches(
+            text: searchText,
+            embedding: embedding,
+            limit: candidateLimit
+        )
+        let literalScopes = folderScopes.filter(\.isLiteral)
+        if query.filter.kinds == Set([IndexedItemKind.folder]) {
+            if literalScopes.isEmpty == false {
+                let literalFolderIDs = Set(literalScopes.map(\.folder.id))
+                accumulators = accumulators.filter { literalFolderIDs.contains($0.key) }
+            }
+            return
+        }
+        let activeScopes = literalScopes.isEmpty ? folderScopes : literalScopes
+        var literalDescendantIDs: Set<UUID> = []
+        for (rank, scope) in activeScopes.enumerated() {
+            let descendants = try await database.descendants(
+                of: scope.folder,
+                kinds: query.filter.kinds,
+                limit: candidateLimit
+            )
+            addFolderScope(
+                items: descendants,
+                scope: scope,
+                rank: rank,
+                to: &accumulators
+            )
+            if scope.isLiteral {
+                literalDescendantIDs.formUnion(descendants.map(\.id))
+            }
+        }
+        if literalScopes.isEmpty == false {
+            accumulators = accumulators.filter {
+                literalDescendantIDs.contains($0.key)
+            }
+        }
+    }
+
+    /// Seeds broad type-only listing requests before relevance signals are fused.
     /// - Parameters:
     ///   - items: Items fetched by their indexed category.
     ///   - accumulators: Mutable per-item score state.
@@ -78,7 +178,6 @@ actor HybridRetrievalService {
     ) {
         for (rank, item) in items.enumerated() {
             var accumulator = accumulators[item.id] ?? ScoreAccumulator()
-            accumulator.fileType = 1
             accumulator.reciprocalRank += reciprocal(rank: rank)
             accumulators[item.id] = accumulator
         }
@@ -94,14 +193,23 @@ actor HybridRetrievalService {
         queryText: String,
         to accumulators: inout [UUID: ScoreAccumulator]
     ) {
+        let tokens = SearchTextEscaping.tokens(queryText)
         for (rank, item) in items.enumerated() {
             var accumulator = accumulators[item.id] ?? ScoreAccumulator()
             if item.displayName.compare(queryText, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame {
                 accumulator.exactName = 1
             } else if item.displayName.localizedCaseInsensitiveContains(queryText) {
                 accumulator.exactName = 0.65
+            } else if tokens.isEmpty == false,
+                      tokens.allSatisfy(item.displayName.localizedCaseInsensitiveContains) {
+                accumulator.exactName = RetrievalConstants.metadataTokenMatch
             }
-            if item.relativePath.localizedCaseInsensitiveContains(queryText) { accumulator.path = 1 }
+            if item.relativePath.localizedCaseInsensitiveContains(queryText) {
+                accumulator.path = RetrievalConstants.metadataPathMatch
+            } else if tokens.isEmpty == false,
+                      tokens.allSatisfy(item.relativePath.localizedCaseInsensitiveContains) {
+                accumulator.path = RetrievalConstants.metadataPathTokenMatch
+            }
             accumulator.reciprocalRank += reciprocal(rank: rank)
             accumulators[item.id] = accumulator
         }
@@ -141,21 +249,115 @@ actor HybridRetrievalService {
         }
     }
 
+    /// Finds folders whose names, paths, or generated local context define a strong scope.
+    /// - Parameters:
+    ///   - text: Normalized user search text.
+    ///   - embedding: One local query embedding reused from ordinary semantic retrieval.
+    ///   - limit: Maximum metadata and semantic candidates to inspect.
+    /// - Returns: Strongest folder scopes in descending confidence order.
+    /// - Throws: A local database error when candidates cannot be loaded.
+    private func folderScopeMatches(
+        text: String,
+        embedding: [Float],
+        limit: Int
+    ) async throws -> [FolderScopeMatch] {
+        let metadataFolders = try await database.metadataSearch(
+            text: text,
+            kinds: Set([IndexedItemKind.folder]),
+            limit: limit
+        )
+        var strengths: [UUID: Double] = [:]
+        let literalFolderIDs = Set(metadataFolders.map(\.id))
+        for folder in metadataFolders {
+            strengths[folder.id] = metadataFolderScopeStrength(folder: folder, text: text)
+        }
+
+        let semanticFolders = try await database.semanticSearch(
+            embedding: embedding,
+            kinds: Set([IndexedItemKind.folder]),
+            limit: limit
+        )
+        for hit in semanticFolders {
+            let similarity = max(0, 1 - hit.distance)
+            guard similarity >= RetrievalConstants.minimumFolderScopeSemanticSimilarity else {
+                continue
+            }
+            strengths[hit.itemID] = max(strengths[hit.itemID] ?? 0, similarity)
+        }
+
+        let foldersByID = try await database.fetchItems(ids: Set(strengths.keys))
+        return strengths.compactMap { itemID, strength in
+            guard let folder = foldersByID[itemID], folder.kind == .folder else { return nil }
+            return FolderScopeMatch(
+                folder: folder,
+                strength: strength,
+                isLiteral: literalFolderIDs.contains(itemID)
+            )
+        }
+        .sorted { left, right in left.strength > right.strength }
+        .prefix(RetrievalConstants.maximumFolderScopeCount)
+        .map { $0 }
+    }
+
+    /// Calculates deterministic folder-scope strength from an exact metadata result.
+    /// - Parameters:
+    ///   - folder: Folder returned by literal name and path search.
+    ///   - text: Normalized query used for the metadata search.
+    /// - Returns: Strong path signal used to promote contained items.
+    private func metadataFolderScopeStrength(folder: IndexedItem, text: String) -> Double {
+        if folder.displayName.compare(
+            text,
+            options: [.caseInsensitive, .diacriticInsensitive]
+        ) == .orderedSame {
+            return RetrievalConstants.exactFolderScopeMatch
+        }
+        if folder.displayName.localizedCaseInsensitiveContains(text) {
+            return RetrievalConstants.nameFolderScopeMatch
+        }
+        return RetrievalConstants.pathFolderScopeMatch
+    }
+
+    /// Promotes descendants and records the matched folder as visible evidence.
+    /// - Parameters:
+    ///   - items: Files and folders contained by the matched scope.
+    ///   - scope: Matched folder and calibrated strength.
+    ///   - rank: Position among bounded folder scopes.
+    ///   - accumulators: Mutable per-item score state.
+    private func addFolderScope(
+        items: [IndexedItem],
+        scope: FolderScopeMatch,
+        rank: Int,
+        to accumulators: inout [UUID: ScoreAccumulator]
+    ) {
+        for item in items {
+            var accumulator = accumulators[item.id] ?? ScoreAccumulator()
+            if scope.strength > accumulator.path {
+                accumulator.path = scope.strength
+                accumulator.folderEvidence = scope.folder.displayName
+            }
+            accumulator.reciprocalRank += reciprocal(rank: rank)
+            accumulators[item.id] = accumulator
+        }
+    }
+
     /// Converts raw signals into an explainable result.
     /// - Parameters:
     ///   - accumulator: Raw fused signals.
     ///   - item: Matching indexed item.
+    ///   - matchesFileType: Whether the item satisfies an explicit user-requested kind.
     /// - Returns: Calibrated search result with evidence.
     private func finalize(
         accumulator: ScoreAccumulator,
-        item: IndexedItem
+        item: IndexedItem,
+        matchesFileType: Bool
     ) -> SearchResult {
         let recency = recencyScore(date: item.modifiedAt)
+        let fileType = matchesFileType ? 1.0 : 0.0
         let total = accumulator.exactName * RetrievalConstants.exactNameWeight
             + accumulator.path * RetrievalConstants.pathWeight
             + accumulator.keyword * RetrievalConstants.keywordWeight
             + accumulator.semantic * RetrievalConstants.semanticWeight
-            + accumulator.fileType * RetrievalConstants.fileTypeWeight
+            + fileType * RetrievalConstants.fileTypeWeight
             + recency * RetrievalConstants.recencyWeight
             + accumulator.reciprocalRank
         let normalized = min(1, total / 10)
@@ -190,13 +392,17 @@ actor HybridRetrievalService {
                 path: accumulator.path,
                 keyword: accumulator.keyword,
                 semantic: accumulator.semantic,
-                fileType: accumulator.fileType,
+                fileType: fileType,
                 recency: recency,
                 reciprocalRank: accumulator.reciprocalRank,
                 total: total
             ),
             confidence: confidence,
-            explanation: explanation(accumulator: accumulator),
+            explanation: explanation(
+                accumulator: accumulator,
+                matchesFileType: matchesFileType,
+                confidence: confidence
+            ),
             citations: citations
         )
     }
@@ -244,19 +450,49 @@ actor HybridRetrievalService {
     }
 
     /// Explains the strongest deterministic matching signals.
-    /// - Parameter accumulator: Raw fused signals.
+    /// - Parameters:
+    ///   - accumulator: Raw fused signals.
+    ///   - matchesFileType: Whether the item satisfies an explicit user-requested kind.
+    ///   - confidence: Calibrated certainty used to avoid overstating semantic evidence.
     /// - Returns: Concise user-visible reason summary.
-    private func explanation(accumulator: ScoreAccumulator) -> String {
-        var reasons: [String] = []
-        if accumulator.exactName == 1 { reasons.append(RetrievalStrings.exactNameMatch) }
-        else if accumulator.exactName > 0 { reasons.append(RetrievalStrings.nameMatch) }
-        if accumulator.path > 0 { reasons.append(RetrievalStrings.pathMatch) }
-        if accumulator.keyword > 0 { reasons.append(RetrievalStrings.keywordMatch) }
-        if accumulator.semantic > 0 { reasons.append(RetrievalStrings.semanticMatch) }
-        return RetrievalStrings.matchSummary(
-            reasons: reasons,
-            matchesFileType: accumulator.fileType > 0
+    private func explanation(
+        accumulator: ScoreAccumulator,
+        matchesFileType: Bool,
+        confidence: ConfidenceLevel
+    ) -> String {
+        if accumulator.exactName == 1 { return RetrievalStrings.exactNameEvidence }
+        if let folderName = accumulator.folderEvidence {
+            return RetrievalStrings.folderScopeEvidence(folderName)
+        }
+        if accumulator.exactName > 0 { return RetrievalStrings.nameEvidence }
+        if accumulator.path > 0 { return RetrievalStrings.pathEvidence }
+        if let evidence = accumulator.keywordEvidence?.1 {
+            return RetrievalStrings.keywordEvidence(explanationExcerpt(evidence))
+        }
+        if let evidence = accumulator.semanticEvidence?.1 {
+            return RetrievalStrings.semanticEvidence(
+                explanationExcerpt(evidence),
+                isUncertain: confidence == .low
+            )
+        }
+        return matchesFileType ? RetrievalStrings.fileTypeMatch : RetrievalStrings.fallbackMatch
+    }
+
+    /// Produces a compact single-line passage for one result-card explanation.
+    /// - Parameter text: Indexed passage that produced the match.
+    /// - Returns: Whitespace-normalized evidence bounded for the card layout.
+    private func explanationExcerpt(_ text: String) -> String {
+        let normalized = text.components(separatedBy: .whitespacesAndNewlines)
+            .filter { $0.isEmpty == false }
+            .joined(separator: AppConstants.Text.space)
+        guard normalized.count > RetrievalConstants.maximumExplanationEvidenceCharacters else {
+            return normalized
+        }
+        let end = normalized.index(
+            normalized.startIndex,
+            offsetBy: RetrievalConstants.maximumExplanationEvidenceCharacters
         )
+        return String(normalized[..<end]) + AppConstants.Text.ellipsis
     }
 }
 
@@ -266,8 +502,15 @@ private struct ScoreAccumulator {
     var path = 0.0
     var keyword = 0.0
     var semantic = 0.0
-    var fileType = 0.0
     var reciprocalRank = 0.0
     var keywordEvidence: (UUID, String)?
     var semanticEvidence: (UUID, String)?
+    var folderEvidence: String?
+}
+
+/// One folder whose metadata or semantic context can scope descendant retrieval.
+private struct FolderScopeMatch {
+    let folder: IndexedItem
+    let strength: Double
+    let isLiteral: Bool
 }

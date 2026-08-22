@@ -24,6 +24,14 @@ struct ReadOnlyFileScanner: Sendable {
     internal func scan(root: AuthorizedRoot, at rootURL: URL) throws -> ScanSnapshot {
         let fileManager = FileManager.default
         var exclusions: [ExcludedPath] = []
+        let rootValues = try rootURL.resourceValues(forKeys: resourceKeys)
+        let rootItem = makeItem(root: root, rootURL: rootURL, url: rootURL, values: rootValues)
+        var files = [
+            ScannedFile(
+                item: rootItem,
+                isExtractable: FileKindResolver.isExtractable(url: rootURL, kind: rootItem.kind)
+            )
+        ]
         guard let enumerator = fileManager.enumerator(
             at: rootURL,
             includingPropertiesForKeys: Array(resourceKeys),
@@ -36,7 +44,6 @@ struct ReadOnlyFileScanner: Sendable {
             throw LocalAssistantError.indexing(rootURL.path)
         }
 
-        var files: [ScannedFile] = []
         for case let url as URL in enumerator {
             try Task.checkCancellation()
             do {
@@ -78,10 +85,9 @@ struct ReadOnlyFileScanner: Sendable {
         let kind = FileKindResolver.kind(for: standardizedURL, values: values)
         let relativeComponents = standardizedURL.pathComponents.dropFirst(rootURL.standardizedFileURL.pathComponents.count)
         let relativePath = relativeComponents.joined(separator: FileConstants.pathSeparator)
-        let parentPath = standardizedURL.deletingLastPathComponent().path
-        let parentID = parentPath == rootURL.standardizedFileURL.path
+        let parentID = standardizedURL == rootURL.standardizedFileURL
             ? nil
-            : StableIdentifier.uuid(for: parentPath)
+            : StableIdentifier.uuid(for: standardizedURL.deletingLastPathComponent().path)
         let byteCount = Int64(values.fileSize ?? 0)
         return IndexedItem(
             id: StableIdentifier.uuid(for: standardizedURL.path),

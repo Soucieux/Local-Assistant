@@ -5,16 +5,16 @@ enum IndexingDecisionPolicy {
     /// Returns whether a scanned item can safely skip extraction and embedding.
     /// - Parameters:
     ///   - metadataMatches: Whether the current and retained metadata hashes match.
-    ///   - isExtractable: Whether the file should contain locally extracted text.
+    ///   - requiresContentIndexing: Whether the item should retain searchable text or context.
     ///   - previousContentHash: Content hash retained by the earlier successful run.
     /// - Returns: `true` when no changed content or failed extraction needs processing.
     internal static func itemIsUnchanged(
         metadataMatches: Bool,
-        isExtractable: Bool,
+        requiresContentIndexing: Bool,
         previousContentHash: String?
     ) -> Bool {
         metadataMatches
-            && (isExtractable == false || previousContentHash != nil)
+            && (requiresContentIndexing == false || previousContentHash != nil)
     }
 
     /// Returns whether a path belongs to a temporarily unreadable scan subtree.

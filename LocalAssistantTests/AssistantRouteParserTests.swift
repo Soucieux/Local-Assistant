@@ -26,6 +26,28 @@ struct AssistantRouteParserTests {
         #expect(reply(route) == "Swift is a language.")
     }
 
+    @Test("A folder request recovers when the model returns only an acknowledgement")
+    internal func recoversFolderSearchWithoutMarker() {
+        let route = parser.parse(
+            modelOutput: "Matching results are shown below.",
+            originalQuestion: "school folders"
+        )
+        let parsed = plan(route)
+        #expect(parsed?.text == "school")
+        #expect(parsed?.filter.kinds == [.folder])
+    }
+
+    @Test("A local file possession request recovers without a routing marker")
+    internal func recoversFileSearchWithoutMarker() {
+        let route = parser.parse(
+            modelOutput: "Matching results are shown below.",
+            originalQuestion: "I want to know if I have any school files"
+        )
+        let parsed = plan(route)
+        #expect(parsed?.text == "school")
+        #expect(parsed?.filter.kinds.isEmpty == true)
+    }
+
     @Test("Surrounding whitespace is trimmed from a conversational reply")
     func trimsReplyWhitespace() {
         let route = parser.parse(modelOutput: "  Hello.  \n", originalQuestion: "hi")
@@ -48,11 +70,38 @@ struct AssistantRouteParserTests {
         #expect(parsed?.filter.kinds.isEmpty == true)
     }
 
-    @Test("Unrecognized kinds are dropped instead of failing the search")
-    func ignoresUnknownKinds() {
+    @Test("Model-invented kinds are ignored instead of becoming hard filters")
+    func ignoresModelInventedKinds() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"notes","kinds":["pdf","hologram"]}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find my notes"))
-        #expect(parsed?.filter.kinds == Set([IndexedItemKind.pdf]))
+        #expect(parsed?.filter.kinds.isEmpty == true)
+    }
+
+    @Test("A type stated by the user remains a hard filter when the model omits it")
+    func preservesExplicitUserKind() {
+        let output = #"[[SEARCH_LOCAL_FILES]]{"query":"quarterly budget","kinds":[]}"#
+        let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find quarterly budget PDFs"))
+        #expect(parsed?.filter.kinds == [.pdf])
+    }
+
+    @Test("An embedded image request reports the current visual-index limitation")
+    func rejectsUnsupportedEmbeddedImageConstraint() {
+        let output = #"[[SEARCH_LOCAL_FILES]]{"query":"people","kinds":["pdf"]}"#
+        let route = parser.parse(
+            modelOutput: output,
+            originalQuestion: "find files with images of people inside"
+        )
+        #expect(reply(route) == RetrievalStrings.visualContentUnavailable)
+    }
+
+    @Test("An ordinary visual knowledge question remains conversation")
+    func preservesVisualKnowledgeConversation() {
+        let output = "A portrait is an image representing a person."
+        let route = parser.parse(
+            modelOutput: output,
+            originalQuestion: "what is an image of a person"
+        )
+        #expect(reply(route) == output)
     }
 
     @Test("A malformed payload still searches, using the user's own words")
@@ -88,6 +137,47 @@ struct AssistantRouteParserTests {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"","kinds":["pdf"]}"#
         let route = parser.parse(modelOutput: output, originalQuestion: "show all pdf")
         #expect(plan(route) != nil)
+    }
+
+    @Test("A broad plural type request becomes a type-only search")
+    func normalizesBroadPluralTypeRequest() {
+        let output = #"[[SEARCH_LOCAL_FILES]]{"query":"any PDFs","kinds":["pdf"]}"#
+        let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "Any PDFs?"))
+        #expect(parsed?.text.isEmpty == true)
+        #expect(parsed?.filter.kinds == [.pdf])
+    }
+
+    @Test("Conversational list wording does not become semantic evidence")
+    func normalizesConversationalTypeRequest() {
+        let output = #"[[SEARCH_LOCAL_FILES]]{"query":"do you have PDFs","kinds":["pdf"]}"#
+        let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "Do I have any PDFs?"))
+        #expect(parsed?.text.isEmpty == true)
+        #expect(parsed?.filter.kinds == [.pdf])
+    }
+
+    @Test("A requested file type keeps its meaningful topic")
+    func preservesTopicInTypedRequest() {
+        let output = #"[[SEARCH_LOCAL_FILES]]{"query":"PDFs","kinds":["pdf"]}"#
+        let parsed = plan(
+            parser.parse(
+                modelOutput: output,
+                originalQuestion: "Show PDFs about insurance"
+            )
+        )
+        #expect(parsed?.text == "insurance")
+        #expect(parsed?.filter.kinds == [.pdf])
+    }
+
+    @Test("A malformed type-only route still produces a broad listing")
+    func normalizesMalformedTypeOnlyRoute() {
+        let parsed = plan(
+            parser.parse(
+                modelOutput: "[[SEARCH_LOCAL_FILES]]{broken",
+                originalQuestion: "List all available PDFs"
+            )
+        )
+        #expect(parsed?.text.isEmpty == true)
+        #expect(parsed?.filter.kinds == [.pdf])
     }
 
     @Test("A definition question is answered rather than treated as a file request")

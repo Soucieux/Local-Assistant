@@ -105,6 +105,11 @@ struct ScoreBreakdown: Codable, Hashable, Sendable {
         reciprocalRank: 0,
         total: 0
     )
+
+    /// Whether a non-empty query matched something beyond type, recency, or rank position.
+    internal var hasQueryEvidence: Bool {
+        exactName > 0 || path > 0 || keyword > 0 || semantic > 0
+    }
 }
 
 /// A bounded excerpt linking an answer to a local file.

@@ -1,6 +1,18 @@
 import Foundation
 
 extension AssistantDatabase {
+    /// Saves current file-system metadata without replacing existing extracted passages.
+    /// - Parameter items: Complete scanned hierarchy with prior content hashes preserved.
+    /// - Throws: A local database error or cancellation when the metadata pass cannot finish.
+    internal func upsertItemMetadata(_ items: [IndexedItem]) throws {
+        try inTransaction {
+            for item in items {
+                try Task.checkCancellation()
+                try upsertItem(item)
+            }
+        }
+    }
+
     /// Replaces one indexed item and all of its extracted passages atomically.
     /// - Parameters:
     ///   - item: Current read-only file metadata.

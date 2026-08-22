@@ -8,6 +8,16 @@ enum FileConstants {
         static let fieldSeparator = "\u{1F}"
     }
 
+    enum FolderIndex {
+        static let version = 1
+        static let maximumChildNames = 64
+        static let titlePrefix = "Folder: "
+        static let pathPrefix = "Path: "
+        static let contentsPrefix = "Contains: "
+        static let childSeparator = ", "
+        static let sectionName = "Folder context"
+    }
+
     static let pathSeparator = "/"
     static let pathSeparatorCharacter: Character = "/"
     static let hiddenNamePrefix = "."

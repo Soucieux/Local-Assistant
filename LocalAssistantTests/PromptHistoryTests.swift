@@ -80,4 +80,39 @@ struct PromptHistoryTests {
 
         #expect(prompt.contains(summary))
     }
+
+    @Test("frames retained messages as real user and assistant turns")
+    internal func framesHistoryAsChatTurns() {
+        let userMessage = ChatMessage.user("My project is called Atlas.")
+        let assistantReply = assistantMessage("I will remember that name.")
+        let prompt = builder.assistantPrompt(
+            question: "What is it called?",
+            history: [userMessage, assistantReply]
+        )
+
+        let framedHistory = InferenceConstants.chatUserStart
+            + userMessage.text
+            + AppConstants.Text.newline
+            + InferenceConstants.chatAssistantStart
+            + assistantReply.text
+            + AppConstants.Text.newline
+        #expect(prompt.contains(framedHistory))
+    }
+
+    @Test("retains the newest turn when older messages exhaust the budget")
+    internal func prioritizesNewestHistory() {
+        let oversizedReply = assistantMessage(
+            String(repeating: "Earlier response. ", count: 400)
+        )
+        let latestUser = ChatMessage.user("The latest project name is Beacon.")
+        let latestAssistant = assistantMessage("Beacon is the current project name.")
+        let prompt = builder.assistantPrompt(
+            question: "What is the current project name?",
+            history: [oversizedReply, latestUser, latestAssistant]
+        )
+
+        #expect(prompt.contains(latestUser.text))
+        #expect(prompt.contains(latestAssistant.text))
+    }
+
 }

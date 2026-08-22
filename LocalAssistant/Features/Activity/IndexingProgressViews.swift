@@ -61,7 +61,10 @@ struct IndexingSummaryBadges: View {
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(tint)
                 .frame(width: 28, height: 28)
-                .background(Circle().fill(tint.opacity(0.12)))
+                .background(
+                    RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                        .fill(tint.opacity(0.12))
+                )
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxSmall) {
                 Text(title)
@@ -105,7 +108,7 @@ struct BackgroundIndexingBanner: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
                 HStack {
                     Text(UIStrings.indexingInBackground)
-                        .font(.callout.weight(.semibold))
+                        .font(.callout.monospaced().weight(.semibold))
                     if let folderName = progress.folderName {
                         Text(UIStrings.indexingFolderLabel(folderName))
                             .font(.callout)
@@ -164,10 +167,15 @@ struct BackgroundIndexingBanner: View {
             }
         }
         .padding(DesignTokens.Spacing.medium)
-        .background(DesignTokens.Color.processingSurface)
+        .background(DesignTokens.Color.elevatedSurface)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(DesignTokens.Color.processing)
+                .frame(width: 3)
+        }
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(DesignTokens.Color.processing.opacity(0.20))
+                .fill(DesignTokens.Color.commandInk.opacity(0.18))
                 .frame(height: 1)
         }
     }

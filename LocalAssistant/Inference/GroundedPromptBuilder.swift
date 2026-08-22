@@ -10,10 +10,8 @@ struct GroundedPromptBuilder: Sendable {
     internal func assistantPrompt(question: String, history: [ChatMessage]) -> String {
         InferenceConstants.chatSystemStart
             + InferenceConstants.assistantSystemPrompt
-            + InferenceConstants.chatUserStart
-            + InferenceConstants.recentConversationHeader
             + boundedHistory(history)
-            + InferenceConstants.questionHeader
+            + InferenceConstants.chatUserStart
             + sanitizedUntrustedText(question)
             + AppConstants.Text.newline
             + InferenceConstants.noThinkingInstruction
@@ -35,11 +33,10 @@ struct GroundedPromptBuilder: Sendable {
         let historyText = boundedHistory(history)
         return InferenceConstants.chatSystemStart
             + InferenceConstants.groundedSystemPrompt
+            + historyText
             + InferenceConstants.chatUserStart
             + InferenceConstants.contextHeader
             + evidenceText
-            + InferenceConstants.recentConversationHeader
-            + historyText
             + InferenceConstants.questionHeader
             + sanitizedUntrustedText(question)
             + AppConstants.Text.newline
@@ -67,23 +64,39 @@ struct GroundedPromptBuilder: Sendable {
         return output
     }
 
-    /// Formats recent user and assistant messages under a character budget.
+    /// Formats recent user and assistant messages as real Qwen chat turns.
     /// - Parameter history: Private chronological message history.
-    /// - Returns: Bounded dialogue text.
+    /// - Returns: Bounded role-framed dialogue that prioritizes the newest messages.
     private func boundedHistory(_ history: [ChatMessage]) -> String {
-        let recent = history.suffix(InferenceConstants.recentMessageLimit)
-        var output = AppConstants.Text.empty
-        for message in recent {
-            let label = message.role == .user
-                ? InferenceConstants.userRoleLabel
-                : InferenceConstants.assistantRoleLabel
-            let line = label
-                + historyText(for: message)
+        var blocks: [String] = []
+        var characterCount = 0
+        let recent = history
+            .filter { $0.role == .user || $0.role == .assistant }
+            .suffix(InferenceConstants.recentMessageLimit)
+        for message in recent.reversed() {
+            let visibleText = String(
+                historyText(for: message)
+                    .prefix(InferenceConstants.maximumHistoryMessageCharacters)
+            )
+            let block = historyRoleStart(for: message.role)
+                + visibleText
                 + AppConstants.Text.newline
-            if output.count + line.count > InferenceConstants.maximumHistoryCharacters { break }
-            output += line
+            guard characterCount + block.count <= InferenceConstants.maximumHistoryCharacters else {
+                break
+            }
+            blocks.insert(block, at: 0)
+            characterCount += block.count
         }
-        return output
+        return blocks.joined()
+    }
+
+    /// Returns the Qwen role boundary for one retained conversation message.
+    /// - Parameter role: User or assistant author of the message.
+    /// - Returns: Chat-template prefix that closes the prior role and opens this one.
+    private func historyRoleStart(for role: MessageRole) -> String {
+        role == .user
+            ? InferenceConstants.chatUserStart
+            : InferenceConstants.chatAssistantStart
     }
 
     /// Returns the conversation text a prompt may show for one stored message.

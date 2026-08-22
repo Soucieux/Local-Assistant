@@ -4,6 +4,11 @@ import Foundation
 struct ScannedFile: Hashable, Sendable {
     let item: IndexedItem
     let isExtractable: Bool
+
+    /// Whether this item needs a searchable local content record.
+    var requiresContentIndexing: Bool {
+        isExtractable || item.kind == .folder
+    }
 }
 
 /// Reason a path was deliberately excluded from indexing.

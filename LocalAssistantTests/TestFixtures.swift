@@ -8,22 +8,30 @@ enum TestFixtures {
     /// - Parameters:
     ///   - name: Visible file or folder name.
     ///   - path: Absolute path on disk.
+    ///   - relativePath: Optional root-relative path.
+    ///   - id: Stable item identifier.
+    ///   - rootID: Authorized root identifier.
+    ///   - parentID: Optional indexed parent folder identifier.
     ///   - isDirectory: Whether the item represents a folder.
     ///   - kind: Stored item category.
     /// - Returns: An indexed item suitable for formatter and retrieval tests.
     static func item(
         name: String,
         path: String? = nil,
+        relativePath: String? = nil,
+        id: UUID = UUID(),
+        rootID: UUID = UUID(),
+        parentID: UUID? = nil,
         isDirectory: Bool = false,
         kind: IndexedItemKind = .document
     ) -> IndexedItem {
         let resolvedPath = path ?? "/Users/example/Documents/\(name)"
         return IndexedItem(
-            id: UUID(),
-            rootID: UUID(),
-            parentID: nil,
+            id: id,
+            rootID: rootID,
+            parentID: parentID,
             url: URL(fileURLWithPath: resolvedPath),
-            relativePath: name,
+            relativePath: relativePath ?? name,
             displayName: name,
             kind: kind,
             contentType: nil,

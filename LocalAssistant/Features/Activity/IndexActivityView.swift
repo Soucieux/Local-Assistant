@@ -9,16 +9,7 @@ struct IndexActivityView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    DesignTokens.Color.canvas,
-                    DesignTokens.Color.processing.opacity(0.025),
-                    DesignTokens.Color.primaryAccent.opacity(0.018)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            CompanionCanvasBackground()
 
             VStack(spacing: 0) {
                 header
@@ -57,22 +48,22 @@ struct IndexActivityView: View {
 
             Image(systemName: SystemImages.activity)
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(DesignTokens.Color.primaryAccent)
+                .foregroundStyle(DesignTokens.Color.commandAccent)
                 .frame(
                     width: DesignTokens.Control.appIconSize,
                     height: DesignTokens.Control.appIconSize
                 )
                 .background(
                     RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
-                        .fill(DesignTokens.Color.selectedSurface)
+                        .fill(DesignTokens.Color.commandAccent.opacity(0.10))
                 )
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxSmall) {
                 Text(UIStrings.activityTitle)
-                    .font(.title3.weight(.bold))
+                    .font(.title3.monospaced().weight(.semibold))
                 Text(UIStrings.activityDetail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Color.commandMutedInk)
             }
 
             Spacer()
@@ -88,9 +79,11 @@ struct IndexActivityView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.xLarge)
         .padding(.vertical, DesignTokens.Spacing.medium)
-        .background(.regularMaterial)
+        .background(DesignTokens.Color.commandLightCanvas.opacity(0.96))
         .overlay(alignment: .bottom) {
-            Rectangle().fill(DesignTokens.Color.hairline).frame(height: 1)
+            Rectangle()
+                .fill(DesignTokens.Color.commandInk.opacity(0.28))
+                .frame(height: 1)
         }
     }
 
@@ -133,7 +126,7 @@ struct IndexActivityView: View {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.medium) {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxSmall) {
                     Label(UIStrings.filterHistory, systemImage: SystemImages.filter)
-                        .font(.headline)
+                        .font(.headline.monospaced())
                     Text(UIStrings.filterHistoryDescription)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -170,7 +163,7 @@ struct IndexActivityView: View {
         .padding(DesignTokens.Spacing.large)
         .background(
             RoundedRectangle(cornerRadius: DesignTokens.Radius.large)
-                .fill(DesignTokens.Color.subtleFill)
+                .fill(DesignTokens.Color.elevatedSurface)
         )
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Radius.large)
@@ -323,7 +316,7 @@ struct IndexActivityView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(tint)
             Text(value)
-                .font(.title2.weight(.bold))
+                .font(.title2.monospaced().weight(.bold))
         }
         .padding(DesignTokens.Spacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -351,7 +344,7 @@ struct IndexActivityView: View {
             content()
         }
         .padding(DesignTokens.Spacing.large)
-        .cardSurface(tint: DesignTokens.Color.primaryAccent)
+        .cardSurface()
     }
 
     /// Reports whether any activity filter is narrowing the retained history.

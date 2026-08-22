@@ -12,8 +12,19 @@ struct AssistantRouteParser: Sendable {
         if requiresClarification(question: originalQuestion) {
             return .reply(RetrievalStrings.ambiguousFileRequest)
         }
-        guard let payload = searchPayload(in: output) else {
+        let payload = searchPayload(in: output)
+        guard payload != nil || shouldRecoverLocalSearch(
+            modelOutput: output,
+            question: originalQuestion
+        ) else {
             return .reply(output)
+        }
+        if requiresVisualUnderstanding(question: originalQuestion) {
+            return .reply(RetrievalStrings.visualContentUnavailable)
+        }
+
+        guard let payload else {
+            return .search(fallbackPlan(for: originalQuestion))
         }
 
         guard let data = payload.data(using: .utf8),
@@ -21,13 +32,107 @@ struct AssistantRouteParser: Sendable {
             return .search(fallbackPlan(for: originalQuestion))
         }
 
-        let kinds = Set((encoded.kinds ?? []).compactMap(IndexedItemKind.init(rawValue:)))
+        let kinds = explicitlyRequestedKinds(question: originalQuestion)
         return .search(
             LocalSearchPlan(
-                text: encoded.query.trimmingCharacters(in: .whitespacesAndNewlines),
+                text: normalizedSearchText(
+                    modelQuery: encoded.query,
+                    originalQuestion: originalQuestion,
+                    kinds: kinds
+                ),
                 filter: SearchFilter.with(kinds: kinds)
             )
         )
+    }
+
+    /// Removes request wording and hard file-type terms from one model-routed search.
+    /// - Parameters:
+    ///   - modelQuery: Search text proposed by the embedded routing model.
+    ///   - originalQuestion: User wording used to distinguish a broad type listing from a topic search.
+    ///   - kinds: File kinds explicitly requested by the user.
+    /// - Returns: Topic terms only, or an empty string for a broad type-only listing.
+    private func normalizedSearchText(
+        modelQuery: String,
+        originalQuestion: String,
+        kinds: Set<IndexedItemKind>
+    ) -> String {
+        let originalTerms = distinguishingTerms(in: originalQuestion, kinds: kinds)
+        guard originalTerms.isEmpty == false else { return AppConstants.Text.empty }
+        let modelTerms = distinguishingTerms(in: modelQuery, kinds: kinds)
+        return (modelTerms.isEmpty ? originalTerms : modelTerms).joined(
+            separator: AppConstants.Text.space
+        )
+    }
+
+    /// Extracts words that describe the requested subject rather than the search action or kind.
+    /// - Parameters:
+    ///   - text: User or model search wording.
+    ///   - kinds: File kinds whose recognized names should not become semantic evidence.
+    /// - Returns: Ordered lowercase topic terms.
+    private func distinguishingTerms(
+        in text: String,
+        kinds: Set<IndexedItemKind>
+    ) -> [String] {
+        let requestedTypeTerms = kinds.reduce(into: Set<String>()) { result, kind in
+            result.formUnion(RetrievalConstants.fileTypeTerms[kind] ?? [])
+        }
+        let excludedTerms = RetrievalConstants.searchFillerTerms.union(requestedTypeTerms)
+        return orderedTokens(text).filter { excludedTerms.contains($0) == false }
+    }
+
+    /// Derives hard item kinds from the user's words rather than trusting model-generated kinds.
+    /// - Parameter question: Original user request.
+    /// - Returns: File kinds explicitly requested as result types.
+    private func explicitlyRequestedKinds(question: String) -> Set<IndexedItemKind> {
+        let tokens = orderedTokens(question)
+        return Set(RetrievalConstants.fileTypeTerms.compactMap { kind, terms in
+            let requested = tokens.enumerated().contains { index, token in
+                terms.contains(token) && isEmbeddedContentReference(at: index, tokens: tokens) == false
+            }
+            return requested ? kind : nil
+        })
+    }
+
+    /// Reports whether a file-type word describes content inside another file.
+    /// - Parameters:
+    ///   - index: Position of the candidate file-type term.
+    ///   - tokens: Ordered lowercase words from the original request.
+    /// - Returns: `true` when the term follows a container-content relationship.
+    private func isEmbeddedContentReference(at index: Int, tokens: [String]) -> Bool {
+        guard index > 0,
+              let relationIndex = tokens[..<index].lastIndex(where: {
+                  RetrievalConstants.embeddedContentRelationTerms.contains($0)
+              }) else {
+            return false
+        }
+        return tokens[..<relationIndex].contains {
+            RetrievalConstants.containerTerms.contains($0)
+        }
+    }
+
+    /// Detects a request whose required evidence is unavailable to the text-only index.
+    /// - Parameter question: Original user request.
+    /// - Returns: `true` for embedded-image or visual-subject constraints.
+    private func requiresVisualUnderstanding(question: String) -> Bool {
+        let tokens = orderedTokens(question)
+        let visualIndices = tokens.indices.filter {
+            RetrievalConstants.visualItemTerms.contains(tokens[$0])
+        }
+        return visualIndices.contains { index in
+            isEmbeddedContentReference(at: index, tokens: tokens)
+                || tokens[(index + 1)...].contains {
+                    RetrievalConstants.visualSubjectRelationTerms.contains($0)
+                }
+        }
+    }
+
+    /// Splits user text into ordered lowercase alphanumeric words.
+    /// - Parameter text: Arbitrary user-entered text.
+    /// - Returns: Non-empty normalized tokens in source order.
+    private func orderedTokens(_ text: String) -> [String] {
+        text.lowercased().components(
+            separatedBy: CharacterSet.alphanumerics.inverted
+        ).filter { $0.isEmpty == false }
     }
 
     /// Extracts the structured payload when the model routed the request to local search.
@@ -48,6 +153,26 @@ struct AssistantRouteParser: Sendable {
             .dropFirst(InferenceConstants.localSearchRoutingToken.count)
             .drop { InferenceConstants.routingMarkerTrailingCharacters.contains($0) }
         return String(payload)
+    }
+
+    /// Recovers an explicit local-item request when the routing model returns only an acknowledgement.
+    /// - Parameters:
+    ///   - modelOutput: Visible model text that omitted the structured routing marker.
+    ///   - question: Original user request used to confirm local-item intent.
+    /// - Returns: `true` when the request should use deterministic local search fallback.
+    private func shouldRecoverLocalSearch(modelOutput: String, question: String) -> Bool {
+        let tokens = orderedTokens(question)
+        let itemTerms = RetrievalConstants.fileTypeTerms.values.reduce(
+            into: Set([RetrievalConstants.singularFileToken, RetrievalConstants.pluralFileToken])
+        ) { result, terms in
+            result.formUnion(terms)
+        }
+        guard tokens.contains(where: itemTerms.contains) else { return false }
+        let hasExplicitIntent = tokens.contains(where: RetrievalConstants.localSearchIntentTerms.contains)
+        let acknowledgedSearch = modelOutput.lowercased().contains(
+            InferenceConstants.localSearchAcknowledgement
+        )
+        return hasExplicitIntent || acknowledgedSearch
     }
 
     /// Detects a singular file-type request that contains no distinguishing detail.
@@ -94,24 +219,13 @@ struct AssistantRouteParser: Sendable {
     /// - Parameter question: Original user request.
     /// - Returns: A bounded search plan that still enforces recognized file types.
     private func fallbackPlan(for question: String) -> LocalSearchPlan {
-        let components = question.lowercased().components(
-            separatedBy: CharacterSet.alphanumerics.inverted
-        )
-        let tokens = Set(components.filter { $0.isEmpty == false })
-        let kinds = Set(RetrievalConstants.fileTypeTerms.compactMap { kind, terms in
-            tokens.isDisjoint(with: terms) ? nil : kind
-        })
-        let excludedTerms = RetrievalConstants.searchFillerTerms.union(
-            RetrievalConstants.fileTypeTerms.values.reduce(into: Set<String>()) { result, terms in
-                result.formUnion(terms)
-            }
-        )
-        let remainingTerms = components.filter {
-            $0.isEmpty == false && excludedTerms.contains($0) == false
-        }
-        let normalizedText = remainingTerms.joined(separator: AppConstants.Text.space)
+        let kinds = explicitlyRequestedKinds(question: question)
         return LocalSearchPlan(
-            text: normalizedText.isEmpty ? question : normalizedText,
+            text: normalizedSearchText(
+                modelQuery: question,
+                originalQuestion: question,
+                kinds: kinds
+            ),
             filter: SearchFilter.with(kinds: kinds)
         )
     }
@@ -132,5 +246,4 @@ struct LocalSearchPlan: Sendable {
 /// Codable payload emitted after the local-search routing marker.
 private struct EncodedSearchPlan: Decodable {
     let query: String
-    let kinds: [String]?
 }

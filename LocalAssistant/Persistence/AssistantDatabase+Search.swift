@@ -68,6 +68,41 @@ extension AssistantDatabase {
         return items
     }
 
+    /// Returns indexed files and folders contained by one matched folder.
+    /// - Parameters:
+    ///   - folder: Indexed folder that defines the result scope.
+    ///   - kinds: Optional hard item kinds applied before limiting descendants.
+    ///   - limit: Maximum number of contained items.
+    /// - Returns: Direct children first, followed by deeper descendants in path order.
+    /// - Throws: A local database error when the query fails.
+    internal func descendants(
+        of folder: IndexedItem,
+        kinds: Set<IndexedItemKind>,
+        limit: Int
+    ) throws -> [IndexedItem] {
+        guard folder.kind == .folder, limit > 0 else { return [] }
+        let orderedKinds = orderedKinds(kinds)
+        let statement = try preparedStatement(
+            SQLStatements.descendantItems(kindCount: orderedKinds.count)
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(folder.rootID.uuidString, at: 1, in: statement)
+        try bind(folder.id.uuidString, at: 2, in: statement)
+        let prefix = SearchTextEscaping.escapedLike(
+            folder.url.path + FileConstants.pathSeparator
+        )
+        try bind(RetrievalConstants.prefixPattern(prefix), at: 3, in: statement)
+        var bindingIndex = try bindKinds(orderedKinds, startingAt: 4, in: statement)
+        try bind(folder.id.uuidString, at: bindingIndex, in: statement)
+        bindingIndex += 1
+        try bind(limit, at: bindingIndex, in: statement)
+        var items: [IndexedItem] = []
+        while try step(statement) {
+            items.append(try readIndexedItem(statement))
+        }
+        return items
+    }
+
     /// Executes a sanitized FTS5 query over names, paths, and extracted text.
     /// - Parameters:
     ///   - text: Plain user query.
@@ -130,24 +165,28 @@ extension AssistantDatabase {
             return try semanticSearchBatch(
                 embedding: embedding,
                 orderedKinds: orderedKinds,
-                neighborLimit: limit
+                neighborLimit: DatabaseConstants.boundedVectorNeighborCount(limit)
             )
         }
 
         guard try eligibleVectorRowCount(orderedKinds) > 0 else { return [] }
         let totalVectorCount = try vectorRowCount()
-        guard totalVectorCount > 0 else { return [] }
-        var neighborLimit = min(limit, totalVectorCount)
+        let maximumNeighborLimit = DatabaseConstants.boundedVectorNeighborCount(totalVectorCount)
+        guard maximumNeighborLimit > 0 else { return [] }
+        var neighborLimit = min(limit, maximumNeighborLimit)
         while true {
             let hits = try semanticSearchBatch(
                 embedding: embedding,
                 orderedKinds: orderedKinds,
                 neighborLimit: neighborLimit
             )
-            if hits.count >= limit || neighborLimit == totalVectorCount {
+            if hits.count >= limit || neighborLimit == maximumNeighborLimit {
                 return Array(hits.prefix(limit))
             }
-            neighborLimit += min(neighborLimit, totalVectorCount - neighborLimit)
+            neighborLimit = DatabaseConstants.nextVectorNeighborCount(
+                current: neighborLimit,
+                available: maximumNeighborLimit
+            )
         }
     }
 
@@ -163,6 +202,8 @@ extension AssistantDatabase {
         orderedKinds: [IndexedItemKind],
         neighborLimit: Int
     ) throws -> [SemanticHit] {
+        let boundedNeighborLimit = DatabaseConstants.boundedVectorNeighborCount(neighborLimit)
+        guard boundedNeighborLimit > 0 else { return [] }
         let statement = try preparedStatement(
             SQLStatements.semanticSearch(kindCount: orderedKinds.count)
         )
@@ -179,7 +220,7 @@ extension AssistantDatabase {
         }
         guard result == SQLITE_OK else { throw LocalAssistantError.database(databaseErrorMessage()) }
         bindingIndex += 1
-        try bind(neighborLimit, at: bindingIndex, in: statement)
+        try bind(boundedNeighborLimit, at: bindingIndex, in: statement)
         var hits: [SemanticHit] = []
         while try step(statement) {
             guard let chunkID = UUID(uuidString: requiredText(statement, column: 0)),
@@ -240,9 +281,24 @@ extension AssistantDatabase {
         _ kinds: [IndexedItemKind],
         in statement: OpaquePointer
     ) throws -> Int32 {
+        try bindKinds(kinds, startingAt: 1, in: statement)
+    }
+
+    /// Binds hard item kinds at an explicit position in a mixed-parameter query.
+    /// - Parameters:
+    ///   - kinds: Stable ordered item kinds.
+    ///   - startingIndex: First one-based binding position.
+    ///   - statement: Prepared search statement.
+    /// - Returns: The next one-based binding index.
+    /// - Throws: A local database error when a binding fails.
+    private func bindKinds(
+        _ kinds: [IndexedItemKind],
+        startingAt startingIndex: Int32,
+        in statement: OpaquePointer
+    ) throws -> Int32 {
         for (offset, kind) in kinds.enumerated() {
-            try bind(kind.rawValue, at: Int32(offset + 1), in: statement)
+            try bind(kind.rawValue, at: startingIndex + Int32(offset), in: statement)
         }
-        return Int32(kinds.count + 1)
+        return startingIndex + Int32(kinds.count)
     }
 }

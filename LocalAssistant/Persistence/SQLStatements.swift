@@ -342,6 +342,25 @@ enum SQLStatements {
         """
     }
 
+    /// Builds a bounded query for items contained by one indexed folder.
+    /// - Parameter kindCount: Number of optional hard item kinds bound after the folder path.
+    /// - Returns: Parameterized descendant search SQL.
+    internal static func descendantItems(kindCount: Int) -> String {
+        """
+        SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
+               byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+        FROM indexed_items
+        WHERE root_id = ?
+          AND id != ?
+          AND absolute_path LIKE ? ESCAPE '\\'
+          AND \(kindPredicate(column: "kind", count: kindCount))
+        ORDER BY
+            CASE WHEN parent_id = ? THEN 0 ELSE 1 END,
+            relative_path COLLATE NOCASE
+        LIMIT ?;
+        """
+    }
+
     /// Builds a batched item lookup for a bounded set of identifiers.
     ///
     /// Resolving candidates one at a time costs a prepared statement and an actor hop per

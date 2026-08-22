@@ -21,6 +21,14 @@ enum FileHasher {
         }
     }
 
+    /// Computes a stable SHA-256 digest for generated local search context.
+    /// - Parameter text: Private synthesized text that will be embedded locally.
+    /// - Returns: Lowercase hexadecimal digest.
+    internal static func sha256(of text: String) -> String {
+        let digest = SHA256.hash(data: Data(text.utf8))
+        return digest.map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
+    }
+
     /// Computes a stable hash for cheap file metadata comparisons.
     ///
     /// The extraction version participates so that an unchanged file is still re-read once
@@ -37,13 +45,17 @@ enum FileHasher {
         modifiedAt: Date?,
         kind: IndexedItemKind
     ) -> String {
-        let value = [
+        var fields = [
             path,
             String(byteCount),
             String(modifiedAt?.timeIntervalSince1970 ?? 0),
             kind.rawValue,
             String(ExtractionConstants.extractionVersion)
-        ].joined(separator: FileConstants.Hash.fieldSeparator)
+        ]
+        if kind == .folder {
+            fields.append(String(FileConstants.FolderIndex.version))
+        }
+        let value = fields.joined(separator: FileConstants.Hash.fieldSeparator)
         let digest = SHA256.hash(data: Data(value.utf8))
         return digest.map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
     }

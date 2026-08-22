@@ -25,7 +25,10 @@ struct SearchResultsView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, DesignTokens.Spacing.small)
                     .padding(.vertical, DesignTokens.Spacing.xSmall)
-                    .background(Capsule().fill(DesignTokens.Color.subtleFill))
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                            .fill(DesignTokens.Color.subtleFill)
+                    )
 
                 Spacer()
             }
@@ -89,7 +92,10 @@ private struct ResultRow: View {
                             .foregroundStyle(typeTint)
                             .padding(.horizontal, DesignTokens.Spacing.small)
                             .padding(.vertical, DesignTokens.Spacing.xSmall)
-                            .background(Capsule().fill(typeTint.opacity(0.11)))
+                            .background(
+                                RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                                    .fill(typeTint.opacity(0.11))
+                            )
 
                         if isTopResult || isAvailable == false {
                             StatusPill(
@@ -185,11 +191,15 @@ private struct ResultRow: View {
             Button {
                 Task { await model.open(result.item) }
             } label: {
-                Label(UIStrings.openFile, systemImage: SystemImages.open)
+                Label(UIStrings.openItem(result.item.kind), systemImage: SystemImages.open)
             }
             .buttonStyle(PrimaryActionButtonStyle())
             .disabled(isAvailable == false)
-            .help(isAvailable ? UIStrings.openFile : UIStrings.unavailableMatchHelp)
+            .help(
+                isAvailable
+                    ? UIStrings.openItem(result.item.kind)
+                    : UIStrings.unavailableMatchHelp
+            )
         }
     }
 }
