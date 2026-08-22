@@ -36,11 +36,11 @@ enum DesignTokens {
     }
 
     enum Radius {
-        static let small: CGFloat = 7
-        static let medium: CGFloat = 10
-        static let large: CGFloat = 14
-        static let xLarge: CGFloat = 18
-        static let xxLarge: CGFloat = 24
+        static let small: CGFloat = 3
+        static let medium: CGFloat = 5
+        static let large: CGFloat = 7
+        static let xLarge: CGFloat = 10
+        static let xxLarge: CGFloat = 14
     }
 
     enum Shadow {
@@ -56,10 +56,42 @@ enum DesignTokens {
         static let scrollDuration = 0.22
         static let controlDuration = 0.12
         static let waveformDuration = 0.1
+        static let commandRelocationDuration = 0.34
+        static let acquisitionDuration = 0.48
+        static let acquisitionStagger = 0.07
+        static let responseTransitionDuration = 0.24
+        static let screenTransitionDuration = 0.20
+        static let trianglePulseDuration = 1.40
+        static let triangleDimOpacity = 0.22
+    }
+
+    enum Command {
+        static let contentMaximumWidth: CGFloat = 980
+        static let responseMaximumWidth: CGFloat = 760
+        static let inputMaximumWidth: CGFloat = 560
+        static let findingMinimumWidth: CGFloat = 228
+        static let findingMaximumWidth: CGFloat = 310
+        static let findingMinimumHeight: CGFloat = 176
+        static let triangleWidth: CGFloat = 42
+        static let triangleHeight: CGFloat = 36
+        static let headerHeight: CGFloat = 68
+        static let headerControlHeight: CGFloat = 30
+        static let headerControlHorizontalPadding: CGFloat = 7
+        static let sectionRuleWidth: CGFloat = 142
+        static let acquisitionCornerLength: CGFloat = 17
+        static let acquisitionCornerWidth: CGFloat = 3
+        static let scanlineSpacing: CGFloat = 4
+        static let scanlineOpacity = 0.026
     }
 
     /// Geometry for the live microphone level meter shown in place of the composer field.
     enum Waveform {
+        /// Most the live indicator grows at full volume, as a fraction of its resting size.
+        static let indicatorScaleRange: CGFloat = 0.18
+
+        /// Newest level samples the indicator reacts to.
+        static let indicatorSampleCount = 3
+
         static let barWidth: CGFloat = 3
         static let barSpacing: CGFloat = 3
         static let minimumBarHeight: CGFloat = 3
@@ -70,16 +102,20 @@ enum DesignTokens {
 
     enum Color {
         static let primaryAction = SwiftUI.Color(
-            red: 0.29,
-            green: 0.34,
-            blue: 0.86
+            red: 0.082,
+            green: 0.082,
+            blue: 0.082
         )
         static let primaryActionPressed = SwiftUI.Color(
-            red: 0.23,
-            green: 0.27,
-            blue: 0.72
+            red: 0.18,
+            green: 0.18,
+            blue: 0.18
         )
-        static let primaryAccent = SwiftUI.Color(nsColor: .systemIndigo)
+        static let primaryAccent = SwiftUI.Color(
+            red: 0.84,
+            green: 0.10,
+            blue: 0.13
+        )
         static let voiceFill = SwiftUI.Color(
             red: 0.48,
             green: 0.27,
@@ -89,18 +125,36 @@ enum DesignTokens {
         static let voice = SwiftUI.Color(nsColor: .systemPurple)
         static let processing = SwiftUI.Color(nsColor: .systemOrange)
         static let destructive = SwiftUI.Color(nsColor: .systemRed)
-        static let graphite = SwiftUI.Color(nsColor: .labelColor)
-        static let hairline = SwiftUI.Color(nsColor: .separatorColor).opacity(0.72)
+        static let graphite = SwiftUI.Color(
+            red: 0.082,
+            green: 0.082,
+            blue: 0.082
+        )
+        static let hairline = graphite.opacity(0.18)
         static let selectedSurface = primaryAccent.opacity(0.11)
-        static let canvas = SwiftUI.Color(nsColor: .windowBackgroundColor)
-        static let elevatedSurface = SwiftUI.Color(nsColor: .controlBackgroundColor)
-        static let assistantSurface = SwiftUI.Color(nsColor: .textBackgroundColor)
+        static let canvas = SwiftUI.Color(
+            red: 0.945,
+            green: 0.941,
+            blue: 0.925
+        )
+        static let elevatedSurface = SwiftUI.Color.white.opacity(0.72)
+        static let assistantSurface = SwiftUI.Color.white.opacity(0.68)
         static let userSurface = primaryAction
         static let subtleFill = SwiftUI.Color.primary.opacity(0.055)
         static let focusRing = primaryAccent.opacity(0.72)
         static let voiceSurface = voice.opacity(0.12)
         static let processingSurface = processing.opacity(0.13)
         static let destructiveSurface = destructive.opacity(0.10)
+        /// Same color as `primaryAccent`; aliased so the command surface can be retinted
+        /// independently if its visual language ever diverges from the rest of the app.
+        static let commandAccent = primaryAccent
+        static let commandLightCanvas = canvas
+        static let commandInk = graphite
+        static let commandMutedInk = SwiftUI.Color(
+            red: 0.34,
+            green: 0.34,
+            blue: 0.33
+        )
 
         /// Returns a restrained identifying color for an indexed item category.
         /// - Parameter kind: Indexed file or folder category.
@@ -150,6 +204,7 @@ struct PrimaryActionButtonStyle: ButtonStyle {
                     : .easeOut(duration: DesignTokens.Motion.controlDuration),
                 value: configuration.isPressed
             )
+            .buttonHoverFeedback(tint: DesignTokens.Color.primaryAction)
     }
 }
 
@@ -187,6 +242,7 @@ struct SecondaryActionButtonStyle: ButtonStyle {
                     : .easeOut(duration: DesignTokens.Motion.controlDuration),
                 value: configuration.isPressed
             )
+            .buttonHoverFeedback(tint: DesignTokens.Color.graphite)
     }
 }
 
@@ -221,6 +277,7 @@ struct TintedActionButtonStyle: ButtonStyle {
                     : .easeOut(duration: DesignTokens.Motion.controlDuration),
                 value: configuration.isPressed
             )
+            .buttonHoverFeedback(tint: tint)
     }
 }
 
@@ -252,10 +309,13 @@ struct IconActionButtonStyle: ButtonStyle {
             .foregroundStyle(tint)
             .frame(width: size, height: size)
             .background(
-                Circle()
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
                     .fill(configuration.isPressed ? fill.opacity(0.72) : fill)
             )
-            .overlay(Circle().stroke(tint.opacity(0.12)))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                    .stroke(tint.opacity(0.18))
+            )
             .opacity(isEnabled ? 1 : 0.42)
             .scaleEffect(configuration.isPressed ? 0.94 : 1)
             .animation(
@@ -264,6 +324,7 @@ struct IconActionButtonStyle: ButtonStyle {
                     : .easeOut(duration: DesignTokens.Motion.controlDuration),
                 value: configuration.isPressed
             )
+            .buttonHoverFeedback(tint: tint)
     }
 }
 
@@ -293,6 +354,38 @@ struct DestructiveActionButtonStyle: ButtonStyle {
                     .stroke(DesignTokens.Color.destructive.opacity(0.20))
             )
             .opacity(isEnabled ? 1 : 0.46)
+            .buttonHoverFeedback(tint: DesignTokens.Color.destructive)
+    }
+}
+
+/// Stable hover feedback shared by every custom in-window button style.
+private struct ButtonHoverFeedbackModifier: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isHovered = false
+    let tint: Color
+
+    /// Adds visible pointer feedback without shifting the surrounding layout.
+    /// - Parameter content: Styled button content receiving hover feedback.
+    /// - Returns: Content with restrained brightness, depth, and optional scale feedback.
+    internal func body(content: Content) -> some View {
+        content
+            .brightness(isEnabled && isHovered ? 0.025 : 0)
+            .shadow(
+                color: tint.opacity(isEnabled && isHovered ? 0.18 : 0),
+                radius: isEnabled && isHovered ? 5 : 0,
+                y: isEnabled && isHovered ? 1 : 0
+            )
+            .scaleEffect(isEnabled && isHovered && reduceMotion == false ? 1.012 : 1)
+            .animation(
+                reduceMotion
+                    ? nil
+                    : .easeOut(duration: DesignTokens.Motion.controlDuration),
+                value: isHovered
+            )
+            .onHover { hovering in
+                isHovered = hovering
+            }
     }
 }
 
@@ -320,8 +413,14 @@ struct StatusPill: View {
             .foregroundStyle(tint)
             .padding(.horizontal, DesignTokens.Spacing.small)
             .padding(.vertical, DesignTokens.Spacing.xSmall)
-            .background(Capsule().fill(tint.opacity(0.10)))
-            .overlay(Capsule().stroke(tint.opacity(0.13)))
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                    .fill(tint.opacity(0.10))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
+                    .stroke(tint.opacity(0.20))
+            )
     }
 }
 
@@ -335,25 +434,67 @@ private struct CardSurfaceModifier: ViewModifier {
     internal func body(content: Content) -> some View {
         content
             .background(
-                RoundedRectangle(cornerRadius: DesignTokens.Radius.large)
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
                     .fill(
                         tint?.opacity(0.065)
                             ?? DesignTokens.Color.elevatedSurface
                     )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Radius.large)
-                    .stroke(tint?.opacity(0.20) ?? DesignTokens.Color.hairline)
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                    .stroke(
+                        tint?.opacity(0.24)
+                            ?? DesignTokens.Color.commandInk.opacity(0.22)
+                    )
             )
             .shadow(
-                color: .black.opacity(DesignTokens.Shadow.cardOpacity),
-                radius: DesignTokens.Shadow.cardRadius,
-                y: DesignTokens.Shadow.cardY
+                color: .black.opacity(0.025),
+                radius: 3,
+                y: 1
             )
     }
 }
 
+/// Fixed light application canvas with a restrained analogue scan texture.
+struct CompanionCanvasBackground: View {
+    /// Builds the shared background for the command, history, activity, and Settings screens.
+    var body: some View {
+        ZStack {
+            DesignTokens.Color.commandLightCanvas
+
+            Canvas { context, size in
+                var y: CGFloat = 0
+                while y < size.height {
+                    var path = Path()
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: size.width, y: y))
+                    context.stroke(
+                        path,
+                        with: .color(
+                            DesignTokens.Color.commandInk.opacity(
+                                DesignTokens.Command.scanlineOpacity
+                            )
+                        ),
+                        lineWidth: 0.5
+                    )
+                    y += DesignTokens.Command.scanlineSpacing
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+        .ignoresSafeArea()
+    }
+}
+
 extension View {
+    /// Applies the shared hover response to a custom button surface.
+    /// - Parameter tint: Color used for the restrained hover depth.
+    /// - Returns: The receiving custom button with enabled-state-aware feedback.
+    internal func buttonHoverFeedback(tint: Color) -> some View {
+        modifier(ButtonHoverFeedbackModifier(tint: tint))
+    }
+
     /// Applies the shared card treatment with an optional semantic accent.
     /// - Parameter tint: Optional accent identifying an emphasized card state.
     /// - Returns: The receiving view on an adaptive elevated surface.

@@ -5,6 +5,7 @@ enum SystemImages {
     static let indexedFolders = "folder.badge.gearshape"
     static let settings = "gearshape"
     static let activity = "clock.arrow.circlepath"
+    static let history = "text.bubble"
     static let monitoring = "wave.3.right.circle.fill"
     static let filter = "line.3.horizontal.decrease"
     static let source = "arrow.triangle.branch"
@@ -50,6 +51,7 @@ enum SystemImages {
     static let text = "doc.plaintext.fill"
     static let archive = "archivebox.fill"
     static let other = "doc.fill"
+    static let version = "number"
 
     /// Returns the most recognizable SF Symbol for an indexed item category.
     /// - Parameter kind: Indexed file or folder category.

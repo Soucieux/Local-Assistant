@@ -1,8 +1,9 @@
 import Foundation
 
 /// Main-window destinations that preserve one focused application surface.
-enum AppScreen {
+enum AppScreen: Hashable {
     case assistant
+    case history
     case activity
     case settings
 }
@@ -58,6 +59,17 @@ enum LocalModelCapabilityState: String, Sendable {
     case ready
     case missing
     case integrityFailure
+}
+
+/// User-selected interaction used to start and finish local speech recognition.
+enum VoiceInputMode: String, CaseIterable, Sendable {
+    case clickToSpeak
+    case holdSpace
+
+    /// Whether quiet audio should finish and submit the active capture.
+    var stopsAfterSilence: Bool {
+        self == .clickToSpeak
+    }
 }
 
 /// Author of a conversation message.

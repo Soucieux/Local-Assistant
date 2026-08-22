@@ -3,6 +3,7 @@ import SwiftUI
 /// Single-purpose assistant surface with privacy-safe error presentation.
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Builds the assistant or Settings inside one main-window surface.
     var body: some View {
@@ -10,13 +11,24 @@ struct RootView: View {
         Group {
             switch model.activeScreen {
             case .assistant:
-                ChatView()
+                AssistantCommandView()
+            case .history:
+                ConversationHistoryView()
             case .activity:
                 IndexActivityView()
             case .settings:
                 SettingsView()
             }
         }
+            .id(model.activeScreen)
+            .transition(.opacity)
+            .animation(
+                reduceMotion
+                    ? nil
+                    : .easeOut(duration: DesignTokens.Motion.screenTransitionDuration),
+                value: model.activeScreen
+            )
+            .preferredColorScheme(.light)
             .alert(
                 UIStrings.errorTitle,
                 isPresented: Binding(

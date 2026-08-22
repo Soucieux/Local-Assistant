@@ -6,9 +6,25 @@ enum UIStrings {
     static let about = "About Local Assistant"
     static let settings = "Settings"
     static let activity = "Activity"
+    static let history = "History"
     static let assistant = "Assistant"
     static let backToAssistant = "Back to Assistant"
     static let assistantSubtitle = "Private answers and file search on this Mac"
+    static let commandPrompt = "WHAT SHOULD I FIND?"
+    static let commandLocalStatus = "LOCAL / OFFLINE / READY"
+    static let commandIndexingStatus = "LOCAL / OFFLINE / INDEXING"
+    static let commandListening = "LISTENING"
+    static let commandProcessing = "PROCESSING LOCALLY"
+    static let commandResponse = "RESPONSE / COMPLETE"
+    static let commandFindings = "ITEMS IDENTIFIED"
+    static let commandTypePlaceholder = "Type a command"
+    static let commandClickInputHelp = "CLICK TO SPEAK OR TYPE A REQUEST"
+    static let commandHoldInputHelp = "HOLD SPACE TO SPEAK OR CLICK TO TYPE"
+    static let commandIndexingCompact = "INDEXING IN BACKGROUND"
+    static let historyTitle = "Conversation History"
+    static let historyDetail = "Review every request and response retained on this Mac."
+    static let historyEmptyTitle = "No conversation history yet"
+    static let historyEmptyDetail = "Requests and responses will appear here after you use the assistant."
     static let searchPlaceholder = "Ask or find a local file…"
     static let startListening = "Start speaking"
     static let stopListening = "Stop and send"
@@ -20,6 +36,8 @@ enum UIStrings {
         "This permanently removes saved messages and current file matches. Your files, folders, permissions, and index are not changed."
     static let revealInFinder = "Reveal in Finder"
     static let openFile = "Open File"
+    static let openFolder = "Open Folder"
+    static let fileAcquired = "Acquired"
     static let welcomeTitle = "Find anything in your files"
     static let welcomeDetail = "Type or speak. Everything stays on this Mac."
     static let welcomePromptTitle = "Try asking"
@@ -48,7 +66,7 @@ enum UIStrings {
     static let folderPickerMessage = "Local Assistant receives read-only access to the folders you select."
     static let folderPickerPrompt = "Allow Read-Only Access"
     static let answerWithEvidence = "Send message"
-    static let searchResults = "File matches"
+    static let searchResults = "Matches"
     static let neverIndexed = "Not indexed yet"
     static let lastIndexed = "Last indexed"
     static let readOnlyAccess = "Read-only access"
@@ -85,6 +103,14 @@ enum UIStrings {
     static let modelVoiceCapability = "Voice input"
     static let modelVoiceCapabilityDescription =
         "Turns speech into text and loads when you use the microphone."
+    static let voiceInputModeTitle = "Voice input"
+    static let voiceInputModeDescription =
+        "Choose how recording starts and when a spoken request is sent."
+    static let voiceClickToSpeak = "Click to speak"
+    static let voiceHoldSpace = "Hold Space"
+
+    static let voiceHoldSpaceDescription =
+        "Hold Space while the command field is not being edited, then release to send."
     static let modelCapabilityReady = "Ready"
     static let modelCapabilityMissing = "Not installed"
     static let modelCapabilityDamaged = "Damaged"
@@ -220,6 +246,12 @@ enum UIStrings {
         return "\(processed) of \(total) · \(percent)%"
     }
 
+    /// Describes the click-to-speak pause using the actual configured silence timeout.
+    /// - Returns: Plain-language pause guidance that cannot drift from the real duration.
+    internal static func voiceClickToSpeakDescription() -> String {
+        "Click the voice control and pause for \(Int(VoiceConstants.silenceTimeout)) seconds to send automatically."
+    }
+
     /// Prefixes a folder name with the standard compact separator.
     /// - Parameter folderName: Visible authorized-folder name.
     /// - Returns: Compact secondary folder label.
@@ -239,6 +271,20 @@ enum UIStrings {
     /// - Returns: Singular or plural match count.
     internal static func matchingFilesCount(_ count: Int) -> String {
         return count == 1 ? "1 match" : "\(count) matches"
+    }
+
+    /// Formats a file-finding number using the command surface's fixed-width notation.
+    /// - Parameter index: One-based position of the finding.
+    /// - Returns: Two-character numeric label for the finding.
+    internal static func commandFindingNumber(_ index: Int) -> String {
+        String(format: "%02d", index)
+    }
+
+    /// Formats the command surface's acquired-file section label.
+    /// - Parameter count: Number of file findings in the current response.
+    /// - Returns: Uppercase section label with a fixed-width count.
+    internal static func commandFindingsLabel(count: Int) -> String {
+        "\(commandFindings) / \(String(format: "%02d", count))"
     }
 
     /// Returns the user-facing name of one assistant capability.
@@ -301,6 +347,13 @@ enum UIStrings {
         case .archive: return "Archive"
         case .other: return "File"
         }
+    }
+
+    /// Returns the explicit open-action label for a file or folder.
+    /// - Parameter kind: Indexed item category shown by the result card.
+    /// - Returns: Folder-aware action text.
+    internal static func openItem(_ kind: IndexedItemKind) -> String {
+        kind == .folder ? openFolder : openFile
     }
 
     /// Formats a message timestamp using the current locale and time zone.
