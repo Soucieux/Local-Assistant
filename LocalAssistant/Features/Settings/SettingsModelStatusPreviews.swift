@@ -30,29 +30,22 @@ private enum ModelStatusPreview {
         return SettingsView().environment(model)
     }
 
-    /// Places light and dark copies side by side at the smallest supported window size.
-    ///
-    /// Both appearances render together so contrast, wrapping, and status-pill width can
-    /// be compared without switching the system appearance between reviews.
+    /// Places the light-only Settings screen at the smallest supported window size.
     /// - Parameters:
     ///   - status: Overall readiness shown in the model summary.
     ///   - capabilities: Readiness shown for each listed capability.
-    /// - Returns: Both appearances of one readiness state.
+    /// - Returns: The intended light appearance for one readiness state.
     @MainActor
-    internal static func appearances(
+    internal static func lightAppearance(
         status: OfflineStatus,
         capabilities: [LocalModelCapabilityKind: LocalModelCapabilityState]
     ) -> some View {
-        HStack(spacing: 0) {
-            settings(status: status, capabilities: capabilities)
-                .environment(\.colorScheme, .light)
-            settings(status: status, capabilities: capabilities)
-                .environment(\.colorScheme, .dark)
-        }
-        .frame(
-            width: DesignTokens.Window.minimumWidth * 2,
-            height: DesignTokens.Window.minimumHeight
-        )
+        settings(status: status, capabilities: capabilities)
+            .environment(\.colorScheme, .light)
+            .frame(
+                width: DesignTokens.Window.minimumWidth,
+                height: DesignTokens.Window.minimumHeight
+            )
     }
 
     /// Applies one readiness value to every listed capability.
@@ -68,35 +61,35 @@ private enum ModelStatusPreview {
 }
 
 #Preview("Models: everything ready") {
-    ModelStatusPreview.appearances(
+    ModelStatusPreview.lightAppearance(
         status: .ready,
         capabilities: ModelStatusPreview.uniform(.ready)
     )
 }
 
 #Preview("Models: not installed") {
-    ModelStatusPreview.appearances(
+    ModelStatusPreview.lightAppearance(
         status: .missingModels,
         capabilities: ModelStatusPreview.uniform(.missing)
     )
 }
 
 #Preview("Models: damaged") {
-    ModelStatusPreview.appearances(
+    ModelStatusPreview.lightAppearance(
         status: .integrityFailure,
         capabilities: ModelStatusPreview.uniform(.integrityFailure)
     )
 }
 
 #Preview("Models: checking") {
-    ModelStatusPreview.appearances(
+    ModelStatusPreview.lightAppearance(
         status: .checking,
         capabilities: ModelStatusPreview.uniform(.checking)
     )
 }
 
 #Preview("Models: voice input missing its tokenizer") {
-    ModelStatusPreview.appearances(
+    ModelStatusPreview.lightAppearance(
         status: .missingModels,
         capabilities: [.chat: .ready, .fileSearch: .ready, .voiceInput: .missing]
     )

@@ -25,7 +25,7 @@ enum AppConstants {
         static let modelAssetManifestFilename = "model-assets.sha256"
         static let folderMonitorQueueLabel = "com.soucieux.LocalAssistant.folder-monitoring"
         static let bundleShortVersionKey = "CFBundleShortVersionString"
-        static let fallbackVersion = "1.1"
+        static let fallbackVersion = "2.5"
     }
 
     enum Chat {
@@ -34,6 +34,10 @@ enum AppConstants {
         static let evidenceLimit = 10
         static let maximumOutputTokens = 1_024
         static let contextTokenLimit = 8_192
+    }
+
+    enum Preferences {
+        static let voiceInputModeKey = "voice-input-mode"
     }
 
     enum Indexing {
