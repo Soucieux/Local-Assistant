@@ -7,7 +7,7 @@ private enum CheckValues {
     static let unreadableChild = "/Authorized/Unreadable/Child/file.txt"
     static let unrelatedPath = "/Authorized/Available/file.txt"
     static let completionFailure = "Progress fraction was not bounded correctly."
-    static let retryFailure = "Failed extractable content was not scheduled for retry."
+    static let retryFailure = "Failed indexable content was not scheduled for retry."
     static let unchangedFailure = "Successfully indexed content was not left unchanged."
     static let metadataFailure = "Changed metadata was incorrectly treated as unchanged."
     static let subtreeFailure = "Unreadable subtree containment was not preserved."
@@ -28,7 +28,7 @@ internal struct IndexingDecisionChecks {
         precondition(
             IndexingDecisionPolicy.itemIsUnchanged(
                 metadataMatches: true,
-                isExtractable: true,
+                requiresContentIndexing: true,
                 previousContentHash: nil
             ) == false,
             CheckValues.retryFailure
@@ -36,7 +36,7 @@ internal struct IndexingDecisionChecks {
         precondition(
             IndexingDecisionPolicy.itemIsUnchanged(
                 metadataMatches: true,
-                isExtractable: true,
+                requiresContentIndexing: true,
                 previousContentHash: CheckValues.contentHash
             ),
             CheckValues.unchangedFailure
@@ -44,7 +44,7 @@ internal struct IndexingDecisionChecks {
         precondition(
             IndexingDecisionPolicy.itemIsUnchanged(
                 metadataMatches: false,
-                isExtractable: false,
+                requiresContentIndexing: false,
                 previousContentHash: nil
             ) == false,
             CheckValues.metadataFailure

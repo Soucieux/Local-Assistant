@@ -101,8 +101,7 @@ A successful build removes any existing `Local Assistant.app` first and deletes 
 Run the static boundary audit against the Release application:
 
 ```zsh
-./Scripts/audit_offline_boundary.sh \
-  ./DerivedData/Build/Products/Release/LocalAssistant.app
+./Scripts/audit_offline_boundary.sh "./Local Assistant.app"
 ```
 
 The audit requires exactly the approved App Sandbox, microphone, application-scoped bookmark, and user-selected read-only entitlements, and rejects every unexpected entitlement. It then inspects the application executable and every bundled executable and fails if any of them links a networking library or imports a network symbol, because a binary that never links networking code cannot open a connection whatever its source might still say. It also inspects packaged resources for network-related implementation text.

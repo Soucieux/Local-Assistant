@@ -255,7 +255,7 @@ The Debug configuration therefore also carries `get-task-allow`, a test-manager 
 
 ## Release gates
 
-For v1.4, distinguish these activities:
+For each release, distinguish these activities:
 
 - **Build:** compile and link the Release application using resolved local dependencies.
 - **Automated tests:** run the `LocalAssistantTests` bundle against the Debug application.

@@ -627,9 +627,6 @@ actor IndexingService {
         )
     }
 
-
-
-
     /// Builds a bounded progress snapshot.
     /// - Parameters:
     ///   - run: Durable run summary supplying identity and counts.
