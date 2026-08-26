@@ -27,7 +27,7 @@ non-secret configuration contains the SSH host, SSH port, fixed restricted usern
 and bounded timeout. The private SSH key remains owner-only in Connector Application Support. It
 is never exported, added to the server ZIP, or placed in a command argument.
 
-The v4.5 build 45 application packages Connector runtime v1.7.0. The runtime publishes a non-secret
+The v4.6 build 46 application packages unchanged Connector runtime v1.7.0. The runtime publishes a non-secret
 contract version in its local status so Local Assistant can stop an incompatible request before it
 reaches an older installed runtime. The runtime rejects an agent task
 unless its authorization is either an explicit standalone OpenClaw invocation or a confirmed

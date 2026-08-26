@@ -269,22 +269,22 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v4.5 status | Meaning |
+| Release area | v4.6 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | Reminder reads use hidden local knowledge without confirmation. Every reminder change is confirmed inside the assistant conversation before its exact text can enter the separate OpenClaw Connector. Clear natural instructions do not require the literal words yes or no. No reminder-management screen or Local Assistant notification path was added. |
-| Source implementation | Complete | The embedded local LLM still interprets confirmation replies, while a bounded local phrase layer guarantees common standalone instructions such as continue, proceed, send it, or cancel. Ambiguous or changed requests remain pending. The processing label and progress bar now fill and center in the available assistant workspace. Connector runtime package v1.7.0 uses pinned Hatchling 1.27.0 instead of the vulnerable setuptools build path. |
+| Approved scope | Complete | Local and OpenClaw answers expand with the live window and render native Markdown structure, including real tables instead of raw pipe text. No WebView, active response link, network entitlement, or Connector transport change was added. |
+| Source implementation | Complete | A bounded native parser now presents headings, paragraphs, emphasis, lists, quotations, fenced code, dividers, and pipe tables in both the current response and History. Tables use styled header rows, equal-width cells, wrapping, and narrow-window horizontal scrolling. |
 | Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
-| Debug compilation | Complete | The focused macOS routing target compiled and all 40 `AssistantRouteParserTests` cases passed. |
-| Release build | Complete | The clean offline v4.5 build generated matching signed Local Assistant and OpenClaw Connector applications plus the clean-Mac disk image. |
-| Automated tests | Complete | All 40 focused macOS routing tests and all 36 Connector tests passed. The QWeather package audit reports zero known vulnerabilities after resolving Axios to 1.18.0 and `follow-redirects` to 1.16.0. |
+| Debug compilation | Complete | The focused native Markdown parser target compiled successfully through the Debug test action. |
+| Release build | Complete | The clean offline build produced the signed project-root Local Assistant, OpenClaw Connector, and v4.6 disk image. |
+| Automated tests | Complete | Five focused parser cases passed for rich block structure, semantic tables, escaped pipes, malformed-table fallback, and soft paragraph wrapping. |
 | Voice runtime testing | Pending manual check | Automated state tests cover silence submission in both modes; live multilingual recognition still requires manual inspection. |
-| Focused testing | Complete | Source, disk-image, and installed applications report v4.5 build 45; their strict signatures pass, macOS resolves the installed applications, the installed Connector runtime is byte-identical to the packaged runtime, and its real connection verification succeeds. |
-| Disconnected runtime testing | Not run | The v4.5 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Complete | The rebuilt signed Local Assistant bundle passed the offline-boundary audit; no reachable runtime network path was found. |
-| Interface inspection | Complete | The exact installed assistant processing state was captured and inspected. Its processing label and progress bar remain centered in the available workspace. No live reminder mutation was created for testing. |
+| Focused testing | Complete | The project-root, installed, and mounted-disk-image applications report v4.6 build 46; strict deep signature checks passed for both applications. |
+| Disconnected runtime testing | Not run | The v4.6 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Complete | The signed Local Assistant bundle passed the offline-boundary audit. The only discovered network string remains unreachable compiled model metadata; no response-rendering network path was added. |
+| Interface inspection | Complete | The exact installed application was inspected at its restored and expanded widths. The same OpenClaw response reflowed across the available width and rendered its heading, bullets, inline code, and two-column table as native styled content. |
 | Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The disk image passed `hdiutil verify`; its read-only mounted applications report v4.5 build 45 and pass strict signature checks. SHA-256: `fe6d86f42f6808f97161450e5de9d64d02119b4207ead06bea9b64e3a92977bf`. |
+| Release artifact integrity | Complete | The disk image passed `hdiutil verify`; its mounted Local Assistant and OpenClaw Connector both report v4.6 build 46 and pass strict deep signature verification. SHA-256: `82f4f33e9c96a8ea549ec8c62f0b0ca7d07ff2c63e60336f2421fb71405015a8`. |
 
 ### Version index
 
@@ -297,6 +297,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 | Version | What changed |
 |---|---|
+| v4.6 | [Responsive native Markdown responses](#v46--responsive-native-markdown-responses) |
 | v4.5 | [Natural confirmation, centered processing, and dependency security](#v45--natural-confirmation-centered-processing-and-dependency-security) |
 | v4.4 | [Conversational reminder confirmation and runtime compatibility](#v44--conversational-reminder-confirmation-and-runtime-compatibility) |
 | v4.3 | [Natural reminder routing and responsive result cards](#v43--natural-reminder-routing-and-responsive-result-cards) |
@@ -345,6 +346,14 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v4.6 — Responsive native Markdown responses
+
+- Expands the current answer and retained assistant History content with the live app window instead of keeping the old fixed-width answer column.
+- Presents common block Markdown as native SwiftUI headings, paragraphs, emphasis, lists, quotations, fenced code, dividers, and real table cells. OpenClaw pipe tables no longer appear as raw `|` and `---` text.
+- Keeps response links inert and adds no WebView or network presentation dependency, preserving the Local Assistant privacy boundary.
+- Advances Local Assistant and OpenClaw Connector to v4.6 build 46. Connector runtime v1.7.0 and OpenClaw server bridge v1.3.0 remain unchanged because neither transport contract changed.
+- Passed five focused parser cases, the clean release build, source/installed/mounted version and signature checks, the signed-bundle privacy audit, installed restored/expanded response inspection, and disk-image verification.
 
 ### v4.5 — Natural confirmation, centered processing, and dependency security
 
