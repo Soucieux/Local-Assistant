@@ -273,17 +273,17 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Approved scope | Complete | Reminders are hidden read-only knowledge; every change goes through an explicitly named OpenClaw request, with no Local Assistant notifications or reminder-management screen. |
 | Source implementation | Complete | The Connector detects complete existing installations without returning token values, provides no-reentry update and verification, separates intentional credential replacement, supports confirmed exact cleanup, and retains the five-step first-install path without giving Local Assistant network access. |
 | Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
-| Debug compilation | In progress | Connector v3.10 type-checks cleanly; the full Debug application build remains part of the current release run. |
-| Release build | Pending | The clean offline v3.10 build has not run yet. |
-| Automated tests | In progress | All 32 Connector tests, all 7 OpenClaw plugin tests, and all 5 typed reminder-bridge tests pass; the focused Local Assistant tests remain part of the current release run. |
+| Debug compilation | Pass | The complete Local Assistant Xcode test target compiled and passed in Debug, and Connector v3.10 type-checks cleanly. |
+| Release build | Pass | The clean offline v3.10 build produced both signed applications and the release disk image. |
+| Automated tests | Pass | The complete Local Assistant Xcode test target, all 32 Connector tests, all 7 OpenClaw plugin tests, and all 5 typed reminder-bridge tests pass. |
 | Voice runtime testing | Pending manual check | Live multilingual speech, final transcription, silence sending, and hold-Space sending still require manual inspection. |
-| Focused testing | Pending | Bundle signatures, embedded server payload, setup-state contract, cleanup boundary, and disk-image contents await the v3.10 build. |
+| Focused testing | Pass | Both bundle signatures, the embedded server payload, setup-state contract, cleanup boundary, installed versions, and disk-image contents pass. |
 | Disconnected runtime testing | Not run | The v3.10 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Pending | The v3.10 signed Local Assistant bundle has not been audited yet. |
-| Interface inspection | Pending | The built v3.10 existing-install, first-install, replacement, cleanup, and error states still require visual inspection. |
+| Static privacy audit | Pass | The signed v3.10 Local Assistant bundle passes the offline-boundary audit with only the approved sandbox, microphone, bookmark, and read-only folder entitlements. |
+| Interface inspection | Pass | The built and installed v3.10 loading, existing-install, public-settings review, empty credential-replacement, and cleanup-confirmation states were inspected; cards align, saved tokens remain hidden, Settings survives minimize and restore, and Local Assistant opens the installed v3.10 Connector. |
 | Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Pending | The v3.10 build 40 applications and release disk image have not been produced yet. |
+| Release artifact integrity | Pass | Both packaged and installed applications report v3.10 build 40, the mounted disk image contains the matching pair, and `Local Assistant Release.dmg` has SHA-256 `c5ad1abc2a17867cf103c38434f8f3d8058a0df3bafbc6db2be4efc86ab77c2d`. |
 
 ### Version index
 
@@ -346,6 +346,7 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Replaced the dense Connector form with a light-only semantic-color workbench: blue identifies server values, cyan identifies generated files, orange identifies server actions, teal identifies credentials and privacy, green identifies verification, and red is reserved for destructive cleanup.
 - Rewrote every primary step for a first-time user who knows only how to open Mac Terminal and the server terminal. Required actions and completion cues remain visible; definitions, security details, alternatives, internal port details, and Q&A recovery remain collapsed under the step that owns them.
 - Advanced Local Assistant and OpenClaw Connector to v3.10 build 40 and the Connector runtime package to v1.4.0. The OpenClaw reminder bridge remains v1.3.0 because its server contract did not change.
+- Passed the complete Local Assistant Xcode test target, all 32 Connector tests, all 7 OpenClaw plugin tests, all 5 typed reminder-bridge tests, the clean offline Release build, strict bundle-signature checks, the signed-app privacy audit, installed-app visual inspection, and mounted disk-image validation.
 
 ### v3.9 — Reliable connector setup, refresh, and lifecycle
 
