@@ -16,14 +16,27 @@ The Connector has two narrow lanes:
 - `cloudbase-reminders` accepts only an unconfirmed complete-list snapshot with
   `calendarPolicy: "never"`. It calls the read-only OpenClaw plugin and requires the response to
   assert `calendarChanged: false`.
-- `openclaw-agent` accepts only a chat request whose exact message contains standalone `OpenClaw`
-  or `Open Claw`. It calls OpenClaw's standard agent endpoint and does not attach reminder rows,
-  files, indexed text, or conversation history.
+- `openclaw-agent` requires one typed authorization. An explicit non-reminder OpenClaw request must
+  contain standalone `OpenClaw` or `Open Claw`. A clear reminder create, update, complete,
+  reschedule, or remove request instead carries Local Assistant's recorded user confirmation and
+  does not need to name OpenClaw. It calls OpenClaw's standard agent endpoint and does not attach
+  reminder rows, files, indexed text, or conversation history.
 
 Both lanes use the same pinned SSH server identity and separate credentials in macOS Keychain. The
 non-secret configuration contains the SSH host, SSH port, fixed restricted username, spool path,
 and bounded timeout. The private SSH key remains owner-only in Connector Application Support. It
 is never exported, added to the server ZIP, or placed in a command argument.
+
+The v4.5 build 45 application packages Connector runtime v1.7.0. The runtime publishes a non-secret
+contract version in its local status so Local Assistant can stop an incompatible request before it
+reaches an older installed runtime. The runtime rejects an agent task
+unless its authorization is either an explicit standalone OpenClaw invocation or a confirmed
+reminder mutation. In both cases the submitted message remains exact and no hidden context is
+added.
+
+The Python package uses Hatchling 1.27.0 as its pinned build backend. This avoids the vulnerable
+setuptools build path reported for versions below the unavailable patched release while preserving
+editable development installs and the packaged standalone runtime.
 
 ## Normal installed-app setup
 

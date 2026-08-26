@@ -6,7 +6,7 @@ Local Assistant is designed for one person and one Mac. Open the application nor
 
 Conversation, retrieval, text embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Semantic search compares plain-language requests with text extracted from files, including OCR text from images and image-only PDF pages. Authorized roots and descendant folders are also indexed with local context, so a request such as “files for school” can use the matching folder as the scope even when individual files do not contain the word “school.” Search answers stay concise while reusable result modules present item identity, matching evidence, and explicit Open or Reveal actions. The application runtime does not depend on a local server, a cloud service, telemetry, or an updater.
 
-An optional, separately installed OpenClaw connector exchanges schema-validated tasks through an owner-only local file spool. The app keeps complete CloudBase reminder snapshots as hidden local knowledge and answers reminder questions with exact, lexical, semantic, and deadline-aware retrieval. It never shows a reminder-management screen, changes CloudBase itself, or schedules reminder notifications. A typed or spoken request is sent to OpenClaw only when it explicitly contains standalone `OpenClaw` or `Open Claw`; only that submitted text is sent. The app bundle still has no networking entitlement, and the connector's scoped credentials remain in separate macOS Keychain entries.
+An optional, separately installed OpenClaw connector exchanges schema-validated tasks through an owner-only local file spool. The app keeps complete CloudBase reminder snapshots as hidden local knowledge and answers reminder questions with exact, lexical, semantic, and deadline-aware retrieval. It never shows a reminder-management screen, changes CloudBase itself, or schedules reminder notifications. Read-only reminder questions stay entirely local and need no confirmation. A reminder create, update, complete, reschedule, or remove request requires explicit confirmation before only that submitted text is sent to OpenClaw. Standalone `OpenClaw` or `Open Claw` remains the gate for unrelated OpenClaw requests. The app bundle still has no networking entitlement, and the connector's scoped credentials remain in separate macOS Keychain entries.
 
 ## Quick start
 
@@ -108,8 +108,8 @@ Return to Settings, enable **OpenClaw connection**, and select the two-, four-, 
 refresh interval. A per-user `launchd` job runs the Connector briefly when a request is queued and
 at scheduled catch-up checks; the Connector opens its tunnel only when a snapshot is due. A missed
 calendar interval is handled after the Mac wakes. The same one-shot path runs at Local Assistant
-launch when stale, on **Refresh Now**, and after a successful explicit OpenClaw add, update, or
-delete request.
+launch when stale, on **Refresh Now**, and after a successful confirmed reminder add, update,
+complete, reschedule, or delete request.
 
 Every successful complete snapshot transactionally replaces the local reminder cache and RAG
 index. Rows missing from the new snapshot disappear, so remote `updatedAt` values and deletion
@@ -122,7 +122,7 @@ use that local cache; they never contact OpenClaw.
 The commands in `OpenClawConnector/README.md` are for developers who deliberately cloned this repository. They are not part of installed-app setup. That reference labels every command that runs unchanged, every value that must be replaced, and confirms that the connector CLI creates its configuration automatically.
 
 Once enabled, Local Assistant refreshes its hidden reminder snapshot at launch when stale, after a
-successful OpenClaw response, on manual request, and through the selected macOS schedule.
+successful confirmed reminder change, on manual request, and through the selected macOS schedule.
 
 Press **Control–Option–Space** (`⌃⌥Space`) while the application is running to bring its window forward and focus the composer. Closing the window keeps the shortcut available; quitting the application disables it.
 
@@ -138,8 +138,9 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the application is runn
 | `Find the latest budget spreadsheet` | Applies a spreadsheet constraint and hybrid relevance ranking. |
 | `Find my school files` | Matches an indexed School folder, then promotes files and folders contained inside it. |
 | `What reminders are due tomorrow?` | Searches the latest complete local CloudBase snapshot with temporal and semantic ranking. |
-| `Create a reminder to renew the permit tomorrow at 09:00` | Stays local and explains that a change request must explicitly include OpenClaw. |
-| `OpenClaw, delete the permit reminder` | Sends that exact submitted request to OpenClaw, with no cached reminder rows or file context attached. |
+| `Create a reminder to renew the permit tomorrow at 09:00` | Asks for confirmation, then sends only that exact submitted request to OpenClaw. |
+| `Delete the permit reminder` | Asks for confirmation before sending the exact request; saying OpenClaw is not required for a clear reminder change. |
+| `OpenClaw, delete the permit reminder` | Still asks for confirmation because every reminder change is confirmation-gated. |
 | `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 
 ---
@@ -268,22 +269,22 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v3.10 status | Meaning |
+| Release area | v4.5 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | Reminders are hidden read-only knowledge; every change goes through an explicitly named OpenClaw request, with no Local Assistant notifications or reminder-management screen. |
-| Source implementation | Complete | The Connector detects complete existing installations without returning token values, provides no-reentry update and verification, separates intentional credential replacement, supports confirmed exact cleanup, and retains the five-step first-install path without giving Local Assistant network access. |
+| Approved scope | Complete | Reminder reads use hidden local knowledge without confirmation. Every reminder change is confirmed inside the assistant conversation before its exact text can enter the separate OpenClaw Connector. Clear natural instructions do not require the literal words yes or no. No reminder-management screen or Local Assistant notification path was added. |
+| Source implementation | Complete | The embedded local LLM still interprets confirmation replies, while a bounded local phrase layer guarantees common standalone instructions such as continue, proceed, send it, or cancel. Ambiguous or changed requests remain pending. The processing label and progress bar now fill and center in the available assistant workspace. Connector runtime package v1.7.0 uses pinned Hatchling 1.27.0 instead of the vulnerable setuptools build path. |
 | Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
-| Debug compilation | Pass | The complete Local Assistant Xcode test target compiled and passed in Debug, and Connector v3.10 type-checks cleanly. |
-| Release build | Pass | The clean offline v3.10 build produced both signed applications and the release disk image. |
-| Automated tests | Pass | The complete Local Assistant Xcode test target, all 32 Connector tests, all 7 OpenClaw plugin tests, and all 5 typed reminder-bridge tests pass. |
-| Voice runtime testing | Pending manual check | Live multilingual speech, final transcription, silence sending, and hold-Space sending still require manual inspection. |
-| Focused testing | Pass | Both bundle signatures, the embedded server payload, setup-state contract, cleanup boundary, installed versions, and disk-image contents pass. |
-| Disconnected runtime testing | Not run | The v3.10 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Pass | The signed v3.10 Local Assistant bundle passes the offline-boundary audit with only the approved sandbox, microphone, bookmark, and read-only folder entitlements. |
-| Interface inspection | Pass | The built and installed v3.10 loading, existing-install, public-settings review, empty credential-replacement, and cleanup-confirmation states were inspected; cards align, saved tokens remain hidden, Settings survives minimize and restore, and Local Assistant opens the installed v3.10 Connector. |
+| Debug compilation | Complete | The focused macOS routing target compiled and all 40 `AssistantRouteParserTests` cases passed. |
+| Release build | Complete | The clean offline v4.5 build generated matching signed Local Assistant and OpenClaw Connector applications plus the clean-Mac disk image. |
+| Automated tests | Complete | All 40 focused macOS routing tests and all 36 Connector tests passed. The QWeather package audit reports zero known vulnerabilities after resolving Axios to 1.18.0 and `follow-redirects` to 1.16.0. |
+| Voice runtime testing | Pending manual check | Automated state tests cover silence submission in both modes; live multilingual recognition still requires manual inspection. |
+| Focused testing | Complete | Source, disk-image, and installed applications report v4.5 build 45; their strict signatures pass, macOS resolves the installed applications, the installed Connector runtime is byte-identical to the packaged runtime, and its real connection verification succeeds. |
+| Disconnected runtime testing | Not run | The v4.5 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Complete | The rebuilt signed Local Assistant bundle passed the offline-boundary audit; no reachable runtime network path was found. |
+| Interface inspection | Complete | The exact installed assistant processing state was captured and inspected. Its processing label and progress bar remain centered in the available workspace. No live reminder mutation was created for testing. |
 | Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Pass | Both packaged and installed applications report v3.10 build 40, the mounted disk image contains the matching pair, and `Local Assistant Release.dmg` has SHA-256 `c5ad1abc2a17867cf103c38434f8f3d8058a0df3bafbc6db2be4efc86ab77c2d`. |
+| Release artifact integrity | Complete | The disk image passed `hdiutil verify`; its read-only mounted applications report v4.5 build 45 and pass strict signature checks. SHA-256: `fe6d86f42f6808f97161450e5de9d64d02119b4207ead06bea9b64e3a92977bf`. |
 
 ### Version index
 
@@ -291,9 +292,17 @@ The table and notes below are the durable record of what each release contained.
 current project-root release set is retained; rebuilding never leaves a previous copy. Each
 entry names what that release changed and links to its full notes.
 
+Marketing-version minor numbers run from `0` through `9`. After `vN.9`, the next
+release is `v(N+1).0`; the separate integer build number continues increasing by one.
+
 | Version | What changed |
 |---|---|
-| v3.10 | [Credential-safe Connector updates and cleanup](#v310--credential-safe-connector-updates-and-cleanup) |
+| v4.5 | [Natural confirmation, centered processing, and dependency security](#v45--natural-confirmation-centered-processing-and-dependency-security) |
+| v4.4 | [Conversational reminder confirmation and runtime compatibility](#v44--conversational-reminder-confirmation-and-runtime-compatibility) |
+| v4.3 | [Natural reminder routing and responsive result cards](#v43--natural-reminder-routing-and-responsive-result-cards) |
+| v4.2 | [Content-height Local Assistant setup cards](#v42--content-height-local-assistant-setup-cards) |
+| v4.1 | [Unified connection review and content-height setup cards](#v41--unified-connection-review-and-content-height-setup-cards) |
+| v4.0 | [Credential-safe Connector updates and cleanup](#v40--credential-safe-connector-updates-and-cleanup) |
 | v3.9 | [Reliable connector setup, refresh, and lifecycle](#v39--reliable-connector-setup-refresh-and-lifecycle) |
 | v3.8 | [On-demand restricted SSH transport](#v38--on-demand-restricted-ssh-transport) |
 | v3.7 | [Complete private Tailscale connection setup](#v37--complete-private-tailscale-connection-setup) |
@@ -337,7 +346,58 @@ entry names what that release changed and links to its full notes.
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
 
-### v3.10 — Credential-safe Connector updates and cleanup
+### v4.5 — Natural confirmation, centered processing, and dependency security
+
+- Accepts clear standalone instructions such as continue, proceed, go ahead, send it, do it, okay, sure, or cancel without requiring the literal words yes or no. The embedded local LLM remains the interpreter for other natural replies, while ambiguous or changed requests stay pending.
+- Centers the processing label and progress bar in the full available assistant workspace instead of placing them near the top of the result scroller.
+- Replaces the Connector package's vulnerable setuptools build backend with pinned Hatchling 1.27.0 because the patched setuptools release identified by the alert is not available from the package index. Editable installs and standalone packaging remain supported.
+- Advances Local Assistant and OpenClaw Connector to v4.5 build 45 and the Connector runtime package to v1.7.0. The OpenClaw server bridge remains v1.3.0 because its read-only snapshot contract did not change.
+- Focused confirmation, dependency, packaging, release, installed-interface, and disk-image results are recorded in the release-status table after they run.
+
+### v4.4 — Conversational reminder confirmation and runtime compatibility
+
+- Replaces the reminder-mutation confirmation alert with an assistant conversation turn that repeats the exact pending request and asks for a yes-or-no reply.
+- Uses the embedded local LLM to classify that reply as confirm, decline, or unclear. Only the exact confirmation result authorizes the pending request; unclear replies keep it pending and ask again.
+- Presents reminder-request failures, cancellation, and recovery guidance as assistant messages instead of separate dialogs. A failed mutation remains pending so the user can retry without reconstructing it.
+- Adds a non-secret Connector runtime contract version to the owner-only status file. Local Assistant reads it again at confirmation time and directs an older runtime to **Update and Verify Existing Connector** before any incompatible request is published.
+- Advances Local Assistant and OpenClaw Connector to v4.4 build 44 and the Connector runtime package to v1.6.0. The OpenClaw server bridge remains v1.3.0 because its read-only snapshot contract did not change.
+- Focused confirmation and runtime-contract tests, Connector regression tests, release building, installed-flow inspection, and disk-image validation are recorded in the release-status table.
+
+### v4.3 — Natural reminder routing and responsive result cards
+
+- Recognizes clear reminder and to-do phrasing without requiring the user to say OpenClaw. Read-only list and question requests use the complete local reminder cache and RAG index without confirmation or Connector access.
+- Requires explicit confirmation for every reminder create, update, complete, reschedule, or remove request, including requests that name OpenClaw. After confirmation, only the exact submitted text and its typed authorization enter the Connector.
+- Returns every cached reminder for an all-reminders request without a presentation cap, keeps both current and retained History prose concise, groups cards by tag with one heading per group, and shows one reminder per equal-height styled card with a semantic icon, urgency, date/time, and an optional link indicator.
+- Makes reminder cards, file/folder findings, Settings, Activity, History, and other applicable collections adapt their columns and available space live as the window changes size, without fixed whole-screen margins or unnecessary lower gaps.
+- Restores automatic submission after about two seconds of silence in both voice modes while preserving immediate Hold Space release.
+- Advances Local Assistant and OpenClaw Connector to v4.3 build 43 and the Connector runtime package to v1.5.0. The OpenClaw server bridge remains v1.3.0 because its read-only snapshot contract did not change.
+- Focused tests, release building, signed-artifact checks, privacy audit, installed-screen inspection, and disk-image validation are recorded in the release-status table after they run.
+
+### v4.2 — Content-height Local Assistant setup cards
+
+- Removed the fixed 184-point minimum height from the shared card used by Local Assistant's three-step OpenClaw guide.
+- Made Steps 2 and 3 end after their visible text and controls while retaining equal widths, consistent padding, and the existing card surface.
+- Removed the now-unused setup-card minimum-height design token.
+- Added a project guardrail requiring screenshot-reported layout defects to be verified in the exact installed application and screen shown, not in a visually similar companion screen.
+- Advanced Local Assistant and OpenClaw Connector to v4.2 build 42 so the release package continues to contain matching applications.
+- Passed the complete Local Assistant macOS test target, all 35 Connector tests, the clean offline Release build, strict source and installed-bundle signature checks, the signed-app privacy audit, exact installed-screen visual inspection, and mounted disk-image validation.
+
+### v4.1 — Unified connection review and content-height setup cards
+
+- Replaced the duplicate **Review Connection Settings** and **Replace Saved Credentials** overview routes with one full-width **Review Connection** action.
+- Kept **Replace Saved Credentials** inside Step 4 beside the saved Keychain status, so credential changes begin only where the two secure fields belong.
+- Removed the Connector layout rail from card measurement and made every Connector setup card content-height, eliminating excess lower whitespace in its Steps 2 and 3 while retaining equal widths and semantic colors.
+- Replaced setup discovery's credential-value read with a bounded macOS Keychain metadata query. Startup receives only presence booleans, cannot wait indefinitely for Keychain metadata, and still loads a token only when an authenticated request actually needs it.
+- Advanced Local Assistant and OpenClaw Connector to v4.1 build 41.
+- Defined marketing-version minor numbers as `0` through `9`, with `vN.9` followed by `v(N+1).0`; the build number remains a separate increasing integer.
+- Added a release-package guard that stops the build when Local Assistant and OpenClaw Connector versions or build numbers differ.
+- Passed the 6 focused Keychain and existing-setup tests, clean offline Release build, strict source and installed-bundle signature checks, signed-app privacy audit, installed-app visual inspection, and mounted disk-image validation.
+
+### v4.0 — Credential-safe Connector updates and cleanup
+
+This is the corrected historical release label for build 40. The original build-40
+applications were stamped `3.10`; that immutable bundle metadata and the existing Git
+history are not rewritten.
 
 - Added credential-free discovery of an existing Connector installation. The Swift app receives only reusable public server values and yes/no Keychain-presence flags; it never retrieves or displays saved tokens.
 - Added **Update and Verify Existing Connector**, which installs the current packaged runtime, reuses the saved SSH identity, configuration, and Keychain tokens, verifies a real complete snapshot, and restarts the one-shot job without asking the user to repeat setup.
@@ -345,7 +405,7 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Added confirmed **Remove Connector Data**, which deletes the exact Connector runtime, identity, settings, checkpoint, launch job, pending spool lanes, and two Keychain entries while preserving Local Assistant and its committed reminder cache and RAG index.
 - Replaced the dense Connector form with a light-only semantic-color workbench: blue identifies server values, cyan identifies generated files, orange identifies server actions, teal identifies credentials and privacy, green identifies verification, and red is reserved for destructive cleanup.
 - Rewrote every primary step for a first-time user who knows only how to open Mac Terminal and the server terminal. Required actions and completion cues remain visible; definitions, security details, alternatives, internal port details, and Q&A recovery remain collapsed under the step that owns them.
-- Advanced Local Assistant and OpenClaw Connector to v3.10 build 40 and the Connector runtime package to v1.4.0. The OpenClaw reminder bridge remains v1.3.0 because its server contract did not change.
+- Corrected the release record to v4.0 build 40 and retained Connector runtime package v1.4.0. The original applications remain stamped `3.10`, and the OpenClaw reminder bridge remains v1.3.0 because its server contract did not change.
 - Passed the complete Local Assistant Xcode test target, all 32 Connector tests, all 7 OpenClaw plugin tests, all 5 typed reminder-bridge tests, the clean offline Release build, strict bundle-signature checks, the signed-app privacy audit, installed-app visual inspection, and mounted disk-image validation.
 
 ### v3.9 — Reliable connector setup, refresh, and lifecycle
