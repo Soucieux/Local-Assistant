@@ -22,7 +22,6 @@ struct OpenClawSetupView: View {
                         refreshCard
                         troubleshooting
                     }
-                    .frame(maxWidth: DesignTokens.Window.contentMaximumWidth)
                     .padding(.horizontal, DesignTokens.Spacing.xLarge)
                     .padding(.vertical, DesignTokens.Spacing.xxLarge)
                     .frame(maxWidth: .infinity)
@@ -168,11 +167,8 @@ struct OpenClawSetupView: View {
             footer()
         }
         .padding(DesignTokens.Spacing.large)
-        .frame(
-            maxWidth: .infinity,
-            minHeight: DesignTokens.Control.setupStepMinimumHeight,
-            alignment: .topLeading
-        )
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .fixedSize(horizontal: false, vertical: true)
         .cardSurface()
     }
 
@@ -252,7 +248,7 @@ struct OpenClawHealthSummary: View {
         switch health {
         case .off: return SystemImages.lock
         case .checking: return SystemImages.refresh
-        case .notDetected, .needsAttention: return SystemImages.stale
+        case .notDetected, .updateRequired, .needsAttention: return SystemImages.stale
         case .runningUnverified: return SystemImages.status
         case .runningUnreachable: return SystemImages.stale
         case .ready: return SystemImages.localVerified
@@ -265,7 +261,7 @@ struct OpenClawHealthSummary: View {
         case .off: return DesignTokens.Color.commandMutedInk
         case .checking, .notDetected, .runningUnverified:
             return DesignTokens.Color.processing
-        case .runningUnreachable, .needsAttention:
+        case .updateRequired, .runningUnreachable, .needsAttention:
             return DesignTokens.Color.destructive
         case .ready:
             return DesignTokens.Color.verifiedLocal

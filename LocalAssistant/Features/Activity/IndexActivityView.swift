@@ -20,15 +20,42 @@ struct IndexActivityView: View {
                     LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
                         overview
                         filters
-                        if filteredEvents.isEmpty == false {
-                            activityEvents
-                        }
-                        indexingHistory
+                        activityRecords
                     }
-                    .frame(maxWidth: DesignTokens.Window.contentMaximumWidth)
                     .padding(.horizontal, DesignTokens.Spacing.xLarge)
                     .padding(.vertical, DesignTokens.Spacing.xxLarge)
                     .frame(maxWidth: .infinity)
+                }
+            }
+        }
+    }
+
+    /// Places independent monitoring and indexing histories side by side when width permits.
+    private var activityRecords: some View {
+        Group {
+            if filteredEvents.isEmpty {
+                indexingHistory
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: DesignTokens.Spacing.large) {
+                        activityEvents
+                            .frame(
+                                minWidth: DesignTokens.Window.adaptiveColumnMinimumWidth,
+                                maxWidth: .infinity,
+                                alignment: .topLeading
+                            )
+                        indexingHistory
+                            .frame(
+                                minWidth: DesignTokens.Window.adaptiveColumnMinimumWidth,
+                                maxWidth: .infinity,
+                                alignment: .topLeading
+                            )
+                    }
+
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
+                        activityEvents
+                        indexingHistory
+                    }
                 }
             }
         }

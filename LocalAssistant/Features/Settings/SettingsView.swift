@@ -14,15 +14,7 @@ struct SettingsView: View {
                 settingsHeader
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
-                        privacySection
-                        openClawSection
-                        folderAccessSection
-                        modelsSection
-                        voiceInputSection
-                        assistantStatusSection
-                    }
-                    .frame(maxWidth: DesignTokens.Window.contentMaximumWidth)
+                    settingsContent
                     .padding(.horizontal, DesignTokens.Spacing.xLarge)
                     .padding(.vertical, DesignTokens.Spacing.xxLarge)
                     .frame(maxWidth: .infinity)
@@ -48,6 +40,45 @@ struct SettingsView: View {
                         ?? AppConstants.Text.empty
                 )
             )
+        }
+    }
+
+    /// Uses one ordered column when narrow and balanced intrinsic-height columns when wide.
+    private var settingsContent: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
+            privacySection
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: DesignTokens.Spacing.large) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
+                        openClawSection
+                        modelsSection
+                        voiceInputSection
+                    }
+                    .frame(
+                        minWidth: DesignTokens.Window.adaptiveColumnMinimumWidth,
+                        maxWidth: .infinity,
+                        alignment: .topLeading
+                    )
+
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
+                        folderAccessSection
+                        assistantStatusSection
+                    }
+                    .frame(
+                        minWidth: DesignTokens.Window.adaptiveColumnMinimumWidth,
+                        maxWidth: .infinity,
+                        alignment: .topLeading
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
+                    openClawSection
+                    folderAccessSection
+                    modelsSection
+                    voiceInputSection
+                    assistantStatusSection
+                }
+            }
         }
     }
 
@@ -377,11 +408,7 @@ struct SettingsView: View {
     ) -> some View {
         content()
             .padding(DesignTokens.Spacing.medium)
-            .frame(
-                maxWidth: .infinity,
-                minHeight: DesignTokens.Control.statusTileMinimumHeight,
-                alignment: .topLeading
-            )
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
                     .fill(tint.opacity(0.065))
