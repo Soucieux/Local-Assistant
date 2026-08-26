@@ -196,6 +196,8 @@ class ConnectorService:
         self.spool.write_status(
             {
                 constants.STATUS_KEY_SCHEMA_VERSION: constants.SCHEMA_VERSION,
+                constants.STATUS_KEY_RUNTIME_CONTRACT_VERSION:
+                    constants.RUNTIME_CONTRACT_VERSION,
                 constants.STATUS_KEY_RUNNING: running,
                 constants.STATUS_KEY_LAST_SEEN_AT: _timestamp(),
                 constants.STATUS_KEY_LAST_SUCCESS_AT: self._last_success_at,

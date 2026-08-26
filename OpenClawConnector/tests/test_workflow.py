@@ -48,14 +48,20 @@ class FakeTransport:
         }
 
 
-def request_document(skill, operation, payload, confirmed=False):
+def request_document(
+    skill,
+    operation,
+    payload,
+    confirmed=False,
+    authorization=None,
+):
     """Build one connector task envelope with the skill's required policy."""
     policy = (
         constants.CALENDAR_POLICY_OPENCLAW_DEFAULT
         if skill == constants.AGENT_SKILL
         else constants.CALENDAR_POLICY_NEVER
     )
-    return {
+    document = {
         constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
         constants.FIELD_TASK_ID: TASK_ID,
         constants.FIELD_CONTEXT_ID: CONTEXT_ID,
@@ -66,10 +72,15 @@ def request_document(skill, operation, payload, confirmed=False):
         constants.FIELD_CONFIRMED: confirmed,
         constants.FIELD_PAYLOAD: payload,
     }
+    if skill == constants.AGENT_SKILL:
+        document[constants.FIELD_AUTHORIZATION] = (
+            authorization or constants.AUTHORIZATION_EXPLICIT_OPENCLAW
+        )
+    return document
 
 
 class WorkflowTests(unittest.TestCase):
-    """Verify read-only snapshots and exact explicit OpenClaw disclosure."""
+    """Verify read-only snapshots and exact authorized OpenClaw disclosure."""
 
     def invoke(self, transport, document):
         """Invoke one isolated graph and close its checkpoint connection."""
@@ -211,7 +222,7 @@ class WorkflowTests(unittest.TestCase):
             )
 
     def test_agent_rejects_message_without_explicit_openclaw_name(self) -> None:
-        """Connector-side validation independently enforces the app's routing gate."""
+        """Explicit authorization independently requires the OpenClaw name."""
         with self.assertRaises(ConnectorError):
             self.invoke(
                 FakeTransport(),
@@ -222,6 +233,26 @@ class WorkflowTests(unittest.TestCase):
                     confirmed=True,
                 ),
             )
+
+    def test_agent_accepts_confirmed_reminder_mutation_without_name(self) -> None:
+        """Only the typed confirmation authorization may omit the OpenClaw name."""
+        transport = FakeTransport()
+        message = "Update the permit reminder."
+
+        self.invoke(
+            transport,
+            request_document(
+                constants.AGENT_SKILL,
+                constants.OPERATION_CHAT,
+                {constants.FIELD_MESSAGE: message},
+                confirmed=True,
+                authorization=(
+                    constants.AUTHORIZATION_CONFIRMED_REMINDER_MUTATION
+                ),
+            ),
+        )
+
+        self.assertEqual(transport.agents[0][2], message)
 
 
 if __name__ == "__main__":

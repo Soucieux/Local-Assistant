@@ -94,6 +94,10 @@ class ServiceTests(unittest.TestCase):
                 (spool_directory / constants.STATUS_FILE_NAME).read_text(encoding="utf-8")
             )
             self.assertFalse(status[constants.STATUS_KEY_RUNNING])
+            self.assertEqual(
+                status[constants.STATUS_KEY_RUNTIME_CONTRACT_VERSION],
+                constants.RUNTIME_CONTRACT_VERSION,
+            )
             self.assertIsNotNone(status[constants.STATUS_KEY_LAST_REMINDER_SUCCESS_AT])
 
     def test_swift_uuid_case_does_not_turn_valid_response_into_internal_error(self) -> None:

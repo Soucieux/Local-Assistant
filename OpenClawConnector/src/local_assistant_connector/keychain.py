@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+
 import keyring
 from keyring.errors import PasswordDeleteError
 
@@ -35,8 +37,25 @@ def load_token(account: str) -> str:
 
 def token_exists(account: str) -> bool:
     """Report whether one connector credential exists without returning it."""
-    token = keyring.get_password(constants.KEYCHAIN_SERVICE, account)
-    return isinstance(token, str) and bool(token.strip())
+    try:
+        result = subprocess.run(
+            [
+                constants.KEYCHAIN_SECURITY_EXECUTABLE,
+                constants.KEYCHAIN_FIND_GENERIC_PASSWORD,
+                constants.KEYCHAIN_SERVICE_OPTION,
+                constants.KEYCHAIN_SERVICE,
+                constants.KEYCHAIN_ACCOUNT_OPTION,
+                account,
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=constants.KEYCHAIN_METADATA_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
 
 
 def delete_token(account: str) -> None:

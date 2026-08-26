@@ -17,6 +17,7 @@ OWNER_DIRECTORY_MODE = 0o700
 OWNER_FILE_MODE = 0o600
 
 SCHEMA_VERSION = 1
+RUNTIME_CONTRACT_VERSION = 2
 REMINDER_SKILL = "cloudbase-reminders"
 AGENT_SKILL = "openclaw-agent"
 REMINDER_ROUTE_PATH = "/local-assistant/v1/a2a"
@@ -31,6 +32,8 @@ OPERATION_CHAT = "chat"
 AGENT_MODEL = "openclaw/default"
 MESSAGE_ROLE_USER = "user"
 OPENCLAW_INVOCATION_PATTERN = r"(?iu)(?<!\w)open(?:\s+)?claw(?!\w)"
+AUTHORIZATION_EXPLICIT_OPENCLAW = "explicit-openclaw"
+AUTHORIZATION_CONFIRMED_REMINDER_MUTATION = "confirmed-reminder-mutation"
 INVALID_REQUEST_THREAD_ID = "invalid-request"
 
 FIELD_SCHEMA_VERSION = "schemaVersion"
@@ -41,6 +44,7 @@ FIELD_OPERATION = "operation"
 FIELD_IDEMPOTENCY_KEY = "idempotencyKey"
 FIELD_CALENDAR_POLICY = "calendarPolicy"
 FIELD_CONFIRMED = "confirmed"
+FIELD_AUTHORIZATION = "authorization"
 FIELD_PAYLOAD = "payload"
 FIELD_STATUS = "status"
 FIELD_CALENDAR_CHANGED = "calendarChanged"
@@ -71,7 +75,7 @@ REQUEST_REQUIRED_FIELDS = frozenset(
         FIELD_PAYLOAD,
     }
 )
-REQUEST_OPTIONAL_FIELDS = frozenset({FIELD_CONTEXT_ID})
+REQUEST_OPTIONAL_FIELDS = frozenset({FIELD_CONTEXT_ID, FIELD_AUTHORIZATION})
 
 CONFIG_SSH_HOST = "sshHost"
 CONFIG_SSH_PORT = "sshPort"
@@ -104,6 +108,11 @@ SSH_SHUTDOWN_TIMEOUT_SECONDS = 3
 KEYCHAIN_SERVICE = "com.soucieux.LocalAssistant.OpenClawConnector"
 KEYCHAIN_REMINDER_ACCOUNT = "reminder-snapshot-token"
 KEYCHAIN_AGENT_ACCOUNT = "openclaw-agent-token"
+KEYCHAIN_SECURITY_EXECUTABLE = "/usr/bin/security"
+KEYCHAIN_FIND_GENERIC_PASSWORD = "find-generic-password"
+KEYCHAIN_SERVICE_OPTION = "-s"
+KEYCHAIN_ACCOUNT_OPTION = "-a"
+KEYCHAIN_METADATA_TIMEOUT_SECONDS = 5
 
 HEADER_AUTHORIZATION = "Authorization"
 HEADER_CONTENT_TYPE = "Content-Type"
@@ -133,7 +142,7 @@ ERROR_UNSUPPORTED_SKILL = "connector skill is unsupported"
 ERROR_REMINDER_PAYLOAD = "only an unconfirmed complete reminder snapshot is allowed"
 ERROR_AGENT_PAYLOAD = "agent payload is invalid"
 ERROR_AGENT_MESSAGE = "agent message is invalid"
-ERROR_OPENCLAW_REQUIRED = "agent requests must explicitly name OpenClaw"
+ERROR_OPENCLAW_REQUIRED = "explicit agent requests must name OpenClaw"
 ERROR_REMOTE = "OpenClaw request failed"
 ERROR_AUTHENTICATION = "OpenClaw rejected the configured token"
 ERROR_UNREACHABLE = "the restricted SSH tunnel could not reach OpenClaw"
@@ -170,6 +179,7 @@ STATUS_KEY_LAST_REMINDER_SUCCESS_AT = "lastReminderSuccessAt"
 STATUS_KEY_LAST_ERROR = "lastError"
 STATUS_KEY_PID = "pid"
 STATUS_KEY_SCHEMA_VERSION = FIELD_SCHEMA_VERSION
+STATUS_KEY_RUNTIME_CONTRACT_VERSION = "runtimeContractVersion"
 SCHEDULE_KEY_ENABLED = "enabled"
 SCHEDULE_KEY_INTERVAL_MINUTES = "intervalMinutes"
 ALLOWED_SCHEDULE_INTERVAL_MINUTES = frozenset({120, 240, 480})

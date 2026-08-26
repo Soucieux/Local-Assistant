@@ -79,7 +79,7 @@ def _validate_common(document: object) -> tuple[str, str, str]:
 
 
 class ConnectorWorkflow:
-    """Compiles one persistent graph over the two explicitly allowed lanes."""
+    """Compiles one persistent graph over the two narrowly authorized lanes."""
 
     def __init__(
         self,
@@ -169,7 +169,7 @@ class ConnectorWorkflow:
         return response
 
     def _validate_node(self, state: ConnectorState) -> ConnectorState:
-        """Validate the read-only snapshot lane or explicit OpenClaw lane."""
+        """Validate the read-only snapshot lane or authorized OpenClaw lane."""
         document = state["request"]
         task_id, context_id, skill = _validate_common(document)
         normalized_document = dict(document)
@@ -186,6 +186,7 @@ class ConnectorWorkflow:
                 or document[constants.FIELD_CALENDAR_POLICY]
                 != constants.CALENDAR_POLICY_NEVER
                 or document[constants.FIELD_CONFIRMED] is not False
+                or constants.FIELD_AUTHORIZATION in document
                 or payload
             ):
                 raise ConnectorError(
@@ -207,17 +208,25 @@ class ConnectorWorkflow:
                     False,
                 )
             message = payload.get(constants.FIELD_MESSAGE)
+            authorization = document.get(constants.FIELD_AUTHORIZATION)
             if (
                 not isinstance(message, str)
                 or not message.strip()
                 or len(message) > constants.MAX_AGENT_MESSAGE_CHARACTERS
+                or authorization not in {
+                    constants.AUTHORIZATION_EXPLICIT_OPENCLAW,
+                    constants.AUTHORIZATION_CONFIRMED_REMINDER_MUTATION,
+                }
             ):
                 raise ConnectorError(
                     constants.ERROR_KIND_INVALID_REQUEST,
                     constants.ERROR_AGENT_MESSAGE,
                     False,
                 )
-            if re.search(constants.OPENCLAW_INVOCATION_PATTERN, message) is None:
+            if (
+                authorization == constants.AUTHORIZATION_EXPLICIT_OPENCLAW
+                and re.search(constants.OPENCLAW_INVOCATION_PATTERN, message) is None
+            ):
                 raise ConnectorError(
                     constants.ERROR_KIND_INVALID_REQUEST,
                     constants.ERROR_OPENCLAW_REQUIRED,
@@ -239,7 +248,7 @@ class ConnectorWorkflow:
         return {"response": self._transport.send_reminder(state["request"])}
 
     def _agent_node(self, state: ConnectorState) -> ConnectorState:
-        """Send only the exact explicit user text to OpenClaw."""
+        """Send only the exact locally authorized user text to OpenClaw."""
         payload = state["request"][constants.FIELD_PAYLOAD]
         return {
             "response": self._transport.send_agent(
