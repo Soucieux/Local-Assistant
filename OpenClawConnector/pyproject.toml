@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-assistant-openclaw-connector"
+version = "1.4.0"
+description = "Opt-in one-shot SSH connector between Local Assistant and OpenClaw"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "keyring==25.7.0",
+  "langgraph==1.2.11",
+  "langgraph-checkpoint-sqlite==3.1.1"
+]
+
+[project.scripts]
+local-assistant-connector = "local_assistant_connector.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
