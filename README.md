@@ -6,7 +6,7 @@ Local Assistant is designed for one person and one Mac. Open the application nor
 
 Conversation, retrieval, text embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Semantic search compares plain-language requests with text extracted from files, including OCR text from images and image-only PDF pages. Authorized roots and descendant folders are also indexed with local context, so a request such as “files for school” can use the matching folder as the scope even when individual files do not contain the word “school.” Search answers stay concise while reusable result modules present item identity, matching evidence, and explicit Open or Reveal actions. The application runtime does not depend on a local server, a cloud service, telemetry, or an updater.
 
-An optional, separately installed OpenClaw connector exchanges schema-validated tasks through an owner-only local file spool. The app keeps complete CloudBase reminder snapshots as hidden local knowledge and answers reminder questions with exact, lexical, semantic, and deadline-aware retrieval. It never shows a reminder-management screen, changes CloudBase itself, or schedules reminder notifications. Read-only reminder questions stay entirely local and need no confirmation. A reminder create, update, complete, reschedule, or remove request requires explicit confirmation before only that submitted text is sent to OpenClaw. Standalone `OpenClaw` or `Open Claw` remains the gate for unrelated OpenClaw requests. The app bundle still has no networking entitlement, and the connector's scoped credentials remain in separate macOS Keychain entries.
+An optional, separately installed OpenClaw connector exchanges schema-validated tasks through an owner-only local file spool. The app keeps complete CloudBase reminder snapshots as hidden local knowledge and answers reminder questions with exact, lexical, semantic, and deadline-aware retrieval. It never shows a reminder-management screen, changes CloudBase itself, or schedules reminder notifications. Read-only reminder questions stay entirely local and need no confirmation. A reminder create, update, complete, reschedule, or remove request requires explicit confirmation before only that submitted text is sent to OpenClaw. Standalone `OpenClaw` or `Open Claw` remains the gate for unrelated OpenClaw requests. General agent messages use A2A v1.0 between the Connector and OpenClaw while the complete-snapshot reminder route remains separate. The app bundle still has no networking entitlement, and the connector's scoped credentials remain in separate macOS Keychain entries.
 
 ## Quick start
 
@@ -73,8 +73,8 @@ cd "OpenClaw Server Setup"
 ```
 
 The installer keeps the Gateway on `127.0.0.1:23116`, disables OpenClaw's Tailscale mode, installs
-the read-only reminder route, waits for that route to become ready, and verifies a complete
-snapshot locally. It creates a non-root
+the read-only reminder route and private A2A v1.0 routes, waits for them to become ready, and
+verifies a complete snapshot plus the A2A Agent Card locally. It creates a non-root
 `local-assistant-tunnel` account whose authorized key can perform local port forwarding only to
 that exact loopback destination. Shell access, PTY, X11, SSH-agent forwarding, remote forwarding,
 and every other destination are denied. A failed `sshd` validation restores the previous SSH
@@ -83,7 +83,7 @@ configuration. It is safe to rerun after a partial failure.
 #### Connector step 4 — Enter the completed server values
 
 Continue only after **SERVER SETUP COMPLETE**. Record the server's complete Ed25519 host-key line,
-the reminder bridge token, and the OpenClaw operator token. The installer also prints the host-key
+the reminder bridge token, and the OpenClaw A2A/operator token. The installer also prints the host-key
 fingerprint for comparison through the already trusted administrator SSH session. The server
 address and SSH port remain the values from step 1; the restricted username is always
 `local-assistant-tunnel`.
@@ -99,8 +99,10 @@ Finder-backed picker accepts only the matching Connector.
 Enter the server address and SSH port, paste the complete host-key line and two tokens, then choose
 **Save and Verify Connector**. The Connector pins that host key, opens one encrypted tunnel,
 performs an authenticated complete read-only reminder snapshot, requires proof that Calendar was
-unchanged, and closes the tunnel. On success, a green message appears above the button and the
-setup app closes automatically. On failure, it stays open with an actionable message.
+unchanged, validates the authenticated A2A v1.0 Agent Card, and closes the tunnel. On success, a
+green message appears above the button and the setup app closes automatically. On failure, it
+stays open with an actionable message. Existing installations must create and run a fresh server
+ZIP once before updating and verifying the v4.7 Connector runtime.
 
 #### Finish in Local Assistant — enable and refresh
 
@@ -269,22 +271,22 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v4.6 status | Meaning |
+| Release area | v4.7 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | Local and OpenClaw answers expand with the live window and render native Markdown structure, including real tables instead of raw pipe text. No WebView, active response link, network entitlement, or Connector transport change was added. |
-| Source implementation | Complete | A bounded native parser now presents headings, paragraphs, emphasis, lists, quotations, fenced code, dividers, and pipe tables in both the current response and History. Tables use styled header rows, equal-width cells, wrapping, and narrow-window horizontal scrolling. |
+| Approved scope | Complete | General OpenClaw messages use A2A v1.0 across the existing on-demand SSH boundary. The reminder snapshot route, local cache/RAG behavior, and network-free Local Assistant target remain unchanged. |
+| Source implementation | Complete | Connector runtime v1.8.0 discovers an authenticated Agent Card and sends text-only JSON-RPC `SendMessage`; server bridge v1.4.0 validates and delegates only the exact message and stable context identity. |
 | Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
-| Debug compilation | Complete | The focused native Markdown parser target compiled successfully through the Debug test action. |
-| Release build | Complete | The clean offline build produced the signed project-root Local Assistant, OpenClaw Connector, and v4.6 disk image. |
-| Automated tests | Complete | Five focused parser cases passed for rich block structure, semantic tables, escaped pipes, malformed-table fallback, and soft paragraph wrapping. |
+| Debug compilation | Complete | The updated runtime contract and setup interface compiled through the macOS Debug test action. |
+| Release build | Complete | The clean offline build produced the signed project-root Local Assistant, OpenClaw Connector, and v4.7 disk image. |
+| Automated tests | Complete | All 128 macOS tests, 39 Connector tests, and 12 OpenClaw bridge tests passed. The macOS suite completed 134 parameterized invocations with no failures or skips. |
 | Voice runtime testing | Pending manual check | Automated state tests cover silence submission in both modes; live multilingual recognition still requires manual inspection. |
-| Focused testing | Complete | The project-root, installed, and mounted-disk-image applications report v4.6 build 46; strict deep signature checks passed for both applications. |
-| Disconnected runtime testing | Not run | The v4.6 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Complete | The signed Local Assistant bundle passed the offline-boundary audit. The only discovered network string remains unreachable compiled model metadata; no response-rendering network path was added. |
-| Interface inspection | Complete | The exact installed application was inspected at its restored and expanded widths. The same OpenClaw response reflowed across the available width and rendered its heading, bullets, inline code, and two-column table as native styled content. |
+| Focused testing | Complete | The project-root, installed, and mounted-disk-image applications report v4.7 build 47; strict deep signature checks passed for both applications. |
+| Disconnected runtime testing | Not run | The v4.7 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Complete | The signed Local Assistant bundle passed the offline-boundary audit. The only discovered network string remains unreachable compiled model metadata; A2A exists only in the separate Connector. |
+| Interface inspection | Complete | The installed Connector's existing-installation and review/update screens were inspected. They clearly identify the one server update, fresh ZIP, three-step server action, saved Keychain state, and reminder-plus-A2A verification without exposing either saved token. |
 | Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The disk image passed `hdiutil verify`; its mounted Local Assistant and OpenClaw Connector both report v4.6 build 46 and pass strict deep signature verification. SHA-256: `82f4f33e9c96a8ea549ec8c62f0b0ca7d07ff2c63e60336f2421fb71405015a8`. |
+| Release artifact integrity | Complete | The disk image passed `hdiutil verify`; its mounted Local Assistant and OpenClaw Connector report v4.7 build 47, include the A2A server adapter, and pass strict deep signature verification. SHA-256: `d553a1f98812e751f346bdd4bd1bc216f4df190596ed6b9655cbc1ca8e2d9c58`. |
 
 ### Version index
 
@@ -297,6 +299,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 | Version | What changed |
 |---|---|
+| v4.7 | [Private A2A connection to OpenClaw](#v47--private-a2a-connection-to-openclaw) |
 | v4.6 | [Responsive native Markdown responses](#v46--responsive-native-markdown-responses) |
 | v4.5 | [Natural confirmation, centered processing, and dependency security](#v45--natural-confirmation-centered-processing-and-dependency-security) |
 | v4.4 | [Conversational reminder confirmation and runtime compatibility](#v44--conversational-reminder-confirmation-and-runtime-compatibility) |
@@ -346,6 +349,20 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v4.7 — Private A2A connection to OpenClaw
+
+- Replaces the Connector's direct Chat Completions transport with A2A v1.0 Agent Card discovery
+  and JSON-RPC `SendMessage` while preserving the exact submitted text and stable conversation
+  identity.
+- Adds two Gateway-authenticated loopback routes to server bridge v1.4.0. The existing dedicated
+  reminder snapshot route and Calendar-unchanged proof remain separate and unchanged.
+- Keeps Local Assistant offline, keeps OpenClaw on `127.0.0.1:23116`, and opens only the existing
+  one-request restricted SSH tunnel. No VPN, public Gateway, public HTTPS origin, or permanent
+  tunnel is added.
+- Advances Local Assistant and OpenClaw Connector to v4.7 build 47, Connector runtime v1.8.0, and
+  runtime contract v3. Existing users create and run a fresh server setup ZIP once before
+  verifying the updated Connector.
 
 ### v4.6 — Responsive native Markdown responses
 
