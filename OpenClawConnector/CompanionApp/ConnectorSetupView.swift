@@ -21,7 +21,7 @@ struct ConnectorSetupView: View {
                 }
             }
             .padding(30)
-            .frame(maxWidth: 820)
+            .frame(maxWidth: ConnectorDesignSystem.contentMaximumWidth)
             .frame(maxWidth: .infinity)
         }
         .background(ConnectorDesignSystem.canvas)
@@ -147,9 +147,9 @@ struct ConnectorSetupView: View {
                 )
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(ConnectorDesignSystem.successGreen)
-            .controlSize(.large)
+            .buttonStyle(
+                ConnectorPrimaryButtonStyle(accent: ConnectorDesignSystem.successGreen)
+            )
             .disabled(model.isBusy)
 
             Button {
@@ -161,8 +161,9 @@ struct ConnectorSetupView: View {
                 )
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
+            .buttonStyle(
+                ConnectorSecondaryButtonStyle(accent: ConnectorDesignSystem.serverBlue)
+            )
             .disabled(model.isBusy)
 
             Divider()
@@ -174,8 +175,9 @@ struct ConnectorSetupView: View {
                     ConnectorSetupConstants.Text.removeConnector,
                     systemImage: ConnectorSetupConstants.Symbol.remove
                 )
+                .frame(maxWidth: .infinity)
             }
-            .foregroundStyle(ConnectorDesignSystem.dangerRed)
+            .buttonStyle(ConnectorDestructiveButtonStyle())
             .disabled(model.isBusy)
         }
         .padding(ConnectorDesignSystem.cardPadding)
@@ -195,7 +197,9 @@ struct ConnectorSetupView: View {
                         systemImage: ConnectorSetupConstants.Symbol.back
                     )
                 }
-                .buttonStyle(.borderless)
+                .buttonStyle(
+                    ConnectorSecondaryButtonStyle(accent: ConnectorDesignSystem.serverBlue)
+                )
                 .disabled(model.isBusy)
             } else if model.existingState?.hasExistingData == true {
                 noticeCard(
@@ -205,7 +209,8 @@ struct ConnectorSetupView: View {
                 )
             }
 
-            if model.statusMessage.isEmpty == false {
+            if model.statusMessage.isEmpty == false,
+               model.showsVerificationStatus == false {
                 statusLabel
             }
 
@@ -238,6 +243,7 @@ struct ConnectorSetupView: View {
                 placeholder: ConnectorSetupConstants.Configuration.defaultSSHPort,
                 text: $model.sshPort
             )
+        } footer: {
             helpDisclosure(
                 ConnectorSetupConstants.Text.addressHelpTitle,
                 answers: ConnectorSetupConstants.Text.addressHelp,
@@ -254,30 +260,46 @@ struct ConnectorSetupView: View {
             bullets: ConnectorSetupConstants.Text.filesBullets,
             theme: .files
         ) {
-            Button(ConnectorSetupConstants.Text.createPublicKey) {
-                model.createAndExportPublicKey()
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(ConnectorDesignSystem.fileCyan)
-            .disabled(model.isBusy)
+            VStack(alignment: .leading, spacing: 12) {
+                Button {
+                    model.createAndExportPublicKey()
+                } label: {
+                    Label(
+                        ConnectorSetupConstants.Text.createPublicKey,
+                        systemImage: ConnectorSetupConstants.Symbol.credentials
+                    )
+                }
+                .buttonStyle(
+                    ConnectorPrimaryButtonStyle(accent: ConnectorDesignSystem.fileCyan)
+                )
+                .disabled(model.isBusy)
 
-            if model.publicKeyWasExported {
-                successLabel(ConnectorSetupConstants.Text.publicKeyReady)
-            } else if model.existingState?.sshIdentityReady == true {
-                successLabel(ConnectorSetupConstants.Text.existingPublicKeyReady)
-            }
-
-            Button(ConnectorSetupConstants.Text.createServerSetupZIP) {
-                model.createServerSetupZIP()
-            }
-            .buttonStyle(.bordered)
-            .tint(ConnectorDesignSystem.fileCyan)
-            .disabled(model.isBusy)
-
-            if model.serverSetupWasExported {
-                successLabel(ConnectorSetupConstants.Text.serverSetupReady)
+                if model.publicKeyWasExported {
+                    successLabel(ConnectorSetupConstants.Text.publicKeyReady)
+                } else if model.existingState?.sshIdentityReady == true {
+                    successLabel(ConnectorSetupConstants.Text.existingPublicKeyReady)
+                }
             }
 
+            VStack(alignment: .leading, spacing: 12) {
+                Button {
+                    model.createServerSetupZIP()
+                } label: {
+                    Label(
+                        ConnectorSetupConstants.Text.createServerSetupZIP,
+                        systemImage: ConnectorSetupConstants.Symbol.files
+                    )
+                }
+                .buttonStyle(
+                    ConnectorPrimaryButtonStyle(accent: ConnectorDesignSystem.fileCyan)
+                )
+                .disabled(model.isBusy)
+
+                if model.serverSetupWasExported {
+                    successLabel(ConnectorSetupConstants.Text.serverSetupReady)
+                }
+            }
+        } footer: {
             helpDisclosure(
                 ConnectorSetupConstants.Text.filesHelpTitle,
                 answers: ConnectorSetupConstants.Text.filesHelp,
@@ -295,12 +317,19 @@ struct ConnectorSetupView: View {
             theme: .actions
         ) {
             commandBlock(ConnectorSetupConstants.Text.serverCommands)
-            Button(ConnectorSetupConstants.Text.copyServerCommands) {
+            Button {
                 model.copyServerCommands()
+            } label: {
+                Label(
+                    ConnectorSetupConstants.Text.copyServerCommands,
+                    systemImage: ConnectorSetupConstants.Symbol.copy
+                )
             }
-            .buttonStyle(.borderedProminent)
-            .tint(ConnectorDesignSystem.actionOrange)
+            .buttonStyle(
+                ConnectorPrimaryButtonStyle(accent: ConnectorDesignSystem.actionOrange)
+            )
 
+        } footer: {
             DisclosureGroup(ConnectorSetupConstants.Text.transferHelpTitle) {
                 VStack(alignment: .leading, spacing: 10) {
                     bulletList(
@@ -308,11 +337,19 @@ struct ConnectorSetupView: View {
                         accent: ConnectorDesignSystem.actionOrange
                     )
                     commandBlock(model.transferCommand)
-                    Button(ConnectorSetupConstants.Text.copyTransferCommand) {
+                    Button {
                         model.copyTransferCommand()
+                    } label: {
+                        Label(
+                            ConnectorSetupConstants.Text.copyTransferCommand,
+                            systemImage: ConnectorSetupConstants.Symbol.copy
+                        )
                     }
-                    .buttonStyle(.bordered)
-                    .tint(ConnectorDesignSystem.actionOrange)
+                    .buttonStyle(
+                        ConnectorSecondaryButtonStyle(
+                            accent: ConnectorDesignSystem.actionOrange
+                        )
+                    )
                 }
                 .padding(.top, 10)
             }
@@ -370,10 +407,13 @@ struct ConnectorSetupView: View {
                 Button(ConnectorSetupConstants.Text.replaceCredentials) {
                     model.beginCredentialReplacement()
                 }
-                .buttonStyle(.bordered)
-                .tint(ConnectorDesignSystem.credentialTeal)
+                .buttonStyle(
+                    ConnectorSecondaryButtonStyle(
+                        accent: ConnectorDesignSystem.credentialTeal
+                    )
+                )
             }
-
+        } footer: {
             helpDisclosure(
                 ConnectorSetupConstants.Text.credentialHelpTitle,
                 answers: ConnectorSetupConstants.Text.credentialHelp,
@@ -395,6 +435,11 @@ struct ConnectorSetupView: View {
             bullets: ConnectorSetupConstants.Text.localBullets,
             theme: .verification
         ) {
+            if model.statusMessage.isEmpty == false,
+               model.showsVerificationStatus {
+                statusLabel
+            }
+
             Button {
                 model.saveAndStart()
             } label: {
@@ -406,15 +451,11 @@ struct ConnectorSetupView: View {
                 )
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(ConnectorDesignSystem.successGreen)
-            .controlSize(.large)
+            .buttonStyle(
+                ConnectorPrimaryButtonStyle(accent: ConnectorDesignSystem.successGreen)
+            )
             .disabled(model.isBusy)
-
-            if model.statusMessage.isEmpty == false {
-                statusLabel
-            }
-
+        } footer: {
             Label(
                 ConnectorSetupConstants.Text.troubleshootingTitle,
                 systemImage: ConnectorSetupConstants.Symbol.question
@@ -451,12 +492,13 @@ struct ConnectorSetupView: View {
     }
 
     /// Builds one equal-width numbered stage with a semantic leading rail.
-    private func stepCard<Content: View>(
+    private func stepCard<Content: View, Footer: View>(
         number: Int,
         title: String,
         bullets: [String],
         theme: ConnectorStepTheme,
-        @ViewBuilder content: () -> Content
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder footer: () -> Footer
     ) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
@@ -472,8 +514,28 @@ struct ConnectorSetupView: View {
                     .font(.title3.weight(.bold))
                     .foregroundStyle(ConnectorDesignSystem.text)
             }
-            bulletList(bullets, accent: theme.accent)
-            content()
+
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 24) {
+                    bulletList(bullets, accent: theme.accent)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                    VStack(alignment: .leading, spacing: 14) {
+                        content()
+                    }
+                    .frame(
+                        minWidth: ConnectorDesignSystem.actionMinimumWidth,
+                        maxWidth: .infinity,
+                        alignment: .topLeading
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 16) {
+                    bulletList(bullets, accent: theme.accent)
+                    content()
+                }
+            }
+
+            footer()
         }
         .padding(ConnectorDesignSystem.cardPadding)
         .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -494,23 +556,37 @@ struct ConnectorSetupView: View {
 
     /// Separates Mac actions from server-terminal actions.
     private func locationBadge(_ title: String, onMac: Bool) -> some View {
-        Label(
-            title,
-            systemImage: onMac
-                ? ConnectorSetupConstants.Symbol.settings
-                : ConnectorSetupConstants.Symbol.server
-        )
-        .font(.caption.monospaced().weight(.bold))
-        .foregroundStyle(
-            onMac ? ConnectorDesignSystem.serverBlue : ConnectorDesignSystem.actionOrange
-        )
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .background(
-            (onMac ? ConnectorDesignSystem.serverBlue : ConnectorDesignSystem.actionOrange)
-                .opacity(0.09),
-            in: Capsule()
-        )
+        let accent = onMac
+            ? ConnectorDesignSystem.serverBlue
+            : ConnectorDesignSystem.actionOrange
+        return HStack(spacing: 12) {
+            Image(
+                systemName: onMac
+                    ? ConnectorSetupConstants.Symbol.settings
+                    : ConnectorSetupConstants.Symbol.server
+            )
+            .font(.headline)
+            .frame(
+                width: ConnectorDesignSystem.locationBannerIconSize,
+                height: ConnectorDesignSystem.locationBannerIconSize
+            )
+            .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 8))
+
+            Text(title)
+                .font(.headline.monospaced().weight(.bold))
+                .tracking(0.8)
+
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(accent)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(accent.opacity(0.28), lineWidth: 1)
+        }
     }
 
     /// Formats required actions for fast scanning.

@@ -35,6 +35,7 @@ final class ConnectorSetupModel: ObservableObject {
     @Published private(set) var existingState: ExistingConnectorState?
     @Published private(set) var statusMessage = ConnectorSetupConstants.Text.empty
     @Published private(set) var statusTone = ConnectorSetupStatusTone.neutral
+    @Published private(set) var showsVerificationStatus = false
     @Published private(set) var isBusy = false
     @Published private(set) var publicKeyWasExported = false
     @Published private(set) var serverSetupWasExported = false
@@ -243,7 +244,6 @@ final class ConnectorSetupModel: ObservableObject {
             statusMessage = ConnectorSetupConstants.Text.updateReady
             statusTone = .success
             isBusy = false
-            await closeAfterSuccess()
         } catch {
             showFailure(error)
             isBusy = false
@@ -254,13 +254,14 @@ final class ConnectorSetupModel: ObservableObject {
     internal func saveAndStart() {
         guard isBusy == false else { return }
         clearStatus()
+        showsVerificationStatus = true
         isBusy = true
         Task { [weak self] in
             await self?.performSetupAndVerification()
         }
     }
 
-    /// Completes the local installation and closes only after a real snapshot succeeds.
+    /// Completes the local installation and leaves the verified result visible.
     private func performSetupAndVerification() async {
         do {
             let connection = try validatedConnection()
@@ -276,7 +277,6 @@ final class ConnectorSetupModel: ObservableObject {
             statusMessage = ConnectorSetupConstants.Text.ready
             statusTone = .success
             isBusy = false
-            await closeAfterSuccess()
         } catch {
             showFailure(error)
             isBusy = false
@@ -331,6 +331,7 @@ final class ConnectorSetupModel: ObservableObject {
         mode = .setup
         statusMessage = ConnectorSetupConstants.Text.removeComplete
         statusTone = .success
+        showsVerificationStatus = false
         isBusy = false
     }
 
@@ -350,6 +351,7 @@ final class ConnectorSetupModel: ObservableObject {
     private func clearStatus() {
         statusMessage = ConnectorSetupConstants.Text.empty
         statusTone = .neutral
+        showsVerificationStatus = false
     }
 
     /// Shows one user-safe failure without remote content or credentials.
@@ -357,14 +359,6 @@ final class ConnectorSetupModel: ObservableObject {
         statusMessage = ConnectorSetupConstants.Text.setupFailedPrefix
             + error.localizedDescription
         statusTone = .failure
-    }
-
-    /// Waits briefly so the successful confirmation is visible before closing.
-    private func closeAfterSuccess() async {
-        try? await Task.sleep(
-            nanoseconds: ConnectorSetupConstants.Configuration.automaticCloseDelayNanoseconds
-        )
-        NSApplication.shared.terminate(nil)
     }
 
     /// Returns the normalized SSH server values and pinned host key.

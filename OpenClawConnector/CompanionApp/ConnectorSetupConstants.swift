@@ -51,7 +51,6 @@ enum ConnectorSetupConstants {
         static let verificationExitA2A: Int32 = 13
         static let maximumVerificationErrorBytes = 1_024
         static let maximumSetupStateBytes = 4_096
-        static let automaticCloseDelayNanoseconds: UInt64 = 1_500_000_000
         static let defaultSSHPort = "22"
         static let minimumSSHPort = 1
         static let maximumSSHPort = 65_535
@@ -95,6 +94,7 @@ enum ConnectorSetupConstants {
         static let question = "questionmark.circle.fill"
         static let loading = "arrow.triangle.2.circlepath"
         static let back = "chevron.left"
+        static let copy = "doc.on.doc"
     }
 
     enum Text {
@@ -117,7 +117,7 @@ enum ConnectorSetupConstants {
         static let updateExisting = "Update and Verify Existing Connector"
         static let updateWorking = "Updating and verifying…"
         static let updateReady =
-            "Connector updated and verified. This window will close automatically."
+            "Connector updated and verified. You can close this window."
         static let reviewSettings = "Review Connection / Update Server"
         static let returnToExisting = "Back to Existing Connector"
         static let replaceCredentials = "Replace Saved Credentials"
@@ -173,16 +173,18 @@ enum ConnectorSetupConstants {
         static let serverSetupFailed = "The server setup ZIP could not be created."
         static let filesHelpTitle = "What leaves this Mac?"
         static let filesHelp = [
-            "The public key and setup ZIP are safe to transfer to your server.",
+            "Transfer both the public key and the setup ZIP to your server.",
+            "The public key is a separate file. It is not inside the ZIP.",
             "The private key remains in this Mac user's private Library folder.",
             "The ZIP contains packaged setup files, not this app's source code."
         ]
 
         static let transferTitle = "Run setup on the server"
         static let transferBullets = [
-            "Place both files in the OpenClaw owner's home folder.",
+            "Place the public key and ZIP in the OpenClaw owner's home folder.",
             "Run the four commands below in the server terminal.",
-            "Continue when SERVER SETUP COMPLETE appears. This also enables private A2A."
+            "Continue when SERVER SETUP COMPLETE appears.",
+            "This also enables private A2A."
         ]
         static let serverCommands =
             "cd \"$HOME\"\nunzip -o \"OpenClaw Server Setup.zip\"\ncd \"OpenClaw Server Setup\"\n./setup-server.sh \"$HOME/local-assistant-connector.pub\""
@@ -237,7 +239,7 @@ enum ConnectorSetupConstants {
         static let saveAndStart = "Save and Verify Connector"
         static let working = "Saving and verifying…"
         static let ready =
-            "Connection verified. Setup is complete and this window will close automatically."
+            "Connector verified and ready. You can close this window."
         static let troubleshootingTitle = "If verification does not pass"
         static let tunnelQuestion = "The Connector cannot open the SSH tunnel."
         static let tunnelAnswers = [
