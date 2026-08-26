@@ -1,6 +1,9 @@
 # Local Assistant Product Guardrails
 
-- Keep the runtime fully local: do not add network entitlements, clients, servers, telemetry, runtime downloads, web views, or updater code.
+- Keep the app runtime fully local: do not add network entitlements, clients, servers, telemetry, runtime downloads, web views, or updater code. The optional OpenClaw companion connector is a separate one-shot process; it may use only its documented pinned SSH tunnel, loopback Gateway destination, Keychain credentials, and owner-only spool, and must never move network access into the app target.
+- Keep CloudBase reminders as a hidden local knowledge source. Do not add a reminder browser, Reminder Center, reminder CRUD controls, or reminder notification scheduling to the app.
+- Local Assistant may obtain reminders only through successful complete snapshots. It must never add, update, or remove a CloudBase reminder itself.
+- Send a request to OpenClaw only when the typed or locally transcribed request explicitly contains standalone `OpenClaw` or `Open Claw`. Send that request text only; never attach cached reminder rows, indexed files, or conversation history.
 - Keep authorized source folders read-only. Opening and revealing files must remain explicit user actions.
 - Treat requested file types as hard retrieval constraints, never as ordinary keyword hints.
 - When a request is underspecified and searching would require an arbitrary choice, ask a concise clarification question instead of guessing.
@@ -9,6 +12,9 @@
 - Preserve a focused single-column assistant. The interface may feel rich through hierarchy, typography, icons, restrained color, and depth, but must not become visually overwhelming.
 - Keep folder access, revocation, indexing, model state, shortcut state, and privacy details in Settings.
 - Write Settings copy for the person using the app: describe what is ready, what it enables, and how to recover. Keep model filenames and implementation terminology in documentation or diagnostics.
+- Treat every installed-app setup as a clean-device workflow. Never assume Python, Git, a source checkout, a project-relative directory, or a manually edited configuration file. Mark every action by execution location, label every placeholder and interactive prompt, and validate release instructions using only shipped artifacts.
+- Keep installed-app setup on a short location-specific happy path. Put common failures in collapsed question-and-answer sections under the step that owns them; never tell the user to install the app currently displaying the guide, and distinguish an installed companion, a companion on a mounted release image, and a missing companion.
+- Assume an installed-app user knows only how to open Mac Terminal and the server terminal. Keep each primary setup step limited to its location, required action or fields, exact commands, and one completion cue. Move definitions, reasons, security details, alternatives, diagnostics, and recovery into the owning step's disclosure. Never show raw tool errors or internal port terminology on the primary path, and use color only for stable semantic roles rather than decoration.
 - Preserve natural capitalization in responses, explanations, filenames, and other content. Reserve uppercase styling for short telemetry and interface labels.
 - Update `README.md` and its release-status table whenever a user-facing capability, version, privacy boundary, or validation status changes.
 - Every user-facing implementation must increment both the marketing version and build number.

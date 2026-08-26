@@ -1,10 +1,12 @@
 # Local Assistant
 
-> A private macOS assistant for conversation and evidence-backed file search, with no runtime network access.
+> A private macOS assistant for conversation, evidence-backed file search, and local reminder intelligence, with no network access in the application process.
 
 Local Assistant is designed for one person and one Mac. Open the application normally or press **Control–Option–Space**, then type or speak through its focused light command surface. Voice input can use a click followed by automatic sending after a pause, or hold-to-talk with the Space bar. The main screen presents only the current request, response, and file findings; the complete retained conversation remains available from **History**. It can answer ordinary questions, retain recent conversational context for follow-up requests, ask for clarification when a file request is ambiguous, and search only the folders explicitly authorized through macOS.
 
-Conversation, retrieval, text embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Semantic search compares plain-language requests with text extracted from files, including OCR text from images and image-only PDF pages. Authorized roots and descendant folders are also indexed with local context, so a request such as “files for school” can use the matching folder as the scope even when individual files do not contain the word “school.” Search answers stay concise while reusable result modules present item identity, matching evidence, and explicit Open or Reveal actions. The runtime does not depend on a local server, a cloud service, telemetry, or an updater.
+Conversation, retrieval, text embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Semantic search compares plain-language requests with text extracted from files, including OCR text from images and image-only PDF pages. Authorized roots and descendant folders are also indexed with local context, so a request such as “files for school” can use the matching folder as the scope even when individual files do not contain the word “school.” Search answers stay concise while reusable result modules present item identity, matching evidence, and explicit Open or Reveal actions. The application runtime does not depend on a local server, a cloud service, telemetry, or an updater.
+
+An optional, separately installed OpenClaw connector exchanges schema-validated tasks through an owner-only local file spool. The app keeps complete CloudBase reminder snapshots as hidden local knowledge and answers reminder questions with exact, lexical, semantic, and deadline-aware retrieval. It never shows a reminder-management screen, changes CloudBase itself, or schedules reminder notifications. A typed or spoken request is sent to OpenClaw only when it explicitly contains standalone `OpenClaw` or `Open Claw`; only that submitted text is sent. The app bundle still has no networking entitlement, and the connector's scoped credentials remain in separate macOS Keychain entries.
 
 ## Quick start
 
@@ -20,6 +22,108 @@ Choose the path that matches what you need. If Local Assistant is already instal
 6. Review the centered answer and responsive findings before choosing **Open File**, **Open Folder**, or **Reveal in Finder**.
 7. Open **History** to review the complete retained conversation, including the current session.
 
+### OpenClaw connector setup
+
+Local Assistant never opens a network connection. This connection uses two applications and the
+Mac's built-in SSH client:
+
+- `Local Assistant.app`, the sandboxed offline application;
+- `OpenClaw Connector.app`, the only application component that contacts OpenClaw;
+- a dedicated Connector SSH key and restricted server account that can forward only to
+  `127.0.0.1:23116`.
+
+`OpenClaw Connector.app` contains the versioned server-only deployment payload. It never writes that payload automatically. In the Connector, the user chooses **Create Server Setup ZIP…**, selects a save location, and receives `OpenClaw Server Setup.zip`. The ZIP is assembled locally, downloads nothing, and contains no credentials or application source.
+
+The installed-app setup assumes the Mac has no Python, Git, source checkout, VPN, connector
+configuration, or extra networking application. The OpenClaw host may remain completely CLI-only.
+The user needs only the existing server address, SSH port, and administrator SSH access.
+
+Open Local Assistant and choose **Settings → OpenClaw Connection → Open Setup**. Local Assistant
+shows three short completion cards: open the matching Connector, enable the connection after it
+verifies, and run the first refresh. The Connector owns the five actionable setup steps and keeps
+less common recovery instructions in collapsed **Questions and fixes** disclosures.
+
+#### Connector step 1 — Identify the existing SSH server
+
+Record the server DNS name or IP address and SSH port already used for administration. Confirm the
+administrator login works before continuing. Port `23116` must remain closed to the public and the
+OpenClaw Gateway must not be bound to a public interface.
+
+#### Connector step 2 — Create both server files
+
+Open the exact Connector version selected by Local Assistant. Choose **Create Key and Save Public
+Key…** and save `local-assistant-connector.pub`, then choose **Create Server Setup ZIP…** and save
+the ZIP beside it. Only the public key is transferred; the owner-only private key stays in the
+current Mac user's Connector Application Support directory. The ZIP contains only generic files
+embedded in the Connector and is created only after the user chooses a destination.
+
+#### Connector step 3 — Transfer both files and run setup
+
+Transfer both unchanged files to the OpenClaw owner's home folder using the existing trusted SSH,
+SFTP, Finder, or SCP method. The optional SCP template is only an alternative file-transfer method;
+skip it when the files are already on the server. Run the following on the OpenClaw server as the
+account that owns the working installation. The installer asks for administrator approval only
+when it creates the restricted SSH account and configuration:
+
+```bash
+cd "$HOME"
+unzip -o "OpenClaw Server Setup.zip"
+cd "OpenClaw Server Setup"
+./setup-server.sh "$HOME/local-assistant-connector.pub"
+```
+
+The installer keeps the Gateway on `127.0.0.1:23116`, disables OpenClaw's Tailscale mode, installs
+the read-only reminder route, waits for that route to become ready, and verifies a complete
+snapshot locally. It creates a non-root
+`local-assistant-tunnel` account whose authorized key can perform local port forwarding only to
+that exact loopback destination. Shell access, PTY, X11, SSH-agent forwarding, remote forwarding,
+and every other destination are denied. A failed `sshd` validation restores the previous SSH
+configuration. It is safe to rerun after a partial failure.
+
+#### Connector step 4 — Enter the completed server values
+
+Continue only after **SERVER SETUP COMPLETE**. Record the server's complete Ed25519 host-key line,
+the reminder bridge token, and the OpenClaw operator token. The installer also prints the host-key
+fingerprint for comparison through the already trusted administrator SSH session. The server
+address and SSH port remain the values from step 1; the restricted username is always
+`local-assistant-tunnel`.
+
+#### Connector step 5 — Save and verify
+
+Local Assistant searches Applications, beside its own app, macOS application registration, and the
+root of a mounted release disk image. It launches only a Connector whose marketing version and
+build number exactly match Local Assistant. When Applications contains an older copy, the setup
+screen tells the user to replace it instead of silently opening it. If no matching copy is found, a
+Finder-backed picker accepts only the matching Connector.
+
+Enter the server address and SSH port, paste the complete host-key line and two tokens, then choose
+**Save and Verify Connector**. The Connector pins that host key, opens one encrypted tunnel,
+performs an authenticated complete read-only reminder snapshot, requires proof that Calendar was
+unchanged, and closes the tunnel. On success, a green message appears above the button and the
+setup app closes automatically. On failure, it stays open with an actionable message.
+
+#### Finish in Local Assistant — enable and refresh
+
+Return to Settings, enable **OpenClaw connection**, and select the two-, four-, or eight-hour
+refresh interval. A per-user `launchd` job runs the Connector briefly when a request is queued and
+at scheduled catch-up checks; the Connector opens its tunnel only when a snapshot is due. A missed
+calendar interval is handled after the Mac wakes. The same one-shot path runs at Local Assistant
+launch when stale, on **Refresh Now**, and after a successful explicit OpenClaw add, update, or
+delete request.
+
+Every successful complete snapshot transactionally replaces the local reminder cache and RAG
+index. Rows missing from the new snapshot disappear, so remote `updatedAt` values and deletion
+tombstones are unnecessary. A failed fetch or local validation leaves the last complete cache and
+index untouched and marks reminder knowledge as potentially outdated. Reminder questions always
+use that local cache; they never contact OpenClaw.
+
+#### Advanced developer source setup
+
+The commands in `OpenClawConnector/README.md` are for developers who deliberately cloned this repository. They are not part of installed-app setup. That reference labels every command that runs unchanged, every value that must be replaced, and confirms that the connector CLI creates its configuration automatically.
+
+Once enabled, Local Assistant refreshes its hidden reminder snapshot at launch when stale, after a
+successful OpenClaw response, on manual request, and through the selected macOS schedule.
+
 Press **Control–Option–Space** (`⌃⌥Space`) while the application is running to bring its window forward and focus the composer. Closing the window keeps the shortcut available; quitting the application disables it.
 
 #### Example requests
@@ -33,6 +137,10 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the application is runn
 | `Which PDF?` | Requests a topic, filename, folder, or date instead of guessing. |
 | `Find the latest budget spreadsheet` | Applies a spreadsheet constraint and hybrid relevance ranking. |
 | `Find my school files` | Matches an indexed School folder, then promotes files and folders contained inside it. |
+| `What reminders are due tomorrow?` | Searches the latest complete local CloudBase snapshot with temporal and semantic ranking. |
+| `Create a reminder to renew the permit tomorrow at 09:00` | Stays local and explains that a change request must explicitly include OpenClaw. |
+| `OpenClaw, delete the permit reminder` | Sends that exact submitted request to OpenClaw, with no cached reminder rows or file context attached. |
+| `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 
 ---
 
@@ -49,6 +157,7 @@ The source repository intentionally excludes `Vendor`, generated application bun
 | Hardware | Apple Silicon Mac |
 | Operating system | macOS 15 or newer |
 | Development tools | Xcode and Command Line Tools |
+| Connector preparation | Python 3.10 or newer on the connected preparation Mac only |
 | Free preparation space | Approximately 10 GB |
 
 #### Step 2 — Prepare the offline package
@@ -60,7 +169,7 @@ The source repository intentionally excludes `Vendor`, generated application bun
    ./Scripts/prepare_offline_bundle.sh
    ```
 
-3. Wait for dependency checkout, native-library compilation, model verification, and Swift package resolution to finish.
+3. Wait for dependency checkout, pinned connector-runtime preparation, native-library compilation, model verification, and Swift package resolution to finish.
 
 **Result:** The script recreates `Vendor` from pinned revisions and creates the transferable package under `outputs/LocalAssistant-OfflineKit`.
 
@@ -72,7 +181,7 @@ If the speech model is downloaded manually, preserve the complete `openai_whispe
 2. Transfer them to the destination Mac.
 3. Disable Wi-Fi, Ethernet, VPNs, and other network interfaces before continuing.
 
-Keep the destination disconnected throughout installation, building, auditing, and normal use.
+Keep the destination disconnected throughout application installation, building, and static privacy auditing. The optional connector cannot be exercised until the Mac later has an approved private route to the OpenClaw server; enabling that separate route does not give `Local Assistant.app` network access.
 
 #### Step 4 — Install the verified model assets
 
@@ -92,9 +201,9 @@ Build only from the prepared local dependencies:
 ./Scripts/build_offline.sh
 ```
 
-**Result:** The Release application is built under `DerivedData/Build/Products/Release` without automatic package resolution, then copied to the top of the project as `Local Assistant.app` so it can be opened directly.
+**Result:** The Release application is built under `DerivedData/Build/Products/Release` without automatic package resolution. The project root receives `Local Assistant.app`, the separately packaged `OpenClaw Connector.app`, and `Local Assistant Release.dmg`, which contains both applications. The server deployment payload is embedded only in the Connector, and the user creates `OpenClaw Server Setup.zip` from that app only when needed.
 
-A successful build removes any existing `Local Assistant.app` first and deletes the entire `DerivedData` build cache once the copy at the project root is verified, so the project root always holds exactly the one latest application and no build artifact is left behind.
+A successful build removes the prior generated application and release artifacts first and deletes the entire `DerivedData` build cache once the new copies are verified, so the project root holds only the latest release set.
 
 #### Step 6 — Audit the offline boundary
 
@@ -104,7 +213,7 @@ Run the static boundary audit against the Release application:
 ./Scripts/audit_offline_boundary.sh "./Local Assistant.app"
 ```
 
-The audit requires exactly the approved App Sandbox, microphone, application-scoped bookmark, and user-selected read-only entitlements, and rejects every unexpected entitlement. It then inspects the application executable and every bundled executable and fails if any of them links a networking library or imports a network symbol, because a binary that never links networking code cannot open a connection whatever its source might still say. It also inspects packaged resources for network-related implementation text.
+The audit requires exactly the approved App Sandbox, microphone, application-scoped bookmark, and user-selected read-only entitlements, and rejects every unexpected entitlement. Local Assistant has no user-selected write entitlement because ZIP and public-key export belong to the separate Connector. The audit then inspects the application executable and every bundled executable and fails if any of them links a networking library or imports a network symbol, because a binary that never links networking code cannot open a connection whatever its source might still say. It also inspects packaged resources for network-related implementation text.
 
 The audit reports, rather than rejects, an unreachable service hostname still compiled into the binary. A string literal in unreachable code proves nothing either way; the entitlement set is what the operating system enforces.
 
@@ -116,7 +225,7 @@ The test target builds and runs entirely from local sources and needs no network
 
 ```zsh
 xcodebuild -project LocalAssistant.xcodeproj \
-  -scheme LocalAssistantTests \
+  -scheme LocalAssistant \
   -configuration Debug \
   -derivedDataPath DerivedData \
   -destination 'platform=macOS' test
@@ -140,43 +249,59 @@ Writable application data remains inside the macOS sandbox's Application Support
 
 ```text
 LocalAssistant/
+├── Connector/
+│   ├── schedule.json
+│   ├── status.json
+│   ├── Requests/
+│   ├── Processing/
+│   └── Responses/
+│       └── scheduled-reminder-snapshot.json
 ├── Index/assistant.sqlite3
 └── Models/
 ```
 
 Microphone audio is never written to disk. Speech is recognized from memory while it is spoken, then the complete in-memory utterance receives one final multilingual transcription pass before it is sent. No recording file exists to retain or clean up.
 
-SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. While the application process is running, native macOS folder events schedule incremental updates; reopening the application performs a catch-up scan. Quitting stops monitoring completely. There is no login item, background helper, localhost service, or runtime network route.
+SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. While the application process is running, native macOS folder events schedule incremental updates; reopening the application performs a catch-up scan. Quitting stops folder monitoring completely. Local Assistant itself has no login item, background helper, localhost service, or runtime network route. The optional separate Connector installs a one-shot per-user launchd job that wakes only for queued work or schedule checks, closes every SSH tunnel, and exits.
 
 ## Release notes
 
 ### Current release status
 
-| Release area | v3.1 status | Meaning |
+| Release area | v3.10 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | The approved scope moves each storage figure from a separate line into the reset row itself, sitting directly beside the button inside the same bordered, grey-filled box. |
-| Source implementation | Complete | The shared destructive-action row now takes a `detail` parameter rendered between the title and the button; the standalone storage labels above each row were removed since the row now carries that figure itself. |
-| Semantic capability audit | Complete | No retrieval, indexing, or model behavior changed; this release is a Settings layout change only. |
-| Debug compilation | Passed | The focused XCTest runs compiled the v3.1 source and Settings interface. |
-| Release build | Passed | A clean offline Release build produced the signed v3.1 build 31 application. |
-| Automated tests | Passed | Every existing focused test, including search-index clearing and the index-storage measurement, passed unchanged. |
+| Approved scope | Complete | Reminders are hidden read-only knowledge; every change goes through an explicitly named OpenClaw request, with no Local Assistant notifications or reminder-management screen. |
+| Source implementation | Complete | The Connector detects complete existing installations without returning token values, provides no-reentry update and verification, separates intentional credential replacement, supports confirmed exact cleanup, and retains the five-step first-install path without giving Local Assistant network access. |
+| Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
+| Debug compilation | In progress | Connector v3.10 type-checks cleanly; the full Debug application build remains part of the current release run. |
+| Release build | Pending | The clean offline v3.10 build has not run yet. |
+| Automated tests | In progress | All 32 Connector tests, all 7 OpenClaw plugin tests, and all 5 typed reminder-bridge tests pass; the focused Local Assistant tests remain part of the current release run. |
 | Voice runtime testing | Pending manual check | Live multilingual speech, final transcription, silence sending, and hold-Space sending still require manual inspection. |
-| Focused testing | Passed | A rebuild was confirmed to leave only the new application at the project root, with no previous-bundle copy created. |
-| Disconnected runtime testing | Not run | The v3.1 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Passed | The v3.1 Release bundle passed the offline-boundary audit; no reachable network code path was found. |
-| Interface inspection | Pending manual check | The relocated storage figures require inspection in the built v3.1 application. |
-| Code review | Not run | Code review remains an optional phase after testing and local delivery. |
+| Focused testing | Pending | Bundle signatures, embedded server payload, setup-state contract, cleanup boundary, and disk-image contents await the v3.10 build. |
+| Disconnected runtime testing | Not run | The v3.10 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Pending | The v3.10 signed Local Assistant bundle has not been audited yet. |
+| Interface inspection | Pending | The built v3.10 existing-install, first-install, replacement, cleanup, and error states still require visual inspection. |
+| Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Installed stable bundle | Complete | The project root contains only v3.1 build 31; no prior build is retained. |
+| Release artifact integrity | Pending | The v3.10 build 40 applications and release disk image have not been produced yet. |
 
 ### Version index
 
 The table and notes below are the durable record of what each release contained. Only the
-current project-root application is retained; rebuilding never leaves a previous copy. Each
+current project-root release set is retained; rebuilding never leaves a previous copy. Each
 entry names what that release changed and links to its full notes.
 
 | Version | What changed |
 |---|---|
+| v3.10 | [Credential-safe Connector updates and cleanup](#v310--credential-safe-connector-updates-and-cleanup) |
+| v3.9 | [Reliable connector setup, refresh, and lifecycle](#v39--reliable-connector-setup-refresh-and-lifecycle) |
+| v3.8 | [On-demand restricted SSH transport](#v38--on-demand-restricted-ssh-transport) |
+| v3.7 | [Complete private Tailscale connection setup](#v37--complete-private-tailscale-connection-setup) |
+| v3.6 | [User-created server ZIP and corrected setup packaging](#v36--user-created-server-zip-and-corrected-setup-packaging) |
+| v3.5 | [Unambiguous clean-device OpenClaw setup](#v35--unambiguous-clean-device-openclaw-setup) |
+| v3.4 | [Live OpenClaw status and in-app setup](#v34--live-openclaw-status-and-in-app-setup) |
+| v3.3 | [Hidden reminder knowledge and explicit OpenClaw actions](#v33--hidden-reminder-knowledge-and-explicit-openclaw-actions) |
+| v3.2 | [Private reminder RAG and an opt-in OpenClaw connector](#v32--private-reminder-rag-and-an-opt-in-openclaw-connector) |
 | v3.1 | [Storage figures moved beside each button](#v31--storage-figures-moved-beside-each-button) |
 | v3.0 | [Storage figures next to each reset action](#v30--storage-figures-next-to-each-reset-action) |
 | v2.9 | [Bordered reset rows matching the folder-card style](#v29--bordered-reset-rows-matching-the-folder-card-style) |
@@ -211,6 +336,98 @@ entry names what that release changed and links to its full notes.
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v3.10 — Credential-safe Connector updates and cleanup
+
+- Added credential-free discovery of an existing Connector installation. The Swift app receives only reusable public server values and yes/no Keychain-presence flags; it never retrieves or displays saved tokens.
+- Added **Update and Verify Existing Connector**, which installs the current packaged runtime, reuses the saved SSH identity, configuration, and Keychain tokens, verifies a real complete snapshot, and restarts the one-shot job without asking the user to repeat setup.
+- Separated **Replace Saved Credentials** from public settings review. New tokens enter through empty secure fields, move to Keychain through bounded standard input, and are cleared from Swift immediately after secure handoff even if later verification fails.
+- Added confirmed **Remove Connector Data**, which deletes the exact Connector runtime, identity, settings, checkpoint, launch job, pending spool lanes, and two Keychain entries while preserving Local Assistant and its committed reminder cache and RAG index.
+- Replaced the dense Connector form with a light-only semantic-color workbench: blue identifies server values, cyan identifies generated files, orange identifies server actions, teal identifies credentials and privacy, green identifies verification, and red is reserved for destructive cleanup.
+- Rewrote every primary step for a first-time user who knows only how to open Mac Terminal and the server terminal. Required actions and completion cues remain visible; definitions, security details, alternatives, internal port details, and Q&A recovery remain collapsed under the step that owns them.
+- Advanced Local Assistant and OpenClaw Connector to v3.10 build 40 and the Connector runtime package to v1.4.0. The OpenClaw reminder bridge remains v1.3.0 because its server contract did not change.
+
+### v3.9 — Reliable connector setup, refresh, and lifecycle
+
+- Fixed the standard macOS `Application Support` SSH host-key path so OpenSSH receives it as one pinned file rather than splitting it at the space.
+- Canonicalized Swift-generated UUIDs before forwarding and comparison, preventing valid complete reminder snapshots from being replaced by the generic `connector could not complete the request` response.
+- Added regression coverage at the workflow, service, and SSH-command boundaries.
+- Moved public-key and server-ZIP creation into the standalone Connector, which now embeds the generic server kit and owns every user-approved export. Local Assistant returned to a read-only user-selected-files entitlement.
+- Replaced the overwhelming Local Assistant procedure with three short completion cards and a five-step bullet-first Connector flow that distinguishes existing server access, two generated files, server commands, printed values, and local verification.
+- Added bounded server-route readiness retries and service diagnostics so a normal Gateway restart no longer races the installer snapshot check.
+- Added allowlisted SSH failure reasons for host-key mismatch, rejected public key, unresolved address, refused connection, timeout, and unreachable network without exposing raw SSH output or credentials.
+- Required exact marketing-version and build-number matching before Local Assistant opens a Connector, with recovery wording when Applications contains an older copy.
+- Added visible startup progress, preserved the current screen when reopening from the Dock, kept the global shortcut's assistant behavior, and made the Connector a normal Dock-visible application.
+- Advanced Local Assistant and OpenClaw Connector to v3.9 build 39 and the bridge/connector packages to v1.3.0.
+
+### v3.8 — On-demand restricted SSH transport
+
+- Replaced Tailscale and the private HTTPS origin with an on-demand encrypted SSH tunnel opened by the separate Connector only for one request.
+- Kept OpenClaw fixed to server loopback `127.0.0.1:23116`; no public Gateway port, HTTPS endpoint, VPN app, or continuously running tunnel is required.
+- Added user-controlled Connector key generation. Only `local-assistant-connector.pub` is exported; the owner-only private key stays on the Mac and never enters the server ZIP or a command argument.
+- Reworked the rerunnable server installer to create a non-root, no-shell `local-assistant-tunnel` account restricted to local forwarding to the exact Gateway destination, with PTY, X11, agent forwarding, remote forwarding, and all other destinations denied.
+- Added strict Ed25519 host-key pinning and SSH configuration rollback when `sshd` validation fails.
+- Replaced the persistent connector process with a one-shot launchd job. Queued app work launches it immediately; calendar checks support two-, four-, and eight-hour reminder schedules and a missed check after wake.
+- Added scheduled snapshot handoff: the Connector fetches a complete snapshot, exits, and leaves the newest result in the owner-only spool until Local Assistant validates, embeds, and transactionally replaces the cache and RAG index.
+- Preserved the prior complete cache on every fetch, validation, embedding, or database failure and visibly marks reminder knowledge as potentially outdated. Missing IDs in a successful complete snapshot are deleted locally without `updatedAt` fields or tombstones.
+- Rewrote the seven-step in-app guide and its collapsed Q&A troubleshooting around the real SSH flow, clean-device assumptions, public-key and ZIP transfer, server-owner boundary, host-key verification, one-shot scheduling, and stale-cache behavior.
+- Advanced Local Assistant and OpenClaw Connector to v3.8 build 38 and the bridge/connector packages to v1.2.0.
+
+### v3.7 — Complete private Tailscale connection setup
+
+- Added a browser-specific prerequisite section that separates new Tailscale accounts from existing accounts and explains that sign-up uses an external identity provider, not the CLI-only OpenClaw server.
+- Added execute-as-is Linux commands that install Tailscale only when missing, print a one-time authorization URL when required, and confirm the server has joined the intended tailnet.
+- Added a separate OpenClaw token-authentication check and private Tailscale Serve command block that keeps the Gateway on loopback and identifies the exact `https://…ts.net` origin required by the connector.
+- Distinguished the one-time authorization URL, private HTTPS origin, WebSocket addresses, and API paths so the wrong value cannot be pasted into the server installer or connector.
+- Added separate Mac instructions for new and existing Tailscale installations, including the same-account requirement, macOS network-extension approval, and server-visibility check.
+- Added buttons for the official Tailscale account, Linux installation, and macOS installation pages. Local Assistant only opens those pages in the default browser and receives no account or sign-in information.
+- Preserved concise bullet groups, aligned full-width cards, distinct browser/server/Mac locations, in-card command copy actions, and the network-denied Local Assistant boundary.
+- Advanced Local Assistant and OpenClaw Connector to v3.7 build 37.
+- Rebuilt the signed release apps and clean-Mac disk image, passed 17 connector tests and 7 bridge tests, passed the offline-boundary and packaging checks, and visually inspected the guide and connector at normal and minimum sizes under both system appearances.
+
+### v3.6 — User-created server ZIP and corrected setup packaging
+
+- Replaced the automatically generated server ZIP with a **Create Server Setup ZIP…** action inside Local Assistant. The user chooses the destination, and the app explains that it packages versioned server runtime files locally without downloading content or adding credentials.
+- Kept **Set up the OpenClaw server** and **Set up the local companion** as the two location boundaries. Every setup card now uses concise bullet points, every card fills the same content width, the server commands and copy action remain inside server step 2, and **Open Connector App** remains inside the connector-configuration card.
+- Reduced the disk image to the two standalone Mac applications. Required server installer and bridge files are embedded in Local Assistant and enter the exported ZIP only after the user requests it; development tests and documentation are excluded from that payload.
+- Added a distinct generated icon to `OpenClaw Connector.app` and declared it in the connector bundle metadata.
+- Preserved the app's network-denied sandbox while adding user-selected write access solely for the ZIP destination; authorized source-folder bookmarks remain read-only.
+- Corrected post-payload signing so the final Local Assistant bundle retains its explicit sandbox entitlements, then rebuilt and checksum-validated the v3.6 build 36 release DMG.
+
+### v3.5 — Unambiguous clean-device OpenClaw setup
+
+- Replaced the conceptual four-step guide with separate **ON THE OPENCLAW SERVER** and **ON THIS MAC** sections. Every command states its execution location, whether it runs unchanged, and whether a prompt expects input.
+- Normalized all six step cards to the same width and minimum height, with aligned **WHERE**, **DO THIS**, and **EXPECT** rows instead of dense instruction paragraphs.
+- Added `OpenClaw Server Setup.zip`, whose interactive server installer installs and verifies the read-only bridge, enables the agent endpoint, restarts OpenClaw, and prints the three values needed on the Mac without asking the user to edit a file.
+- Added a separately packaged `OpenClaw Connector.app` containing its own Python and LangGraph runtime. It detects the local spool, saves configuration and Keychain credentials through the packaged connector, and starts a per-user background service without requiring Python, Git, Terminal, or project source on the user's Mac.
+- Added a complete release disk image containing both applications and the server setup kit, while keeping all network access outside `Local Assistant.app`.
+- Advanced the application to v3.5 build 35.
+
+### v3.4 — Live OpenClaw status and in-app setup
+
+- Added a live **Connection status** summary to the OpenClaw Settings section. While the user-controlled ability is enabled, Local Assistant checks the connector's bounded, non-secret local heartbeat once per second and reports Off, Checking, Not detected, Running but not yet verified, Ready, or Needs attention.
+- Added a same-window **OpenClaw Setup** guide opened from Settings, with plain-language preparation, installation, secure configuration, start, recovery, and privacy steps. The installation-specific spool path can be copied there, and optional source-install commands remain collapsed until requested.
+- Kept the privacy boundary unchanged: Local Assistant has no network entitlement, never reads the OpenClaw origin or Keychain credentials, and stops both automatic reminder refreshes and heartbeat monitoring when the connection ability is disabled.
+- Advanced the application to v3.4 build 34.
+
+### v3.3 — Hidden reminder knowledge and explicit OpenClaw actions
+
+- Removed the Reminder Center, Local Assistant reminder CRUD proposals, confirmation sheet, and macOS reminder notifications. Every cached reminder is now hidden, read-only local knowledge.
+- Clarified Privacy with the sole external OpenClaw path, moved every connector control into a distinct **OpenClaw Connection** section directly below it, and added visible setup state with a portable connector guide.
+- Added local reminder-grounded generation so the assistant can answer questions from retrieved CloudBase records instead of only showing matches.
+- Added a deterministic standalone `OpenClaw` / `Open Claw` gate before local inference. Matching requests go immediately to OpenClaw with only the exact submitted text and a stable conversation identifier.
+- Reduced the reminder bridge to complete-list snapshots and made both the Swift service and LangGraph connector reject every read-by-ID and mutation shape.
+- Consolidated connector traffic onto one exact OpenClaw origin while retaining separate Keychain credentials for snapshot reads and full-operator agent requests.
+- Changed automatic refresh choices to two, four, or eight hours, with a four-hour default, stale launch catch-up, and a refresh after each successful OpenClaw response.
+
+### v3.2 — Private reminder RAG and an opt-in OpenClaw connector
+
+- Added a complete-snapshot CloudBase reminder cache because the remote rows have no incremental timestamp or deletion tombstone. A malformed, partial, timed-out, or unembeddable snapshot never replaces the previous complete cache.
+- Added local exact, FTS5, Qwen embedding, reciprocal-rank, and temporal reminder retrieval, with reminder cards retained in conversation History.
+- Added a Reminder Center with Upcoming, Overdue, and All views, explicit ownership labels, automatic sync while the app is open, and exact plus one-day-early local alerts only for Local Assistant-owned rows.
+- Added confirmation-gated CloudBase-only create, update, and delete operations. Creates carry a stable idempotency key, updates carry compare-and-set fields, and all mutations reject OpenClaw-managed and legacy/unknown rows.
+- Added a separate Python connector using LangGraph and durable SQLite checkpoints, exact HTTPS origins, separate Keychain credentials, bounded owner-only spool files, and reminder versus full-operator lanes. Both lanes are disabled until explicitly configured; the app itself retains no network entitlement.
+- Added an OpenClaw plugin route that accepts only the narrow schema-v1 reminder contract, always requires `calendarPolicy:"never"`, invokes a fixed bridge command, and never accepts a calendar identifier.
 
 ### v3.1 — Storage figures moved beside each button
 
@@ -659,9 +876,9 @@ macOS remains the final authority. A bookmark cannot bypass system permissions, 
 - Automatic refresh runs only while the application process is running; quitting stops every folder watcher until the next launch-time catch-up scan.
 - The global shortcut is fixed and works only while the application process is running.
 - Built-in conversational knowledge may be incomplete; file-specific answers remain bounded by displayed evidence.
-- No Feishu or other network bridge exists. Any future bridge requires a separately approved and isolated network boundary.
+- The only optional network boundary is the separately packaged OpenClaw connector. Local Assistant has no direct Feishu, CloudBase, calendar, email, or general internet client.
 
-Preparation tools may use the internet on a trusted staging Mac, but they are not packaged or invoked by the runtime application. For a physically offline deployment, prepare and verify all assets first, transfer them using trusted media, disconnect the destination Mac, and only then install and use the application.
+Preparation tools may use the internet on a trusted staging Mac, but they are not packaged or invoked by the runtime application. For an app-only physically offline deployment, prepare and verify all assets first, transfer them using trusted media, disconnect the destination Mac, and then install and use Local Assistant without enabling OpenClaw. The optional connector requires a separately approved private network route to the OpenClaw server.
 
 ## License
 

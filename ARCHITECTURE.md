@@ -2,7 +2,7 @@
 
 ## Runtime boundary
 
-Local Assistant is one sandboxed macOS application process. It has no HTTP server, localhost service, database daemon, cloud API, updater, telemetry client, web view, network client entitlement, or network server entitlement.
+Local Assistant's trusted core is one sandboxed macOS application process. It has no HTTP server, localhost service, database daemon, cloud API client, updater, telemetry client, web view, network client entitlement, or network server entitlement. An optional, separately installed companion app packages the Python and LangGraph connector runtime outside the Local Assistant bundle and outside this core trust boundary. The app communicates with that process only through a bounded owner-only file spool after the user enables the connector in Settings.
 
 ```text
 User-selected folders
@@ -48,17 +48,44 @@ Filename/path/FTS5     Vector neighbors
  Grounded answer + actionable matches
 ```
 
-Selected source files are never modified. The app's only writable area is its private sandbox container.
+The reminder and OpenClaw path is deliberately separate:
+
+```text
+Sandboxed Local Assistant
+        │ bounded schema-v1 JSON files
+        ▼
+Owner-only Connector/{Requests,Processing,Responses}
+        │
+        ▼
+Separately packaged connector (Python + LangGraph + SQLite checkpoints)
+        │ one pinned, on-demand SSH local-forwarding tunnel
+        │ server destination fixed at 127.0.0.1:23116
+        ├──────── read-only snapshot lane ────────┐
+        │     dedicated Keychain token            ▼
+        │     calendarPolicy="never"     OpenClaw reminder plugin
+        │                                         │ complete list only
+        │                                         ▼
+        │                                CloudBase getReminderItems
+        │
+        └──────── explicit agent lane ────────────┐
+              separate Keychain token             ▼
+              exact submitted message      OpenClaw agent + its tools
+```
+
+The agent lane accepts a message only when it contains standalone `OpenClaw` or `Open Claw`. That explicit name is both the routing key and the user's decision to talk to OpenClaw; no second confirmation sheet is inserted. The connector sends the exact submitted message and a stable conversation identifier. It does not receive cached reminder rows, file-search content, conversation history, the SQLite database, arbitrary files, email, Feishu data, or any credential from the app. OpenClaw then applies its own reminder rules: its normal dated-reminder behavior may update CloudBase and iCloud Calendar, while an explicit CloudBase-only instruction limits the operation there.
+
+Selected source files are never modified, and their security-scoped bookmarks remain read-only. Persistent application data stays in the private sandbox container. Local Assistant has no user-selected write entitlement. The separate Connector owns the user-approved ZIP and public-key destinations and is not embedded in or granted entitlements through the app. Its setup application installs the packaged runtime, writes the non-secret SSH configuration, stores credentials in Keychain, pins the server host key, and registers a one-shot per-user launchd job. On later releases, its bundled runtime returns only the public server values and yes/no credential-presence flags, so the Swift interface can update and verify an existing installation without retrieving either Keychain token. New tokens are accepted only through explicit replacement, transferred to the runtime through bounded standard input, and cleared from the Swift fields immediately after Keychain handoff. A queued request launches the job immediately; calendar checks support the chosen multi-hour reminder schedule and a missed check after wake. Every run closes its tunnel and exits.
 
 ## Conversation and search routing
 
-Every typed or locally transcribed request first enters the embedded Qwen chat model. That pass returns one of three outcomes:
+Every typed or locally transcribed request first passes a deterministic standalone-name check. A request containing `OpenClaw` or `Open Claw` bypasses local inference and goes directly to the connector. Every other request enters the embedded Qwen chat model, which returns one of four outcomes:
 
 1. a normal conversational reply;
 2. a concise clarification question when searching would require a guess; or
-3. a structured local search plan containing normalized topic terms and hard indexed-item kinds.
+3. a structured local search plan containing normalized topic terms and hard indexed-item kinds;
+4. a read-only reminder retrieval plan for the hidden local cache.
 
-The routing pass receives recent local conversation but no file excerpts. Only a clear search plan can enter retrieval. The marker payload is parsed inside the process; recognized file types are enforced as filters rather than treated as keyword hints.
+The routing pass receives recent local conversation but no file excerpts or reminder rows. Only a clear search plan can enter retrieval. The marker payload is parsed inside the process; recognized file types are enforced as filters rather than treated as keyword hints. Reminder routes support list and exact-get retrieval only. A mutation request without the explicit OpenClaw name stays local and receives an instruction to include OpenClaw; no connector task is published.
 
 ## Trust zones
 
@@ -82,9 +109,15 @@ The app creates owner-only content below:
 
 ```text
 ~/Library/Containers/com.soucieux.LocalAssistant/Data/Library/Application Support/LocalAssistant/
+├── Connector/
+│   ├── Requests/
+│   ├── Processing/
+│   └── Responses/
 ├── Index/assistant.sqlite3
 └── Models/
 ```
+
+The spool contains bounded task and response JSON only. It contains no token, remote origin, model credential, or unrestricted application state. The connector keeps only the validated non-secret SSH server address, port, restricted username, and public pinned host key in its own Application Support directory; the reminder-snapshot and full-operator tokens remain in separate macOS Keychain entries. Its owner-only LangGraph checkpoint database retains only connector workflow state and the task envelope. An agent task can therefore retain the exact explicit message, but never reminder rows, file-index content, or app conversation history. Confirmed Connector cleanup deletes those exact Keychain entries and the Connector directory while preserving the Local Assistant database, including the last committed reminder cache and RAG index.
 
 SQLite WAL and shared-memory files may sit beside the database. Microphone audio is never written to disk: samples pass from the microphone into the speech model in memory, so a recording cannot outlive the request that produced it. A `Voice` directory left by a version that did store recordings is deleted at startup.
 
@@ -94,7 +127,7 @@ Revoking a root deletes its stored bookmark record and dependent private index r
 
 `LocalAssistant.entitlements` has App Sandbox enabled and contains neither `com.apple.security.network.client` nor `com.apple.security.network.server`. That entitlement set is what the operating system enforces, and it denies every outbound connection regardless of what the process attempts.
 
-Connected preparation is confined to repository scripts run outside the app. The runtime never invokes those scripts.
+Connected preparation is confined to repository scripts run outside the app. The runtime never invokes those scripts. Enabling the connector does not change the app executable, entitlements, or linkage; the external connector is the only component allowed to open SSH and carry authenticated loopback Gateway requests inside that tunnel.
 
 Configuration alone is not treated as sufficient. WhisperKit is configured with `download: false` and `useBackgroundDownloadSession: false`, and two capabilities are removed from the vendored source rather than switched off:
 
@@ -105,7 +138,7 @@ Both are removed. Offline mode is unconditional and a caller cannot re-enable do
 
 `Vendor/` is regenerated from pinned revisions and is not tracked in Git, so a modification made only there would disappear on the next checkout. The modified files are stored under `Patches/WhisperKit/` with the dependency revision they apply to. `Scripts/apply_offline_patches.py` refuses to run against a different pinned revision, restores the stored files, and then verifies that the required marker is present and that the removed constructs are absent from the resulting source. `Scripts/prepare_dependencies.py` invokes it after every checkout, so preparation fails rather than silently producing a network-capable build.
 
-`Scripts/audit_offline_boundary.sh` closes the loop on the built product: it rejects any unexpected entitlement, and inspects the application executable and every bundled executable for a linked networking library or an imported network symbol. Linkage is the strongest static signal available, because a binary that never links networking code cannot open a connection whatever unreachable source may still say.
+`Scripts/audit_offline_boundary.sh` closes the loop on the built product: it requires the sandbox, microphone, bookmark, and user-selected read-only entitlements, rejects every other entitlement, and inspects the application executable and every bundled executable for a linked networking library or an imported network symbol. The separate Connector owns its user-approved exports, so Local Assistant needs no write entitlement. Linkage is the strongest static signal available, because a binary that never links networking code cannot open a connection whatever unreachable source may still say.
 
 ## Persistence and retrieval
 
@@ -113,9 +146,14 @@ One embedded SQLite database provides:
 
 1. relational storage for authorized roots, monitoring preferences, indexed items, chunks, local chat history, and 30-day indexing activity;
 2. FTS5 indexing for names, paths, and extracted text; and
-3. a statically registered sqlite-vec table for 1,024-dimensional float embeddings.
+3. a statically registered sqlite-vec table for 1,024-dimensional float embeddings; and
+4. the latest complete reminder snapshot, reminder FTS/vector rows, and last successful snapshot metadata.
 
 SQLite extension loading is not enabled. sqlite-vec is compiled into the application and registered on the existing connection.
+
+CloudBase exposes neither an `updatedAt > lastSync` feed nor deletion tombstones. Reminder synchronization therefore always requests the complete owner-scoped list. The cache is reconciled inside one SQLite transaction only after the connector reports `status:"completed"`, `success:true`, a complete decodable array, unique valid identifiers, valid fields, and `calendarChanged:false`. A timeout, partial list, malformed row, failed embedding, or failed database write leaves the prior complete cache intact. Missing identifiers in a successful snapshot are deletions; no remote tombstone is needed.
+
+Every cached reminder is read-only in Local Assistant regardless of ownership markers. The cache is not exposed as a browser or management screen. It is refreshed at launch when stale, on manual request, after a successful OpenClaw response, and by the selected multi-hour launchd schedule. A scheduled result waits locally when the application is closed and is transactionally consumed at the next launch. The read-only plugin rejects exact reads and every create, update, or delete shape.
 
 The database schema still contains selected prototype-era tables so an upgrade does not need a destructive migration. The current interface does not present collections, saved searches, aliases, file relationships, summaries, duplicates, or versions, and no runtime path reads them. Retrieval previously queried the empty alias table on every search, which cost a round trip and could never contribute to a score; the table is retained, the query is not.
 
@@ -132,6 +170,8 @@ The database schema still contains selected prototype-era tables so an upgrade d
 - reciprocal-rank fusion across retrieval channels.
 
 Type-constrained metadata and full-text candidates are filtered before candidate limits are applied. Vector retrieval expands nearest-neighbor batches until it has enough eligible types or has inspected every vector, so another file type cannot hide a valid constrained result. Vector neighbors below the minimum relevance floor do not enter fusion. The simplified interface always uses smart hybrid retrieval and shows absolute paths, deterministic match explanations, and a confidence-aware **Top match** or **Possible match** label. A rank is not proof that a file is the user's intended result.
+
+`ReminderRetrievalService` applies the same local-first principle to reminder text, date, time, tag, and link fields. It combines exact identifier/text matches, FTS5 rank, local Qwen embeddings, reciprocal-rank fusion, and explicit temporal intent such as today, tomorrow, an ISO date, or overdue. Retrieved reminder fields enter a separate bounded grounding prompt, so questions are answered locally while supporting reminder cards remain available in the conversation and History.
 
 ## Grounding and generation
 
@@ -224,21 +264,21 @@ llama.cpp, SQLite, and sqlite-vec are linked into the app. This avoids ports, da
 
 The product has one user, one process, and one private database file. A database server would add accounts, processes, ports, configuration, and upgrades without improving this local retrieval workflow.
 
-### Direct Swift services instead of LangChain or LangGraph
+### Direct Swift services in the trusted core
 
-The runtime flow is linear: scan, extract, embed, retrieve, ground, generate. Direct actors and services make the trusted data path smaller and inspectable.
+The in-app runtime flows are linear: scan, extract, embed, retrieve, ground, generate; and request-file, response-file, validate, reconcile. Direct actors and services make the trusted data path smaller and inspectable. LangGraph is used only by the optional external connector, where a durable checkpointed graph keeps the narrow reminder lane and the separately enabled full-operator lane explicit.
 
 ### WhisperKit instead of whisper.cpp
 
 llama.cpp and whisper.cpp can expose overlapping ggml symbols in one native binary. WhisperKit uses Core ML for speech recognition and avoids that native-symbol collision. Its network-capable download paths are removed from the vendored source rather than only disabled by configuration, and the removal is re-applied and verified during preparation.
 
-### Future Feishu bridge remains separate
+### OpenClaw connector remains separate
 
-No Feishu integration exists in the current release. Adding a network entitlement to this binary would break its privacy contract. A future bridge should be a separately signed, network-capable helper with narrow local IPC and an explicit preview/approval step for every outbound payload. It should receive only the exact user-approved text, never unrestricted file or index access.
+No Feishu integration exists in the application. Adding a network entitlement to this binary would break its privacy contract. The implemented connector follows the separate-process boundary: narrow file-spool IPC, a pinned restricted SSH tunnel opened only for one request, separate Keychain credentials, a read-only snapshot lane, and a standalone-name gate for exact-message OpenClaw chat. OpenClaw can continue using Feishu independently; this app neither reads nor processes those messages.
 
 ## Automated tests and interface previews
 
-`LocalAssistantTests` is a native unit-test bundle that loads the application and exercises its pure decision logic: request routing, search-text escaping, passage offsets and overlap, card-aware answer formatting, and scanner exclusions. Exclusion tests operate on real files in a temporary directory — an actual symbolic link, an actual hidden file, an actual credential extension — so they test the resource values the scanner reads rather than a mock of them. They resolve the real account home through the user record, because the test host is sandboxed and its container home is not the path the policy excludes.
+`LocalAssistantTests` is a native unit-test bundle that loads the application and exercises its pure decision logic: request routing, standalone OpenClaw detection, search-text escaping, passage offsets and overlap, card-aware answer formatting, scanner exclusions, reminder snapshot reconciliation, read-only ownership classification, and no-follow spool handling. Exclusion and spool tests operate on real files in a temporary directory — including an actual symbolic link, hidden file, credential extension, and symlinked connector response — so they test the resource values the runtime reads rather than a mock of them. They resolve the real account home through the user record, because the test host is sandboxed and its container home is not the path the policy excludes.
 
 The bundle runs only against the Debug configuration. Loading a test bundle into a sandboxed, adhoc-signed host requires three settings that the Release application must not carry:
 
@@ -265,4 +305,4 @@ For each release, distinguish these activities:
 - **Code review:** a separate authorized source-review phase.
 - **Formal verification:** a separate authorized phase including offline runtime socket observation and broader format fixtures.
 
-The v1.2 source removes the vendored network monitor and tokenizer download, ships the tokenizer inside the verified model package, corrects extraction and retrieval accuracy, fixes voice capture and recording finalization, and adds an automated test bundle. The offline Release build, the static boundary audit, the automated tests, and focused indexing checks are recorded in the release-status table in README. Interface inspection was not repeated in this pass and remains open. Formal disconnected runtime verification and any installed bundle remain independent gates; a passing source build is not evidence that either gate has passed.
+The v3.10 source keeps complete CloudBase reminder snapshots as hidden read-only RAG knowledge and sends only explicitly named OpenClaw requests through the external Connector, without adding networking to the application process. Local Assistant presents three short completion cards while the Connector owns the five actionable setup steps, uses the administrator SSH access the user already has, creates a dedicated key only on demand, and keeps OpenClaw on server loopback. A complete existing installation instead opens a short update-and-verify workbench that reuses public settings, the SSH identity, and Keychain credentials without returning token values to Swift. Explicit replacement reveals empty secure fields, and confirmed cleanup removes only Connector state while preserving Local Assistant and its reminder cache. The server installer creates a non-root forwarding-only account constrained to `127.0.0.1:23116`, waits for the authenticated bridge route, and prints the host key and two scoped tokens only after a complete snapshot succeeds. The Connector embeds the credential-free server payload, pins the server host key, opens no tunnel between tasks, classifies common SSH failures without exposing raw diagnostics, and reports success before closing only after one authenticated complete snapshot proves the server route, reminder credential, and no-Calendar boundary. Local Assistant launches only an exactly matching Connector version, shows startup progress before controls become active, and preserves the current screen across Dock reopen. launchd runs the Connector briefly for queued work and due schedule checks, including a missed check after wake. Build, static boundary audit, automated suites, and focused checks are recorded separately in the release-status table in README. Voice behavior and formal disconnected runtime observation remain manual gates. No CloudBase function, VPN application, public Gateway, or continuous tunnel is deployed by the repository build.
