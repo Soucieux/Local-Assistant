@@ -48,6 +48,7 @@ enum ConnectorSetupConstants {
         static let verificationExitAuthentication: Int32 = 10
         static let verificationExitUnreachable: Int32 = 11
         static let verificationExitSnapshot: Int32 = 12
+        static let verificationExitA2A: Int32 = 13
         static let maximumVerificationErrorBytes = 1_024
         static let maximumSetupStateBytes = 4_096
         static let automaticCloseDelayNanoseconds: UInt64 = 1_500_000_000
@@ -109,7 +110,7 @@ enum ConnectorSetupConstants {
 
         static let existingTitle = "Existing Connector found"
         static let existingBody =
-            "Your server settings, SSH key, and saved credentials can be reused."
+            "Your saved connection can be reused. This release needs one server update for A2A."
         static let serverSettingsReady = "Server settings ready"
         static let sshIdentityReady = "Connector SSH key ready"
         static let credentialsReady = "Credentials saved in Keychain"
@@ -117,7 +118,7 @@ enum ConnectorSetupConstants {
         static let updateWorking = "Updating and verifying…"
         static let updateReady =
             "Connector updated and verified. This window will close automatically."
-        static let reviewSettings = "Review Connection"
+        static let reviewSettings = "Review Connection / Update Server"
         static let returnToExisting = "Back to Existing Connector"
         static let replaceCredentials = "Replace Saved Credentials"
         static let removeConnector = "Remove Connector Data…"
@@ -150,7 +151,7 @@ enum ConnectorSetupConstants {
         static let filesTitle = "Create the setup files"
         static let filesBullets = [
             "Save the Connector public key.",
-            "Create the server setup ZIP.",
+            "Create a fresh server setup ZIP for this release.",
             "Keep both files in the same folder."
         ]
         static let createPublicKey = "Create Key and Save Public Key…"
@@ -181,7 +182,7 @@ enum ConnectorSetupConstants {
         static let transferBullets = [
             "Place both files in the OpenClaw owner's home folder.",
             "Run the four commands below in the server terminal.",
-            "Continue when SERVER SETUP COMPLETE appears."
+            "Continue when SERVER SETUP COMPLETE appears. This also enables private A2A."
         ]
         static let serverCommands =
             "cd \"$HOME\"\nunzip -o \"OpenClaw Server Setup.zip\"\ncd \"OpenClaw Server Setup\"\n./setup-server.sh \"$HOME/local-assistant-connector.pub\""
@@ -205,14 +206,14 @@ enum ConnectorSetupConstants {
         static let resultsBullets = [
             "Copy the host key printed by the completed setup.",
             "Copy the reminder bridge token.",
-            "Copy the OpenClaw operator token."
+            "Copy the OpenClaw A2A / operator token."
         ]
         static let sshHostKeyLabel = "Server SSH host key"
         static let sshHostKeyPlaceholder = "ssh-ed25519 AAAA…"
         static let restrictedUserLabel = "Connector account"
         static let restrictedUserSummary = "Used automatically. It cannot open a shell."
         static let reminderTokenLabel = "Reminder bridge token"
-        static let agentTokenLabel = "OpenClaw operator token"
+        static let agentTokenLabel = "OpenClaw A2A / operator token"
         static let savedCredential = "Saved in macOS Keychain"
         static let credentialHelpTitle = "Where do these values come from?"
         static let credentialHelp = [
@@ -230,7 +231,7 @@ enum ConnectorSetupConstants {
         static let localTitle = "Verify the connection"
         static let localBullets = [
             "Select Save and Verify Connector.",
-            "Wait for the green confirmation.",
+            "Wait while the reminder route and A2A Agent Card are checked.",
             "Return to Local Assistant and enable OpenClaw."
         ]
         static let saveAndStart = "Save and Verify Connector"
@@ -254,6 +255,12 @@ enum ConnectorSetupConstants {
             "Do not repeat server setup for one later synchronization failure.",
             "Local Assistant keeps the last complete reminder cache.",
             "Retry Refresh Now after the server and network are available."
+        ]
+        static let a2aQuestion = "The Connector says the A2A Agent Card is missing."
+        static let a2aAnswers = [
+            "Create a new server setup ZIP from this Connector release.",
+            "Transfer it to the server and run the four setup commands again.",
+            "Return here and select Save and Verify Connector."
         ]
         static let advancedTitle = "Advanced details"
         static let advancedDetails = [
@@ -296,6 +303,8 @@ enum ConnectorSetupConstants {
             "This Mac cannot reach the server. Check the network, address, and firewall."
         static let verificationSnapshotFailed =
             "OpenClaw did not return a complete reminder list. The previous cache was not changed."
+        static let verificationA2AFailed =
+            "OpenClaw does not have this release's A2A bridge. Create and run a fresh server setup ZIP, then verify again."
         static let verificationFailed =
             "The Connector could not complete verification. Open the matching help question below."
     }

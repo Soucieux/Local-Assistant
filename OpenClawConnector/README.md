@@ -19,15 +19,17 @@ The Connector has two narrow lanes:
 - `openclaw-agent` requires one typed authorization. An explicit non-reminder OpenClaw request must
   contain standalone `OpenClaw` or `Open Claw`. A clear reminder create, update, complete,
   reschedule, or remove request instead carries Local Assistant's recorded user confirmation and
-  does not need to name OpenClaw. It calls OpenClaw's standard agent endpoint and does not attach
-  reminder rows, files, indexed text, or conversation history.
+  does not need to name OpenClaw. It discovers the authenticated OpenClaw Agent Card and sends an
+  A2A v1.0 JSON-RPC `SendMessage` request. It does not attach reminder rows, files, indexed text,
+  or conversation history.
 
 Both lanes use the same pinned SSH server identity and separate credentials in macOS Keychain. The
 non-secret configuration contains the SSH host, SSH port, fixed restricted username, spool path,
 and bounded timeout. The private SSH key remains owner-only in Connector Application Support. It
 is never exported, added to the server ZIP, or placed in a command argument.
 
-The v4.6 build 46 application packages unchanged Connector runtime v1.7.0. The runtime publishes a non-secret
+The v4.7 build 47 application packages Connector runtime v1.8.0 and server bridge v1.4.0. The
+runtime publishes a non-secret
 contract version in its local status so Local Assistant can stop an incompatible request before it
 reaches an older installed runtime. The runtime rejects an agent task
 unless its authorization is either an explicit standalone OpenClaw invocation or a confirmed
@@ -48,9 +50,10 @@ explains that the older Applications copy should be replaced.
 The Connector first checks for an existing installation. This check returns only the saved server
 address, SSH port, public host key, and yes/no credential-presence flags. It never loads either
 token into the Swift interface. A complete existing installation therefore opens a short
-**Update and Verify Existing Connector** screen: the packaged runtime is replaced, the existing
-SSH key, settings, and Keychain tokens are reused, a real snapshot is verified, and the one-shot
-job is restarted without requiring any value again.
+**Update and Verify Existing Connector** screen. For v4.7, first create a fresh server ZIP and run
+its setup once on the OpenClaw server. The packaged Mac runtime can then reuse the existing SSH
+key, settings, and Keychain tokens, verify both the reminder snapshot and A2A Agent Card, and
+restart the one-shot job without requesting any value again.
 
 A first installation, incomplete repair, or explicit settings review uses five action-only steps.
 Definitions, security details, transfer alternatives, and recovery remain collapsed under their
@@ -63,11 +66,12 @@ owning step:
 3. Transfer both files to the OpenClaw owner's home folder and run the four commands shown in the
    Connector. The optional SCP template is unnecessary when the files are already on the server.
    The installer keeps OpenClaw on
-   `127.0.0.1:23116`, installs the bridge, and creates a non-root `local-assistant-tunnel` account
+   `127.0.0.1:23116`, installs the reminder and A2A bridge routes, and creates a non-root
+   `local-assistant-tunnel` account
    restricted to local forwarding to that exact destination. It grants no shell, PTY, X11,
    SSH-agent forwarding, remote forwarding, or alternative destination.
 4. Continue only after `SERVER SETUP COMPLETE`, then paste the printed SSH host key, reminder bridge
-   token, and operator token into the Connector. The restricted username is filled automatically.
+   token, and A2A/operator token into the Connector. The restricted username is filled automatically.
    Existing Keychain tokens remain hidden; **Replace Saved Credentials** reveals two empty fields
    only when replacement is intentional.
 5. Choose **Save and Verify Connector**. New tokens travel to the packaged runtime through bounded
@@ -76,9 +80,10 @@ owning step:
    connection in Local Assistant, choose the two-, four-, or eight-hour schedule, and use
    **Refresh Now** once.
 
-Verification performs a real complete read-only snapshot through a temporary tunnel. A green
-confirmation appears only after Calendar-unchanged proof passes; the tunnel closes and the setup
-app then closes automatically.
+Verification performs a real complete read-only snapshot and fetches the authenticated A2A v1.0
+Agent Card through temporary tunnels. A green confirmation appears only after Calendar-unchanged
+proof and the exact loopback JSON-RPC interface both pass; the tunnel closes and the setup app then
+closes automatically.
 
 The Connector maps common SSH failures to a specific safe cause—host-key mismatch, rejected public
 key, unresolved address, refused connection, timeout, or unreachable network—without displaying raw
@@ -136,8 +141,9 @@ port. Run the command without editing a source or configuration file:
 ```
 
 Each token command displays a non-echoing prompt. The first credential can reach only the
-read-only reminder snapshot plugin. The second reaches OpenClaw's full agent endpoint and carries
-OpenClaw's normal tool authority. Neither credential is written to configuration, the spool, a
+read-only reminder snapshot plugin. The second authenticates the private A2A route and its
+delegated OpenClaw agent call and carries OpenClaw's normal tool authority. Neither credential is
+written to configuration, the spool, a
 command line, or the repository.
 
 Run one queue pass with:

@@ -689,6 +689,10 @@ final class ConnectorSetupModel: ObservableObject {
             throw ConnectorSetupError.message(
                 ConnectorSetupConstants.Text.verificationSnapshotFailed
             )
+        case ConnectorSetupConstants.Configuration.verificationExitA2A:
+            throw ConnectorSetupError.message(
+                ConnectorSetupConstants.Text.verificationA2AFailed
+            )
         default:
             throw ConnectorSetupError.message(
                 ConnectorSetupConstants.Text.verificationFailed

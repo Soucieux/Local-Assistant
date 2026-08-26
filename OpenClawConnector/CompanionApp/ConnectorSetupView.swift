@@ -433,6 +433,11 @@ struct ConnectorSetupView: View {
                 accent: ConnectorDesignSystem.successGreen
             )
             helpDisclosure(
+                ConnectorSetupConstants.Text.a2aQuestion,
+                answers: ConnectorSetupConstants.Text.a2aAnswers,
+                accent: ConnectorDesignSystem.successGreen
+            )
+            helpDisclosure(
                 ConnectorSetupConstants.Text.laterRefreshQuestion,
                 answers: ConnectorSetupConstants.Text.laterRefreshAnswers,
                 accent: ConnectorDesignSystem.successGreen
