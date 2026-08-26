@@ -55,6 +55,13 @@ LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_stat
 
 APP_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${TOP_LEVEL_APP}/Contents/Info.plist")"
 APP_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${TOP_LEVEL_APP}/Contents/Info.plist")"
+CONNECTOR_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${TOP_LEVEL_CONNECTOR_APP}/Contents/Info.plist")"
+CONNECTOR_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${TOP_LEVEL_CONNECTOR_APP}/Contents/Info.plist")"
+
+if [[ "${APP_VERSION}" != "${CONNECTOR_VERSION}" || "${APP_BUILD}" != "${CONNECTOR_BUILD}" ]]; then
+  print -u2 "Release version mismatch: Local Assistant v${APP_VERSION} (${APP_BUILD}), Connector v${CONNECTOR_VERSION} (${CONNECTOR_BUILD})."
+  exit 1
+fi
 
 # The verified copy is now at the project root; the build cache (Debug or Release, from this
 # run or an earlier manual test build) is no longer needed and would otherwise read as a
