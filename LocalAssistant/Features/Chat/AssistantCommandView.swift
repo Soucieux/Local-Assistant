@@ -160,7 +160,7 @@ struct AssistantCommandView: View {
                             CommandResponseView(message: response)
                                 .transition(.opacity)
                             if response.fileMatches.isEmpty == false {
-                                CommandFindingsGrid(results: response.fileMatches)
+                                SearchResultsView(results: response.fileMatches)
                                     .transition(.opacity)
                             }
                             if response.reminderMatches.isEmpty == false {

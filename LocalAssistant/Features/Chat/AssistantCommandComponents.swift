@@ -122,38 +122,6 @@ struct CommandResponseView: View {
     }
 }
 
-/// Adaptive grid of the latest files identified for the current request.
-struct CommandFindingsGrid: View {
-    let results: [SearchResult]
-
-    /// Builds a centered acquisition label and responsive file grid.
-    var body: some View {
-        VStack(spacing: DesignTokens.Spacing.large) {
-            CommandSectionLabel(
-                title: UIStrings.commandFindingsLabel(count: results.count)
-            )
-
-            LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.medium) {
-                ForEach(Array(results.enumerated()), id: \.element.id) { offset, result in
-                    CommandFindingCard(result: result, index: offset + 1)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    /// Responsive columns that place multiple findings in a row when width allows.
-    private var columns: [GridItem] {
-        [
-            GridItem(
-                .adaptive(minimum: DesignTokens.Command.findingMinimumWidth),
-                spacing: DesignTokens.Spacing.medium,
-                alignment: .top
-            )
-        ]
-    }
-}
-
 /// Adaptive grid of reminder matches from the latest local snapshot.
 struct CommandReminderFindingsGrid: View {
     let results: [ReminderSearchResult]
@@ -549,99 +517,6 @@ struct CommandSectionLabel: View {
     }
 }
 
-/// One square-edged file acquisition module with explicit read-only actions.
-struct CommandFindingCard: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var acquired = false
-    let result: SearchResult
-    let index: Int
-
-    /// Builds file identity, match evidence, actions, and acquisition markers.
-    var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
-            Text(UIStrings.commandFindingNumber(index))
-                .font(.title3.monospaced().weight(.bold))
-                .foregroundStyle(DesignTokens.Color.commandAccent)
-
-            Text(result.item.displayName)
-                .font(.body.monospaced().weight(.semibold))
-                .foregroundStyle(DesignTokens.Color.commandInk)
-                .lineLimit(2)
-                .textSelection(.enabled)
-
-            Rectangle()
-                .fill(DesignTokens.Color.commandInk.opacity(0.72))
-                .frame(height: 1)
-
-            Label(
-                UIStrings.fileType(result.item.kind).uppercased(),
-                systemImage: SystemImages.fileType(result.item.kind)
-            )
-            .font(.caption2.monospaced().weight(.medium))
-            .foregroundStyle(DesignTokens.Color.commandMutedInk)
-
-            Text(result.explanation)
-                .font(.caption2.monospaced())
-                .foregroundStyle(DesignTokens.Color.commandInk)
-                .lineLimit(3)
-
-            HStack(spacing: 0) {
-                Button(UIStrings.revealInFinder.uppercased()) {
-                    Task { await model.reveal(result.item) }
-                }
-                .buttonStyle(CommandFileActionButtonStyle())
-                .disabled(isAvailable == false)
-
-                Rectangle()
-                    .fill(DesignTokens.Color.commandInk.opacity(0.72))
-                    .frame(width: 1, height: 12)
-
-                Button(UIStrings.openItem(result.item.kind).uppercased()) {
-                    Task { await model.open(result.item) }
-                }
-                .buttonStyle(CommandFileActionButtonStyle())
-                .disabled(isAvailable == false)
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding(DesignTokens.Spacing.medium)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(DesignTokens.Color.commandLightCanvas.opacity(0.86))
-        .overlay {
-            Rectangle()
-                .stroke(DesignTokens.Color.commandInk.opacity(0.72), lineWidth: 1)
-        }
-        .overlay(alignment: .topLeading) {
-            CommandAcquisitionCorner()
-        }
-        .overlay(alignment: .bottomTrailing) {
-            CommandAcquisitionCorner()
-                .rotationEffect(.degrees(180))
-        }
-        .opacity(acquired ? 1 : 0.16)
-        .scaleEffect(acquired ? 1 : 0.985)
-        .onAppear {
-            if reduceMotion {
-                acquired = true
-            } else {
-                withAnimation(
-                    .easeOut(duration: DesignTokens.Motion.acquisitionDuration)
-                        .delay(Double(index - 1) * DesignTokens.Motion.acquisitionStagger)
-                ) {
-                    acquired = true
-                }
-            }
-        }
-        .accessibilityElement(children: .contain)
-    }
-
-    /// Whether the saved file still belongs to an authorized current index.
-    private var isAvailable: Bool {
-        model.isFileMatchAvailable(result.item.id)
-    }
-}
-
 /// Right-angle marker indicating one acquired result module.
 struct CommandAcquisitionCorner: View {
     let tint: Color
@@ -730,31 +605,6 @@ struct CommandRailButtonStyle: ButtonStyle {
             }
             .opacity(isEnabled ? 1 : 0.42)
             .buttonHoverFeedback(tint: tint)
-    }
-}
-
-/// Equal-width text action used inside an acquired file module.
-struct CommandFileActionButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-
-    /// Builds a plain file action with stable square geometry.
-    /// - Parameter configuration: SwiftUI button state and label.
-    /// - Returns: Equal-width text action with pressed and disabled feedback.
-    internal func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.caption2.monospaced().weight(.semibold))
-            .foregroundStyle(DesignTokens.Color.commandInk)
-            .frame(maxWidth: .infinity, minHeight: 26)
-            .background(
-                Rectangle()
-                    .fill(
-                        configuration.isPressed
-                            ? DesignTokens.Color.commandInk.opacity(0.08)
-                            : Color.clear
-                    )
-            )
-            .opacity(isEnabled ? 1 : 0.38)
-            .buttonHoverFeedback(tint: DesignTokens.Color.commandInk)
     }
 }
 
