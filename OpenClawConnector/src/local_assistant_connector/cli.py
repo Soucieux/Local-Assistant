@@ -164,7 +164,9 @@ def main() -> int:
         return 0
     if arguments.command == constants.CLI_VERIFY:
         try:
-            OpenClawTransport(load_config()).verify_reminder_snapshot()
+            transport = OpenClawTransport(load_config())
+            transport.verify_reminder_snapshot()
+            transport.verify_agent_card()
         except ConnectorError as error:
             print(str(error), file=sys.stderr)
             if str(error) == constants.ERROR_AUTHENTICATION:
@@ -173,6 +175,8 @@ def main() -> int:
                 return constants.CLI_EXIT_UNREACHABLE
             if str(error) == constants.ERROR_VERIFICATION:
                 return constants.CLI_EXIT_SNAPSHOT
+            if str(error) == constants.ERROR_A2A_CARD_VERIFICATION:
+                return constants.CLI_EXIT_A2A
             return constants.CLI_EXIT_FAILURE
         print(constants.CLI_VERIFIED)
         return 0

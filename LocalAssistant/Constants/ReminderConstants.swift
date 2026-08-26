@@ -34,7 +34,7 @@ enum ReminderConstants {
 
     enum Connector {
         static let schemaVersion = 1
-        static let runtimeContractVersion = 2
+        static let runtimeContractVersion = 3
         static let responsePollNanoseconds: UInt64 = 250_000_000
         static let responseTimeoutSeconds: TimeInterval = 45
         static let healthPollNanoseconds: UInt64 = 1_000_000_000
@@ -43,6 +43,7 @@ enum ReminderConstants {
         static let maximumResponseBytes = 2_097_152
         static let maximumRequestBytes = 65_536
         static let completedStatus = "completed"
+        static let inputRequiredStatus = "input-required"
         static let maximumReminderTextCharacters = 2_000
         static let maximumOptionalFieldCharacters = 1_000
         static let maximumAgentMessageCharacters = 8_000

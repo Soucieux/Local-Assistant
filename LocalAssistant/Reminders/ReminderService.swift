@@ -199,11 +199,18 @@ actor ReminderService {
 
     /// Validates an OpenClaw response without making a false Calendar assertion.
     private func validateAgentSuccess(_ response: ReminderConnectorResponse) throws {
+        let successfulStatuses = [
+            ReminderConstants.Connector.completedStatus,
+            ReminderConstants.Connector.inputRequiredStatus
+        ]
         guard response.schemaVersion == ReminderConstants.Connector.schemaVersion,
-              response.calendarChanged == nil else {
-            throw LocalAssistantError.connector(ReminderStrings.incompleteSnapshot)
+              response.calendarChanged == nil,
+              successfulStatuses.contains(response.status),
+              response.error == nil else {
+            throw LocalAssistantError.connector(
+                response.error?.message ?? ReminderStrings.incompleteSnapshot
+            )
         }
-        try requireCompleted(response)
     }
 
     /// Requires a completed connector task with no typed error.

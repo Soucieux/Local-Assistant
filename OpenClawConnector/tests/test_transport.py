@@ -11,24 +11,58 @@ from local_assistant_connector.transport import OpenClawTransport
 
 
 class FakeJsonClient:
-    """Captures one agent request and returns a fixed compatible response."""
+    """Captures one A2A agent request and returns a fixed compatible response."""
 
     def __init__(self) -> None:
         """Create an empty capture slot."""
         self.document = None
 
-    def post(self, route, token, document):
+    def get(self, route, token):
+        """Return the private A2A v1.0 Agent Card."""
+        return {
+            constants.FIELD_NAME: "OpenClaw",
+            constants.FIELD_VERSION: "1.0.0",
+            constants.FIELD_SUPPORTED_INTERFACES: [
+                {
+                    constants.FIELD_URL: (
+                        "http://127.0.0.1:23116"
+                        + constants.A2A_AGENT_ROUTE_PATH
+                    ),
+                    constants.FIELD_PROTOCOL_BINDING: constants.A2A_PROTOCOL_BINDING,
+                    constants.FIELD_PROTOCOL_VERSION: constants.A2A_PROTOCOL_VERSION,
+                }
+            ],
+        }
+
+    def post(self, route, token, document, content_type=constants.CONTENT_TYPE_JSON):
         """Record the outbound document without using a network."""
         self.document = document
         return {
-            constants.FIELD_CHOICES: [
-                {
-                    constants.FIELD_MESSAGE: {
-                        constants.FIELD_CONTENT: "The reminder was updated."
-                    }
+            constants.FIELD_JSONRPC: constants.A2A_JSONRPC_VERSION,
+            constants.FIELD_ID: document[constants.FIELD_ID],
+            constants.FIELD_RESULT: {
+                constants.FIELD_MESSAGE: {
+                    constants.FIELD_MESSAGE_ID: "reply-id",
+                    constants.FIELD_CONTEXT_ID: document[constants.FIELD_PARAMS][
+                        constants.FIELD_MESSAGE
+                    ][constants.FIELD_CONTEXT_ID],
+                    constants.FIELD_ROLE: constants.A2A_ROLE_AGENT,
+                    constants.FIELD_PARTS: [
+                        {constants.FIELD_TEXT: "The reminder was updated."}
+                    ],
                 }
-            ]
+            },
         }
+
+
+class FakeTunnel:
+    """Provides one deterministic tunnel-local origin."""
+
+    def __enter__(self):
+        return "http://127.0.0.1:49000"
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
 
 
 class FakeSnapshotClient:
@@ -72,31 +106,60 @@ class TransportTests(unittest.TestCase):
         capture = FakeJsonClient()
         submitted = "OpenClaw, update the permit reminder."
 
-        with patch.object(transport, "_post", side_effect=capture.post):
+        with (
+            patch(
+                "local_assistant_connector.transport.OpenClawSSHTunnel",
+                return_value=FakeTunnel(),
+            ),
+            patch(
+                "local_assistant_connector.transport._JsonClient",
+                return_value=capture,
+            ),
+            patch(
+                "local_assistant_connector.transport.load_token",
+                return_value="agent-token",
+            ),
+        ):
             response = transport.send_agent("task-id", "context-id", submitted)
 
-        content = capture.document[constants.FIELD_MESSAGES][0][
-            constants.FIELD_CONTENT
-        ]
+        content = capture.document[constants.FIELD_PARAMS][constants.FIELD_MESSAGE][
+            constants.FIELD_PARTS
+        ][0][constants.FIELD_TEXT]
         self.assertEqual(content, submitted)
         self.assertNotIn(constants.FIELD_CALENDAR_CHANGED, response)
 
     def test_rejects_an_oversized_agent_answer(self) -> None:
         """A bounded HTTP body cannot become an unbounded app message."""
         transport = OpenClawTransport(connector_config())
-        document = {
-            constants.FIELD_CHOICES: [
-                {
-                    constants.FIELD_MESSAGE: {
-                        constants.FIELD_CONTENT: "x"
-                        * (constants.MAX_AGENT_ANSWER_CHARACTERS + 1)
-                    }
-                }
-            ]
-        }
+        capture = FakeJsonClient()
+        original_post = capture.post
 
-        with self.assertRaises(ConnectorError):
-            transport._agent_answer(document)
+        def oversized(route, token, document, content_type=constants.CONTENT_TYPE_JSON):
+            response = original_post(route, token, document, content_type)
+            response[constants.FIELD_RESULT][constants.FIELD_MESSAGE][
+                constants.FIELD_PARTS
+            ][0][constants.FIELD_TEXT] = "x" * (
+                constants.MAX_AGENT_ANSWER_CHARACTERS + 1
+            )
+            return response
+
+        capture.post = oversized
+        with (
+            patch(
+                "local_assistant_connector.transport.OpenClawSSHTunnel",
+                return_value=FakeTunnel(),
+            ),
+            patch(
+                "local_assistant_connector.transport._JsonClient",
+                return_value=capture,
+            ),
+            patch(
+                "local_assistant_connector.transport.load_token",
+                return_value="agent-token",
+            ),
+            self.assertRaises(ConnectorError),
+        ):
+            transport.send_agent("task-id", "context-id", "OpenClaw, answer.")
 
     def test_verification_requires_a_complete_read_only_snapshot(self) -> None:
         """Setup success proves the reminder route, credential, and complete payload."""

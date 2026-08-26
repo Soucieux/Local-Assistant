@@ -26,6 +26,7 @@ KIT_DIR="${APP_BUNDLE}/Contents/Resources/${KIT_NAME}"
   "${KIT_DIR}/plugin/"
 /bin/cp \
   "${OPENCLAW_DIR}/plugins/local-assistant-bridge/src/constants.js" \
+  "${OPENCLAW_DIR}/plugins/local-assistant-bridge/src/a2a-route.js" \
   "${OPENCLAW_DIR}/plugins/local-assistant-bridge/src/route.js" \
   "${KIT_DIR}/plugin/src/"
 /bin/cp \

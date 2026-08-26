@@ -9,6 +9,11 @@ from urllib import error, parse, request
 from uuid import uuid4
 
 from . import constants
+from .a2a import (
+    parse_send_message_response,
+    send_message_request,
+    validate_agent_card,
+)
 from .keychain import load_token
 from .models import ConnectorConfig, ConnectorError
 from .ssh_tunnel import OpenClawSSHTunnel
@@ -46,7 +51,25 @@ class _JsonClient:
             _ExactOriginRedirectHandler((parsed.scheme, parsed.netloc))
         )
 
-    def post(self, route: str, token: str, document: Mapping[str, Any]) -> Mapping[str, Any]:
+    def get(self, route: str, token: str) -> Mapping[str, Any]:
+        """GET one authenticated bounded JSON object."""
+        http_request = request.Request(
+            self._origin + route,
+            headers={
+                constants.HEADER_AUTHORIZATION: constants.BEARER_PREFIX + token,
+                constants.HEADER_ACCEPT: constants.CONTENT_TYPE_JSON,
+            },
+            method=constants.HTTP_GET,
+        )
+        return self._perform(http_request)
+
+    def post(
+        self,
+        route: str,
+        token: str,
+        document: Mapping[str, Any],
+        content_type: str = constants.CONTENT_TYPE_JSON,
+    ) -> Mapping[str, Any]:
         """POST one authenticated bounded JSON object with retryable status handling."""
         body = json.dumps(
             document, separators=(",", ":"), ensure_ascii=False
@@ -62,11 +85,15 @@ class _JsonClient:
             data=body,
             headers={
                 constants.HEADER_AUTHORIZATION: constants.BEARER_PREFIX + token,
-                constants.HEADER_CONTENT_TYPE: constants.CONTENT_TYPE_JSON,
-                constants.HEADER_ACCEPT: constants.CONTENT_TYPE_JSON,
+                constants.HEADER_CONTENT_TYPE: content_type,
+                constants.HEADER_ACCEPT: content_type,
             },
             method=constants.HTTP_POST,
         )
+        return self._perform(http_request)
+
+    def _perform(self, http_request: request.Request) -> Mapping[str, Any]:
+        """Perform one bounded request with the connector retry policy."""
         for attempt in range(constants.MAX_RETRY_ATTEMPTS):
             try:
                 with self._opener.open(
@@ -208,51 +235,33 @@ class OpenClawTransport:
         context_id: str,
         message: str,
     ) -> Mapping[str, Any]:
-        """Send only the exact explicit user text to OpenClaw."""
-        remote = self._post(
-            constants.AGENT_ROUTE_PATH,
-            constants.KEYCHAIN_AGENT_ACCOUNT,
-            {
-                constants.FIELD_MODEL: constants.AGENT_MODEL,
-                constants.FIELD_USER: f"local-assistant:{context_id}",
-                constants.FIELD_MESSAGES: [
-                    {
-                        constants.FIELD_ROLE: constants.MESSAGE_ROLE_USER,
-                        constants.FIELD_CONTENT: message,
-                    }
-                ],
-                constants.FIELD_STREAM: False,
-            },
-        )
-        answer = self._agent_answer(remote)
+        """Discover OpenClaw and send only exact user text over A2A v1.0."""
+        token = load_token(constants.KEYCHAIN_AGENT_ACCOUNT)
+        with OpenClawSSHTunnel(self._config) as origin:
+            client = _JsonClient(origin, self._config.request_timeout_seconds)
+            validate_agent_card(
+                client.get(constants.A2A_AGENT_CARD_ROUTE_PATH, token)
+            )
+            remote = client.post(
+                constants.A2A_AGENT_ROUTE_PATH,
+                token,
+                send_message_request(task_id, context_id, message),
+                constants.CONTENT_TYPE_A2A_JSON,
+            )
+        answer, status = parse_send_message_response(remote, task_id, context_id)
         return {
             constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
             constants.FIELD_TASK_ID: task_id,
             constants.FIELD_CONTEXT_ID: context_id,
-            constants.FIELD_STATUS: constants.STATUS_COMPLETED,
+            constants.FIELD_STATUS: status,
             constants.FIELD_PAYLOAD: {constants.FIELD_MESSAGE: answer},
         }
 
-    def _agent_answer(self, document: Mapping[str, Any]) -> str:
-        """Extract one non-streaming OpenAI-compatible assistant message."""
-        choices = document.get(constants.FIELD_CHOICES)
-        if not isinstance(choices, list) or not choices:
-            raise ConnectorError(
-                constants.ERROR_KIND_OPERATIONAL,
-                constants.ERROR_REMOTE_RESPONSE,
-                True,
+    def verify_agent_card(self) -> None:
+        """Require the authenticated OpenClaw A2A v1.0 capability declaration."""
+        token = load_token(constants.KEYCHAIN_AGENT_ACCOUNT)
+        with OpenClawSSHTunnel(self._config) as origin:
+            client = _JsonClient(origin, self._config.request_timeout_seconds)
+            validate_agent_card(
+                client.get(constants.A2A_AGENT_CARD_ROUTE_PATH, token)
             )
-        first = choices[0]
-        message = first.get(constants.FIELD_MESSAGE) if isinstance(first, dict) else None
-        content = message.get(constants.FIELD_CONTENT) if isinstance(message, dict) else None
-        if (
-            not isinstance(content, str)
-            or not content.strip()
-            or len(content.strip()) > constants.MAX_AGENT_ANSWER_CHARACTERS
-        ):
-            raise ConnectorError(
-                constants.ERROR_KIND_OPERATIONAL,
-                constants.ERROR_REMOTE_RESPONSE,
-                True,
-            )
-        return content.strip()
