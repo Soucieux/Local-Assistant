@@ -8,10 +8,10 @@ enum ReminderStrings {
     static let undated = "No date"
     static let openClawSettingsTitle = "OpenClaw Connection"
     static let openClawSettingsDetail =
-        "Manage on-demand OpenClaw requests and complete reminder-snapshot refreshes."
+        "Manage private OpenClaw requests and reminder refreshes."
     static let enableConnector = "Enable OpenClaw connection"
     static let connectorPrivacyDetail =
-        "Local Assistant has no network access. A separate one-shot connector opens a restricted SSH tunnel only for a queued request, closes it, and exits."
+        "Local Assistant stays offline. The separate Connector opens SSH only while handling a request."
     static let connectorHealthTitle = "Connection status"
     static let connectorOff = "Off"
     static let connectorOffDetail =
@@ -48,24 +48,35 @@ enum ReminderStrings {
         "Connection status and the three remaining actions. Detailed setup stays inside the matching Connector app."
     static let backToSettings = "Back to Settings"
     static let setupPrivacyTitle = "The privacy boundary stays intact"
-    static let setupPrivacyDetail =
-        "OpenClaw stays on server loopback at 127.0.0.1:23116. Local Assistant never opens a socket. The separate Connector uses the Mac's built-in SSH client only while handling a request; no VPN app, public Gateway, public HTTPS endpoint, or continuous tunnel is required."
+    static let setupPrivacyBullets = [
+        "Local Assistant stays offline.",
+        "The Connector opens SSH only while handling a request.",
+        "OpenClaw remains private on the server."
+    ]
+    static let setupPrivacyTechnicalTitle = "Technical privacy details"
+    static let setupPrivacyTechnicalBullets = [
+        "OpenClaw listens only on server loopback at 127.0.0.1:23116.",
+        "No VPN app, public Gateway, public HTTPS endpoint, or continuous tunnel is used."
+    ]
     static let troubleshootingTitle = "Questions and fixes"
     static let localSetupConnectorTitle = "1. Complete setup in OpenClaw Connector"
     static let localSetupConnectorBullets = [
-        "Open only the Connector from the same Local Assistant release. Version and build must match exactly.",
-        "The Connector creates both server files, shows the server commands, stores both tokens in Keychain, and verifies the restricted tunnel.",
-        "When Save and Verify succeeds, server and Connector setup are complete. The Connector closes automatically."
+        "Open the Connector from this Local Assistant release.",
+        "Confirm that its version and build match Local Assistant.",
+        "Create and transfer both server files.",
+        "Run the server commands and enter the three returned values.",
+        "Choose Save and Verify Connector. Close the window after it reports success."
     ]
     static let localSetupEnableTitle = "2. Enable the connection"
     static let localSetupEnableBullets = [
         "Return to Settings and turn on Enable OpenClaw connection.",
-        "Choose how often the hidden reminder snapshot should refresh. No tunnel remains open while waiting."
+        "Choose how often reminder knowledge should refresh."
     ]
     static let localSetupRefreshTitle = "3. Confirm the first reminder refresh"
     static let localSetupRefreshBullets = [
-        "Choose Refresh Now in Settings after the Connector has verified successfully.",
-        "A successful complete snapshot updates the private reminder cache and RAG index. A failed refresh never erases the last successful snapshot."
+        "Choose Refresh Now after the Connector verifies successfully.",
+        "A successful refresh replaces the private reminder cache and RAG index.",
+        "A failed refresh keeps the last successful snapshot."
     ]
     static let refreshAfterVerifyQuestion =
         "Q: Save and Verify passed, but Refresh Now later failed. Is setup incomplete?"
@@ -115,8 +126,14 @@ enum ReminderStrings {
         "Select OpenClaw Connector.app in Applications or an opened Local Assistant release disk image."
     static let connectorAppLocatePrompt = "Open Connector"
     static let connectorAgentDetail =
-        "Ask about reminders naturally. Read-only questions stay local. Before adding, changing, completing, or removing a reminder, the assistant repeats the exact request in the conversation and waits for your yes or no reply."
+        "Read-only reminder questions use the local snapshot. Changes are sent only after you confirm the exact request in the conversation."
     static let syncInterval = "Refresh hidden reminder knowledge"
+    static let syncIntervalDetail =
+        "Choose the automatic schedule or refresh immediately."
+    static let setupMaintenanceTitle = "Connector setup"
+    static let setupMaintenanceDetail =
+        "Review the saved connection, update its runtime, or replace credentials."
+    static let connectorRequestBehaviorTitle = "How reminder requests work"
     static let connectorNotEnabled =
         "Enable the OpenClaw connector in Settings before using OpenClaw or refreshing reminders."
     static let connectorTimedOut =

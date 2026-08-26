@@ -100,7 +100,7 @@ struct SettingsView: View {
                 )
 
                 Text(ReminderStrings.connectorPrivacyDetail)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -108,74 +108,140 @@ struct SettingsView: View {
 
                 Divider()
 
-                HStack(spacing: DesignTokens.Spacing.medium) {
-                    Text(ReminderStrings.syncInterval)
-                        .font(.callout.weight(.semibold))
-                    Spacer()
-                    Picker(
-                        ReminderStrings.syncInterval,
-                        selection: Binding(
-                            get: { model.reminderSyncIntervalMinutes },
-                            set: { model.setReminderSyncInterval($0) }
-                        )
-                    ) {
-                        ForEach(
-                            ReminderConstants.Preferences.allowedSyncIntervalMinutes,
-                            id: \.self
-                        ) { minutes in
-                            Text(ReminderStrings.syncInterval(minutes: minutes))
-                                .tag(minutes)
-                        }
-                    }
-                    .labelsHidden()
-                    .frame(width: 160)
-                    .disabled(model.reminderConnectorEnabled == false)
-                }
-
-                Button {
-                    Task { await model.syncReminders() }
-                } label: {
-                    Label(
-                        model.reminderSyncState == .syncing
-                            ? ReminderStrings.refreshingNow
-                            : ReminderStrings.refreshNow,
-                        systemImage: SystemImages.refresh
-                    )
-                }
-                .buttonStyle(SecondaryActionButtonStyle())
-                .disabled(
-                    model.reminderConnectorEnabled == false
-                        || model.reminderSyncState == .syncing
-                )
+                openClawRefreshControls
 
                 if model.reminderSyncState == .failed {
                     Label(
                         ReminderStrings.cachedSnapshotOutdated,
                         systemImage: SystemImages.stale
                     )
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(DesignTokens.Color.destructive)
                     .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Text(ReminderStrings.connectorAgentDetail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Divider()
 
-                Button {
-                    model.showOpenClawSetup()
-                } label: {
-                    Label(
-                        model.openClawConnectorHealth == .ready
-                            ? ReminderStrings.reviewSetup
-                            : ReminderStrings.openSetup,
-                        systemImage: SystemImages.openClaw
-                    )
+                openClawSetupControls
+
+                DisclosureGroup(ReminderStrings.connectorRequestBehaviorTitle) {
+                    Text(ReminderStrings.connectorAgentDetail)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, DesignTokens.Spacing.small)
                 }
-                .buttonStyle(SecondaryActionButtonStyle())
+                .font(.callout.weight(.semibold))
             }
         }
+    }
+
+    /// Keeps the reminder schedule and immediate refresh action together.
+    private var openClawRefreshControls: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
+            Text(ReminderStrings.syncInterval)
+                .font(.headline)
+            Text(ReminderStrings.syncIntervalDetail)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: DesignTokens.Spacing.small) {
+                    reminderSyncIntervalPicker
+                    refreshNowButton
+                }
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
+                    reminderSyncIntervalPicker
+                    refreshNowButton
+                }
+            }
+        }
+    }
+
+    /// Builds the saved automatic reminder-refresh interval picker.
+    private var reminderSyncIntervalPicker: some View {
+        Picker(
+            ReminderStrings.syncInterval,
+            selection: Binding(
+                get: { model.reminderSyncIntervalMinutes },
+                set: { model.setReminderSyncInterval($0) }
+            )
+        ) {
+            ForEach(
+                ReminderConstants.Preferences.allowedSyncIntervalMinutes,
+                id: \.self
+            ) { minutes in
+                Text(ReminderStrings.syncInterval(minutes: minutes))
+                    .tag(minutes)
+            }
+        }
+        .labelsHidden()
+        .frame(width: 160)
+        .disabled(model.reminderConnectorEnabled == false)
+    }
+
+    /// Builds the immediate reminder-snapshot refresh action.
+    private var refreshNowButton: some View {
+        Button {
+            Task { await model.syncReminders() }
+        } label: {
+            Label(
+                model.reminderSyncState == .syncing
+                    ? ReminderStrings.refreshingNow
+                    : ReminderStrings.refreshNow,
+                systemImage: SystemImages.refresh
+            )
+        }
+        .buttonStyle(SecondaryActionButtonStyle())
+        .disabled(
+            model.reminderConnectorEnabled == false
+                || model.reminderSyncState == .syncing
+        )
+    }
+
+    /// Keeps Connector maintenance copy and its setup action in one responsive row.
+    private var openClawSetupControls: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: DesignTokens.Spacing.large) {
+                openClawSetupExplanation
+                Spacer(minLength: DesignTokens.Spacing.medium)
+                reviewOpenClawSetupButton
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
+                openClawSetupExplanation
+                reviewOpenClawSetupButton
+            }
+        }
+    }
+
+    /// Explains the scope of the Connector maintenance destination.
+    private var openClawSetupExplanation: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
+            Text(ReminderStrings.setupMaintenanceTitle)
+                .font(.headline)
+            Text(ReminderStrings.setupMaintenanceDetail)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// Opens the setup guide for the current Connector state.
+    private var reviewOpenClawSetupButton: some View {
+        Button {
+            model.showOpenClawSetup()
+        } label: {
+            Label(
+                model.openClawConnectorHealth == .ready
+                    ? ReminderStrings.reviewSetup
+                    : ReminderStrings.openSetup,
+                systemImage: SystemImages.openClaw
+            )
+        }
+        .buttonStyle(SecondaryActionButtonStyle())
     }
 
     /// Provides a writable binding for the folder-revocation confirmation alert.
@@ -289,7 +355,7 @@ struct SettingsView: View {
                 .disabled(model.isListening || model.isBusy)
 
                 Text(voiceInputModeDescription(model.voiceInputMode))
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -327,7 +393,7 @@ struct SettingsView: View {
                         ? UIStrings.shortcutAvailableDescription
                         : UIStrings.shortcutUnavailableDescription
                 )
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -472,8 +538,9 @@ struct SettingsView: View {
                     Text(title)
                         .font(.headline)
                     Text(detail)
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Spacer()

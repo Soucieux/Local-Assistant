@@ -82,10 +82,13 @@ struct OpenClawSetupView: View {
             Label(ReminderStrings.setupPrivacyTitle, systemImage: SystemImages.localVerified)
                 .font(.headline)
                 .foregroundStyle(DesignTokens.Color.verifiedLocal)
-            Text(ReminderStrings.setupPrivacyDetail)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            bulletList(ReminderStrings.setupPrivacyBullets)
+
+            DisclosureGroup(ReminderStrings.setupPrivacyTechnicalTitle) {
+                bulletList(ReminderStrings.setupPrivacyTechnicalBullets)
+                    .padding(.top, DesignTokens.Spacing.small)
+            }
+            .font(.callout.weight(.semibold))
         }
         .padding(DesignTokens.Spacing.large)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,7 +103,7 @@ struct OpenClawSetupView: View {
         ) {
             if let issue = model.openClawConnectorAppIssue {
                 Label(issue, systemImage: SystemImages.stale)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(DesignTokens.Color.destructive)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -129,9 +132,7 @@ struct OpenClawSetupView: View {
         setupCard(
             title: ReminderStrings.localSetupRefreshTitle,
             bullets: ReminderStrings.localSetupRefreshBullets
-        ) {
-            EmptyView()
-        }
+        )
     }
 
     /// Keeps common status questions collapsed until needed.
@@ -155,20 +156,51 @@ struct OpenClawSetupView: View {
     }
 
     /// Builds one equal-width, scannable completion card.
-    private func setupCard<Footer: View>(
+    private func setupCard<Action: View>(
         title: String,
         bullets: [String],
-        @ViewBuilder footer: () -> Footer
+        @ViewBuilder action: () -> Action
     ) -> some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
             Text(title)
                 .font(.headline)
-            bulletList(bullets)
-            footer()
+
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: DesignTokens.Spacing.xLarge) {
+                    bulletList(bullets)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                    action()
+                        .frame(
+                            minWidth: DesignTokens.Window.adaptiveColumnMinimumWidth,
+                            maxWidth: .infinity,
+                            alignment: .topLeading
+                        )
+                }
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
+                    bulletList(bullets)
+                    action()
+                }
+            }
         }
         .padding(DesignTokens.Spacing.large)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .fixedSize(horizontal: false, vertical: true)
+        .cardSurface()
+    }
+
+    /// Builds a compact setup card without a separate action region.
+    /// - Parameters:
+    ///   - title: Numbered setup-stage title.
+    ///   - bullets: Short ordered actions or outcomes.
+    /// - Returns: Full-width card whose height follows its content.
+    private func setupCard(title: String, bullets: [String]) -> some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
+            Text(title)
+                .font(.headline)
+            bulletList(bullets)
+        }
+        .padding(DesignTokens.Spacing.large)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .cardSurface()
     }
 
@@ -227,7 +259,7 @@ struct OpenClawHealthSummary: View {
             }
 
             Text(ReminderStrings.connectorHealthDetail(health))
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
