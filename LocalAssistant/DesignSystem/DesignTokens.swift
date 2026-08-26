@@ -65,10 +65,24 @@ enum DesignTokens {
     }
 
     enum Command {
-        static let responseMaximumWidth: CGFloat = 760
         static let inputMaximumWidth: CGFloat = 560
         static let findingMinimumWidth: CGFloat = 228
         static let historyFindingMinimumWidth: CGFloat = 300
+        static let responseTextColumnCount = 12
+        static let responseTextColumnSpan = 11
+        static let responseBodyFontSize: CGFloat = 18
+        static let responseHistoryBodyFontSize: CGFloat = 15
+        static let responseHeadingOneFontSize: CGFloat = 25
+        static let responseHeadingTwoFontSize: CGFloat = 21
+        static let responseHeadingThreeFontSize: CGFloat = 18
+        static let responseCodeFontSize: CGFloat = 14
+        static let responseTableMinimumColumnWidth: CGFloat = 150
+        static let responseTableCornerRadius: CGFloat = 8
+        static let responseTableBorderWidth: CGFloat = 1
+        static let responseQuoteRailWidth: CGFloat = 3
+        static let responseInlineCodeOpacity = 0.075
+        static let responseQuoteOpacity = 0.05
+        static let responseTableHeaderOpacity = 0.085
         static let reminderSummaryCardHeight: CGFloat = 176
         static let reminderFocusedCardHeight: CGFloat = 216
         static let triangleWidth: CGFloat = 42

@@ -9,10 +9,6 @@ enum AppConstants {
         static let newline = "\n"
         static let tabCharacter: Character = "\t"
         static let ellipsis = "…"
-        static let markdownDashListPrefix = "- "
-        static let markdownAsteriskListPrefix = "* "
-        static let visibleBulletPrefix = "• "
-        static let markdownListPrefixLength = 2
     }
 
     enum Identity {

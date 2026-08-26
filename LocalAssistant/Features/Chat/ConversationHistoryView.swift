@@ -227,7 +227,7 @@ private struct MessageBubble: View {
                     y: 1
                 )
                 .frame(
-                    maxWidth: DesignTokens.Message.maximumWidth,
+                    maxWidth: isUser ? DesignTokens.Message.maximumWidth : .infinity,
                     alignment: isUser ? .trailing : .leading
                 )
                 .fixedSize(horizontal: false, vertical: true)
@@ -238,7 +238,7 @@ private struct MessageBubble: View {
                     .padding(.horizontal, DesignTokens.Spacing.xSmall)
             }
             .frame(
-                maxWidth: DesignTokens.Message.maximumWidth,
+                maxWidth: isUser ? DesignTokens.Message.maximumWidth : .infinity,
                 alignment: isUser ? .trailing : .leading
             )
         }
@@ -277,22 +277,14 @@ private struct StyledMessageText: View {
     let text: String
     let isUser: Bool
 
-    private var foregroundColor: Color {
-        isUser ? .white : DesignTokens.Color.graphite
-    }
-
-    private var messageFont: Font {
-        isUser ? .body.weight(.medium) : .body
-    }
-
-    private var renderedText: AttributedString {
-        let normalizedText = Self.normalizedListMarkers(in: text)
+    /// Parses user-message inline Markdown while removing active link destinations.
+    private var renderedUserText: AttributedString {
         let options = AttributedString.MarkdownParsingOptions(
             interpretedSyntax: .inlineOnlyPreservingWhitespace
         )
         var attributedText =
-            (try? AttributedString(markdown: normalizedText, options: options))
-            ?? AttributedString(normalizedText)
+            (try? AttributedString(markdown: text, options: options))
+            ?? AttributedString(text)
         let linkedRanges = attributedText.runs.compactMap { run in
             run.link == nil ? nil : run.range
         }
@@ -302,38 +294,20 @@ private struct StyledMessageText: View {
         return attributedText
     }
 
-    /// Builds semantic message typography without a web-rendering surface.
+    /// Builds user inline text or the shared native assistant document renderer.
+    @ViewBuilder
     var body: some View {
-        Text(renderedText)
-            .font(messageFont)
-            .foregroundStyle(foregroundColor)
-            .lineSpacing(DesignTokens.Message.lineSpacing)
-            .multilineTextAlignment(.leading)
-            .textSelection(.enabled)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-
-    /// Replaces common Markdown bullet prefixes with stable visible bullets.
-    /// - Parameter text: Raw user or assistant message text.
-    /// - Returns: Message text with simple unordered-list markers normalized.
-    private static func normalizedListMarkers(in text: String) -> String {
-        text.split(separator: AppConstants.Text.newline, omittingEmptySubsequences: false)
-            .map { line in
-                let fullLine = String(line)
-                let leadingWhitespace = fullLine.prefix {
-                    $0 == AppConstants.Text.spaceCharacter
-                        || $0 == AppConstants.Text.tabCharacter
-                }
-                let content = fullLine.dropFirst(leadingWhitespace.count)
-                if content.hasPrefix(AppConstants.Text.markdownDashListPrefix)
-                    || content.hasPrefix(AppConstants.Text.markdownAsteriskListPrefix) {
-                    return String(leadingWhitespace)
-                        + AppConstants.Text.visibleBulletPrefix
-                        + content.dropFirst(AppConstants.Text.markdownListPrefixLength)
-                }
-                return fullLine
-            }
-            .joined(separator: AppConstants.Text.newline)
+        if isUser {
+            Text(renderedUserText)
+                .font(.body.weight(.medium))
+                .foregroundStyle(.white)
+                .lineSpacing(DesignTokens.Message.lineSpacing)
+                .multilineTextAlignment(.leading)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            ResponseMarkdownView(text: text, presentation: .history)
+        }
     }
 }
 

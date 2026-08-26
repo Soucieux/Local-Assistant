@@ -102,45 +102,23 @@ struct ProcessingIndicator: View {
     }
 }
 
-/// Centered latest answer without a conversational bubble.
+/// Responsive latest answer without a conversational bubble.
 struct CommandResponseView: View {
     let message: ChatMessage
 
-    /// Builds the current response label and selectable rich text.
+    /// Builds the current response label and native block-Markdown document.
     var body: some View {
         VStack(spacing: DesignTokens.Spacing.large) {
             Text(UIStrings.commandResponse)
                 .font(.caption2.monospaced().weight(.bold))
                 .tracking(1.6)
                 .foregroundStyle(DesignTokens.Color.commandAccent)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-            Text(renderedText)
-                .font(.system(size: 24, weight: .medium, design: .monospaced))
-                .foregroundStyle(DesignTokens.Color.commandInk)
-                .lineSpacing(DesignTokens.Message.lineSpacing + 2)
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
+            ResponseMarkdownView(text: message.text, presentation: .command)
         }
-        .frame(maxWidth: DesignTokens.Command.responseMaximumWidth)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, DesignTokens.Spacing.large)
-    }
-
-    /// Rich local response text with links rendered inert.
-    private var renderedText: AttributedString {
-        let options = AttributedString.MarkdownParsingOptions(
-            interpretedSyntax: .inlineOnlyPreservingWhitespace
-        )
-        var attributedText =
-            (try? AttributedString(markdown: message.text, options: options))
-            ?? AttributedString(message.text)
-        let linkedRanges = attributedText.runs.compactMap { run in
-            run.link == nil ? nil : run.range
-        }
-        for linkedRange in linkedRanges {
-            attributedText[linkedRange].link = nil
-        }
-        return attributedText
     }
 }
 
