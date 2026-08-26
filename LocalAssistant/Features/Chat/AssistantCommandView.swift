@@ -149,41 +149,49 @@ struct AssistantCommandView: View {
 
     /// Builds the latest processing state, response, and adaptive file findings.
     private var currentOutput: some View {
-        ScrollView {
-            VStack(spacing: DesignTokens.Spacing.xLarge) {
-                if model.isBusy {
-                    ProcessingIndicator()
-                        .transition(.opacity)
-                } else if let response = model.currentResponse {
-                    CommandResponseView(message: response)
-                        .transition(.opacity)
-                    if response.fileMatches.isEmpty == false {
-                        CommandFindingsGrid(results: response.fileMatches)
-                            .transition(.opacity)
+        Group {
+            if model.isBusy {
+                ProcessingIndicator()
+                    .transition(.opacity)
+            } else {
+                ScrollView {
+                    VStack(spacing: DesignTokens.Spacing.xLarge) {
+                        if let response = model.currentResponse {
+                            CommandResponseView(message: response)
+                                .transition(.opacity)
+                            if response.fileMatches.isEmpty == false {
+                                CommandFindingsGrid(results: response.fileMatches)
+                                    .transition(.opacity)
+                            }
+                            if response.reminderMatches.isEmpty == false {
+                                CommandReminderFindingsGrid(
+                                    results: response.reminderMatches,
+                                    presentation: response.reminderPresentation
+                                )
+                                    .transition(.opacity)
+                            }
+                        }
                     }
-                    if response.reminderMatches.isEmpty == false {
-                        CommandReminderFindingsGrid(results: response.reminderMatches)
-                            .transition(.opacity)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.xxLarge)
+                    .frame(maxWidth: .infinity)
                 }
+                .scrollIndicators(.hidden)
             }
-            .frame(maxWidth: DesignTokens.Command.contentMaximumWidth)
-            .padding(.vertical, DesignTokens.Spacing.xxLarge)
-            .frame(maxWidth: .infinity)
-            .animation(
-                reduceMotion
-                    ? nil
-                    : .easeOut(duration: DesignTokens.Motion.responseTransitionDuration),
-                value: model.isBusy
-            )
-            .animation(
-                reduceMotion
-                    ? nil
-                    : .easeOut(duration: DesignTokens.Motion.responseTransitionDuration),
-                value: model.currentResponse?.id
-            )
         }
-        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(
+            reduceMotion
+                ? nil
+                : .easeOut(duration: DesignTokens.Motion.responseTransitionDuration),
+            value: model.isBusy
+        )
+        .animation(
+            reduceMotion
+                ? nil
+                : .easeOut(duration: DesignTokens.Motion.responseTransitionDuration),
+            value: model.currentResponse?.id
+        )
     }
 
     /// Builds the voice and text control in its centered or bottom position.

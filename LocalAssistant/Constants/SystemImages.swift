@@ -53,6 +53,8 @@ enum SystemImages {
     static let other = "doc.fill"
     static let refresh = "arrow.clockwise"
     static let deadline = "calendar.badge.clock"
+    static let reminder = "bell.fill"
+    static let link = "link"
     static let openClaw = "point.3.connected.trianglepath.dotted"
     static let help = "questionmark.circle"
 

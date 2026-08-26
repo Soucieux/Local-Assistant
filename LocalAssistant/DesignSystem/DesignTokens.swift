@@ -7,7 +7,7 @@ enum DesignTokens {
         static let minimumHeight: CGFloat = 540
         static let defaultWidth: CGFloat = 820
         static let defaultHeight: CGFloat = 720
-        static let contentMaximumWidth: CGFloat = 780
+        static let adaptiveColumnMinimumWidth: CGFloat = 340
     }
 
     enum Message {
@@ -20,8 +20,6 @@ enum DesignTokens {
         static let iconButtonSize: CGFloat = 38
         static let compactIconButtonSize: CGFloat = 32
         static let appIconSize: CGFloat = 40
-        static let statusTileMinimumHeight: CGFloat = 128
-        static let setupStepMinimumHeight: CGFloat = 184
         static let shortcutKeyMinimumWidth: CGFloat = 26
         static let shortcutKeyHeight: CGFloat = 24
     }
@@ -67,12 +65,12 @@ enum DesignTokens {
     }
 
     enum Command {
-        static let contentMaximumWidth: CGFloat = 980
         static let responseMaximumWidth: CGFloat = 760
         static let inputMaximumWidth: CGFloat = 560
         static let findingMinimumWidth: CGFloat = 228
-        static let findingMaximumWidth: CGFloat = 310
-        static let findingMinimumHeight: CGFloat = 176
+        static let historyFindingMinimumWidth: CGFloat = 300
+        static let reminderSummaryCardHeight: CGFloat = 176
+        static let reminderFocusedCardHeight: CGFloat = 216
         static let triangleWidth: CGFloat = 42
         static let triangleHeight: CGFloat = 36
         static let headerHeight: CGFloat = 68
@@ -156,6 +154,14 @@ enum DesignTokens {
             green: 0.34,
             blue: 0.33
         )
+        private static let reminderTagPalette = [
+            SwiftUI.Color(nsColor: .systemRed),
+            SwiftUI.Color(nsColor: .systemOrange),
+            SwiftUI.Color(nsColor: .systemGreen),
+            SwiftUI.Color(nsColor: .systemTeal),
+            SwiftUI.Color(nsColor: .systemBlue),
+            SwiftUI.Color(nsColor: .systemPurple)
+        ]
 
         /// Returns a restrained identifying color for an indexed item category.
         /// - Parameter kind: Indexed file or folder category.
@@ -171,6 +177,24 @@ enum DesignTokens {
             case .archive: return SwiftUI.Color(nsColor: .systemGray)
             case .document, .text, .other: return verifiedLocal
             }
+        }
+
+        /// Returns a stable semantic accent for one reminder tag section.
+        /// - Parameters:
+        ///   - identifier: Normalized tag identifier.
+        ///   - isUntagged: Whether the group represents reminders without a tag.
+        /// - Returns: Neutral gray for untagged items or a deterministic palette color.
+        internal static func reminderTag(
+            _ identifier: String,
+            isUntagged: Bool
+        ) -> SwiftUI.Color {
+            guard isUntagged == false else {
+                return SwiftUI.Color(nsColor: .systemGray)
+            }
+            let index = identifier.unicodeScalars.reduce(0) { partial, scalar in
+                (partial * 31 + Int(scalar.value)) % reminderTagPalette.count
+            }
+            return reminderTagPalette[index]
         }
     }
 }

@@ -12,44 +12,51 @@ struct ConversationHistoryView: View {
 
             VStack(spacing: 0) {
                 header
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(
-                            alignment: .leading,
-                            spacing: DesignTokens.Spacing.large
-                        ) {
-                            if model.messages.isEmpty {
-                                historyEmptyState
-                                    .frame(maxWidth: .infinity, minHeight: 390)
-                            }
-                            ForEach(model.messages) { message in
-                                VStack(
-                                    alignment: .leading,
-                                    spacing: DesignTokens.Spacing.medium
-                                ) {
-                                    MessageBubble(message: message)
-                                    if message.fileMatches.isEmpty == false {
-                                        SearchResultsView(results: message.fileMatches)
-                                    }
-                                    if message.reminderMatches.isEmpty == false {
-                                        CommandReminderFindingsGrid(
-                                            results: message.reminderMatches
-                                        )
-                                    }
+                GeometryReader { viewport in
+                    ScrollViewReader { scrollProxy in
+                        ScrollView {
+                            LazyVStack(
+                                alignment: .leading,
+                                spacing: DesignTokens.Spacing.large
+                            ) {
+                                if model.messages.isEmpty {
+                                    historyEmptyState
+                                        .frame(maxWidth: .infinity)
                                 }
+                                ForEach(model.messages) { message in
+                                    VStack(
+                                        alignment: .leading,
+                                        spacing: DesignTokens.Spacing.medium
+                                    ) {
+                                        MessageBubble(message: message)
+                                        if message.fileMatches.isEmpty == false {
+                                            SearchResultsView(results: message.fileMatches)
+                                        }
+                                        if message.reminderMatches.isEmpty == false {
+                                            CommandReminderFindingsGrid(
+                                                results: message.reminderMatches,
+                                                presentation: message.reminderPresentation
+                                            )
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                Color.clear
+                                    .frame(height: DesignTokens.Spacing.xSmall)
+                                    .id(ChatScrollTarget.bottom)
                             }
-                            Color.clear
-                                .frame(height: DesignTokens.Spacing.xSmall)
-                                .id(ChatScrollTarget.bottom)
+                            .padding(.horizontal, DesignTokens.Spacing.xLarge)
+                            .padding(.vertical, DesignTokens.Spacing.xxLarge)
+                            .frame(
+                                maxWidth: .infinity,
+                                minHeight: viewport.size.height,
+                                alignment: model.messages.isEmpty ? .center : .topLeading
+                            )
                         }
-                        .frame(maxWidth: DesignTokens.Window.contentMaximumWidth)
-                        .padding(.horizontal, DesignTokens.Spacing.xLarge)
-                        .padding(.vertical, DesignTokens.Spacing.xxLarge)
-                        .frame(maxWidth: .infinity)
-                    }
-                    .defaultScrollAnchor(model.messages.isEmpty ? .center : .bottom)
-                    .onChange(of: model.messages.count) { _, _ in
-                        scrollToBottom(using: proxy, animated: true)
+                        .defaultScrollAnchor(model.messages.isEmpty ? .center : .bottom)
+                        .onChange(of: model.messages.count) { _, _ in
+                            scrollToBottom(using: scrollProxy, animated: true)
+                        }
                     }
                 }
             }
@@ -194,7 +201,7 @@ private struct MessageBubble: View {
                         .textCase(.uppercase)
                         .tracking(0.45)
 
-                    StyledMessageText(text: message.text, isUser: isUser)
+                    StyledMessageText(text: displayText, isUser: isUser)
                 }
                 .padding(.horizontal, DesignTokens.Spacing.large)
                 .padding(.vertical, DesignTokens.Spacing.medium)
@@ -240,6 +247,28 @@ private struct MessageBubble: View {
             alignment: isUser ? .trailing : .leading
         )
         .accessibilityElement(children: .combine)
+    }
+
+    /// Replaces verbose saved list prose when reminder cards already carry every item detail.
+    private var displayText: String {
+        guard isUser == false,
+              message.reminderMatches.isEmpty == false,
+              message.reminderPresentation == .grouped
+                || message.reminderMatches.count > 1 else {
+            return message.text
+        }
+        let tags = Set(message.reminderMatches.map { result in
+            let tag = result.item.tag?.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ) ?? AppConstants.Text.empty
+            return tag.isEmpty
+                ? ReminderConstants.Presentation.untaggedGroupIdentifier
+                : tag.lowercased()
+        })
+        return ReminderStrings.reminderListSummary(
+            count: message.reminderMatches.count,
+            groupCount: tags.count
+        )
     }
 }
 

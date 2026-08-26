@@ -117,7 +117,7 @@ enum UIStrings {
     static let voiceHoldSpace = "Hold Space"
 
     static let voiceHoldSpaceDescription =
-        "Hold Space while the command field is not being edited, then release to send."
+        "Hold Space while the command field is not being edited. Release it or pause for \(Int(VoiceConstants.silenceTimeout)) seconds to send."
     static let modelCapabilityReady = "Ready"
     static let modelCapabilityMissing = "Not installed"
     static let modelCapabilityDamaged = "Damaged"

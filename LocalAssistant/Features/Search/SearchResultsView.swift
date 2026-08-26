@@ -33,11 +33,28 @@ struct SearchResultsView: View {
                 Spacer()
             }
 
-            ForEach(Array(results.enumerated()), id: \.element.id) { index, result in
-                ResultRow(result: result, isTopResult: index == 0)
+            LazyVGrid(
+                columns: columns,
+                alignment: .leading,
+                spacing: DesignTokens.Spacing.medium
+            ) {
+                ForEach(Array(results.enumerated()), id: \.element.id) { index, result in
+                    ResultRow(result: result, isTopResult: index == 0)
+                }
             }
         }
         .padding(.top, DesignTokens.Spacing.small)
+    }
+
+    /// Columns that continuously reflow file and folder cards with window width.
+    private var columns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(minimum: DesignTokens.Command.historyFindingMinimumWidth),
+                spacing: DesignTokens.Spacing.medium,
+                alignment: .top
+            )
+        ]
     }
 }
 
