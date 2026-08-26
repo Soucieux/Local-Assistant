@@ -117,11 +117,9 @@ enum ConnectorSetupConstants {
         static let updateWorking = "Updating and verifying…"
         static let updateReady =
             "Connector updated and verified. This window will close automatically."
-        static let reviewSettings = "Review Connection Settings"
+        static let reviewSettings = "Review Connection"
         static let returnToExisting = "Back to Existing Connector"
         static let replaceCredentials = "Replace Saved Credentials"
-        static let replaceCredentialsHelp =
-            "Use this only when OpenClaw issued new tokens. Saved tokens are never displayed."
         static let removeConnector = "Remove Connector Data…"
         static let removeTitle = "Remove all Connector data?"
         static let removeMessage =

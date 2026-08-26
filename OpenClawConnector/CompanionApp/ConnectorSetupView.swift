@@ -152,33 +152,18 @@ struct ConnectorSetupView: View {
             .controlSize(.large)
             .disabled(model.isBusy)
 
-            HStack(spacing: 12) {
-                Button {
-                    model.reviewExistingSettings()
-                } label: {
-                    Label(
-                        ConnectorSetupConstants.Text.reviewSettings,
-                        systemImage: ConnectorSetupConstants.Symbol.settings
-                    )
-                }
-                .buttonStyle(.bordered)
-                .disabled(model.isBusy)
-
-                Button {
-                    model.beginCredentialReplacement()
-                } label: {
-                    Label(
-                        ConnectorSetupConstants.Text.replaceCredentials,
-                        systemImage: ConnectorSetupConstants.Symbol.saved
-                    )
-                }
-                .buttonStyle(.bordered)
-                .disabled(model.isBusy)
+            Button {
+                model.reviewExistingSettings()
+            } label: {
+                Label(
+                    ConnectorSetupConstants.Text.reviewSettings,
+                    systemImage: ConnectorSetupConstants.Symbol.settings
+                )
+                .frame(maxWidth: .infinity)
             }
-
-            Text(ConnectorSetupConstants.Text.replaceCredentialsHelp)
-                .font(.caption)
-                .foregroundStyle(ConnectorDesignSystem.secondaryText)
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .disabled(model.isBusy)
 
             Divider()
 
@@ -468,32 +453,32 @@ struct ConnectorSetupView: View {
         theme: ConnectorStepTheme,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        HStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
+                Text(String(number))
+                    .font(.headline.monospacedDigit())
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(theme.accent, in: Circle())
+                Image(systemName: theme.symbol)
+                    .font(.title3)
+                    .foregroundStyle(theme.accent)
+                Text(title)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(ConnectorDesignSystem.text)
+            }
+            bulletList(bullets, accent: theme.accent)
+            content()
+        }
+        .padding(ConnectorDesignSystem.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(ConnectorDesignSystem.surface)
+        .overlay(alignment: .leading) {
             Rectangle()
                 .fill(theme.accent)
                 .frame(width: 6)
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    Text(String(number))
-                        .font(.headline.monospacedDigit())
-                        .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
-                        .background(theme.accent, in: Circle())
-                    Image(systemName: theme.symbol)
-                        .font(.title3)
-                        .foregroundStyle(theme.accent)
-                    Text(title)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(ConnectorDesignSystem.text)
-                }
-                bulletList(bullets, accent: theme.accent)
-                content()
-            }
-            .padding(ConnectorDesignSystem.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(ConnectorDesignSystem.surface)
         .clipShape(RoundedRectangle(cornerRadius: ConnectorDesignSystem.cornerRadius))
         .overlay {
             RoundedRectangle(cornerRadius: ConnectorDesignSystem.cornerRadius)
