@@ -9,6 +9,7 @@ MANIFEST_FILE="${BUNDLE_DIR}/SHA256SUMS"
 
 mkdir -p "${MODEL_DIR}"
 /usr/bin/python3 "${SCRIPT_DIR}/prepare_dependencies.py"
+"${SCRIPT_DIR}/prepare_connector_runtime.sh"
 "${SCRIPT_DIR}/build_llama_static.sh"
 /usr/bin/python3 "${SCRIPT_DIR}/download_models.py" \
   --manifest "${PROJECT_DIR}/Config/ModelManifest.json" \

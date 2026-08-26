@@ -17,9 +17,14 @@ BUILT_APP="${DERIVED_DATA}/Build/Products/Release/LocalAssistant.app"
 # The copy is named for the product rather than the Xcode target, so the application reads
 # as "Local Assistant" wherever it is opened from.
 TOP_LEVEL_APP="${PROJECT_DIR}/Local Assistant.app"
+TOP_LEVEL_CONNECTOR_APP="${PROJECT_DIR}/OpenClaw Connector.app"
+TOP_LEVEL_RELEASE_PACKAGE="${PROJECT_DIR}/Local Assistant Release.dmg"
 
 # Keep only the latest build; the project root never accumulates stale versions.
-/bin/rm -rf "${TOP_LEVEL_APP}"
+/bin/rm -rf \
+  "${TOP_LEVEL_APP}" \
+  "${TOP_LEVEL_CONNECTOR_APP}" \
+  "${TOP_LEVEL_RELEASE_PACKAGE}"
 
 LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_static.sh"
 
@@ -36,7 +41,17 @@ LOCAL_ASSISTANT_SOURCE="${PROJECT_DIR}" "${PROJECT_DIR}/Scripts/build_llama_stat
 # `ditto` copies the bundle with its resource forks and signature intact; `cp` can leave a
 # copied application that macOS refuses to launch.
 /usr/bin/ditto "${BUILT_APP}" "${TOP_LEVEL_APP}"
+/usr/bin/codesign \
+  --force \
+  --deep \
+  --sign - \
+  --options runtime \
+  --entitlements "${PROJECT_DIR}/LocalAssistant/Resources/LocalAssistant.entitlements" \
+  "${TOP_LEVEL_APP}"
 /usr/bin/codesign --verify --deep "${TOP_LEVEL_APP}"
+
+"${PROJECT_DIR}/Scripts/build_connector_app.sh"
+"${PROJECT_DIR}/Scripts/build_release_package.sh"
 
 APP_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${TOP_LEVEL_APP}/Contents/Info.plist")"
 APP_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${TOP_LEVEL_APP}/Contents/Info.plist")"
@@ -46,4 +61,6 @@ APP_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${TOP_LEVEL_AP
 # second and third copy of the app.
 /bin/rm -rf "${DERIVED_DATA}"
 
-print "Open v${APP_VERSION} (${APP_BUILD}) directly at ${TOP_LEVEL_APP}"
+print "Built v${APP_VERSION} (${APP_BUILD}) with its separate connector."
+print "The user creates the server setup ZIP from inside OpenClaw Connector."
+print "Open the complete clean-Mac package at ${TOP_LEVEL_RELEASE_PACKAGE}"
