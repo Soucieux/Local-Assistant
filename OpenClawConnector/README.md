@@ -28,7 +28,7 @@ non-secret configuration contains the SSH host, SSH port, fixed restricted usern
 and bounded timeout. The private SSH key remains owner-only in Connector Application Support. It
 is never exported, added to the server ZIP, or placed in a command argument.
 
-The v4.7 build 47 application packages Connector runtime v1.8.0 and server bridge v1.4.0. The
+The v4.8 build 48 application packages Connector runtime v1.8.0 and server bridge v1.4.0. The
 runtime publishes a non-secret
 contract version in its local status so Local Assistant can stop an incompatible request before it
 reaches an older installed runtime. The runtime rejects an agent task
@@ -50,7 +50,7 @@ explains that the older Applications copy should be replaced.
 The Connector first checks for an existing installation. This check returns only the saved server
 address, SSH port, public host key, and yes/no credential-presence flags. It never loads either
 token into the Swift interface. A complete existing installation therefore opens a short
-**Update and Verify Existing Connector** screen. For v4.7, first create a fresh server ZIP and run
+**Update and Verify Existing Connector** screen. For v4.8, first create a fresh server ZIP and run
 its setup once on the OpenClaw server. The packaged Mac runtime can then reuse the existing SSH
 key, settings, and Keychain tokens, verify both the reminder snapshot and A2A Agent Card, and
 restart the one-shot job without requesting any value again.
@@ -61,8 +61,9 @@ owning step:
 
 1. Enter only the server address and SSH port from the existing administrator SSH login. The
    address has no username, scheme, path, or OpenClaw port.
-2. Choose **Create Key and Save Public Key…**, then **Create Server Setup ZIP…**. Both actions are
-   explicit and user-controlled; nothing is uploaded automatically.
+2. Choose **Create Key and Save Public Key…**, then **Create Server Setup ZIP…**. Both required
+   actions use the same prominent button style and remain explicit and user-controlled. The public
+   key is a separate file and is not contained in the ZIP; nothing is uploaded automatically.
 3. Transfer both files to the OpenClaw owner's home folder and run the four commands shown in the
    Connector. The optional SCP template is unnecessary when the files are already on the server.
    The installer keeps OpenClaw on
@@ -76,14 +77,19 @@ owning step:
    only when replacement is intentional.
 5. Choose **Save and Verify Connector**. New tokens travel to the packaged runtime through bounded
    standard input, enter macOS Keychain, and are immediately cleared from the Swift fields before
-   remote verification. After verification succeeds and the Connector closes, enable the
-   connection in Local Assistant, choose the two-, four-, or eight-hour schedule, and use
-   **Refresh Now** once.
+   remote verification. After verification succeeds, a confirmation remains above the button and
+   the user closes the Connector manually. Then enable the connection in Local Assistant, choose
+   the two-, four-, or eight-hour schedule, and use **Refresh Now** once.
 
 Verification performs a real complete read-only snapshot and fetches the authenticated A2A v1.0
-Agent Card through temporary tunnels. A green confirmation appears only after Calendar-unchanged
-proof and the exact loopback JSON-RPC interface both pass; the tunnel closes and the setup app then
-closes automatically.
+Agent Card through temporary tunnels. A green confirmation appears above the verification button
+only after Calendar-unchanged proof and the exact loopback JSON-RPC interface both pass. The tunnel
+closes, but the setup app remains open until the user closes it.
+
+The setup workbench uses full-width location banners to distinguish Mac and server actions. Wide
+cards place short instructions beside their fields or actions, while narrow windows return to one
+ordered column. Required actions use filled semantic controls; supporting, update, and destructive
+actions retain distinct bordered treatments.
 
 The Connector maps common SSH failures to a specific safe cause—host-key mismatch, rejected public
 key, unresolved address, refused connection, timeout, or unreachable network—without displaying raw
@@ -162,3 +168,9 @@ source CLI deliberately has no persistent run command.
 ```zsh
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
+
+The v4.8 release passed all 39 Connector tests, standalone Swift type checking, the clean packaged
+runtime build, strict project-root, installed, and mounted signature checks, and responsive
+installed-screen inspection at normal and full-screen widths. Its disk image contains no saved
+server values or credentials; those remain outside the application bundle in Connector Application
+Support and macOS Keychain.

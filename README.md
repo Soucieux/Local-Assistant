@@ -100,9 +100,9 @@ Enter the server address and SSH port, paste the complete host-key line and two 
 **Save and Verify Connector**. The Connector pins that host key, opens one encrypted tunnel,
 performs an authenticated complete read-only reminder snapshot, requires proof that Calendar was
 unchanged, validates the authenticated A2A v1.0 Agent Card, and closes the tunnel. On success, a
-green message appears above the button and the setup app closes automatically. On failure, it
-stays open with an actionable message. Existing installations must create and run a fresh server
-ZIP once before updating and verifying the v4.7 Connector runtime.
+green message remains above the button until the user closes the setup app. On failure, the same
+stable message position provides an actionable explanation. Existing installations must create
+and run a fresh server ZIP once before updating and verifying the v4.8 Connector runtime.
 
 #### Finish in Local Assistant — enable and refresh
 
@@ -271,22 +271,22 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-| Release area | v4.7 status | Meaning |
+| Release area | v4.8 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | General OpenClaw messages use A2A v1.0 across the existing on-demand SSH boundary. The reminder snapshot route, local cache/RAG behavior, and network-free Local Assistant target remain unchanged. |
-| Source implementation | Complete | Connector runtime v1.8.0 discovers an authenticated Agent Card and sends text-only JSON-RPC `SendMessage`; server bridge v1.4.0 validates and delegates only the exact message and stable context identity. |
+| Approved scope | Complete | Connector and Settings cards now use responsive content hierarchy, consistent controls, readable explanations, and stable verification messages. Main-screen file and folder results reuse the richer History presentation. |
+| Source implementation | Complete | The v4.8 Swift interfaces remove automatic Connector termination, keep schedule and refresh controls together, preserve narrow-window stacking, and share one file-result card implementation between Main and History. Connector runtime v1.8.0 and server bridge v1.4.0 are unchanged. |
 | Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
-| Debug compilation | Complete | The updated runtime contract and setup interface compiled through the macOS Debug test action. |
-| Release build | Complete | The clean offline build produced the signed project-root Local Assistant, OpenClaw Connector, and v4.7 disk image. |
-| Automated tests | Complete | All 128 macOS tests, 39 Connector tests, and 12 OpenClaw bridge tests passed. The macOS suite completed 134 parameterized invocations with no failures or skips. |
+| Debug compilation | Complete | Local Assistant and the standalone Connector compile with the v4.8 interface changes. |
+| Release build | Complete | The clean offline build produced signed v4.8 build 48 copies of Local Assistant and OpenClaw Connector plus the refreshed clean-Mac disk image. The matching applications are installed in `/Applications`. |
+| Automated tests | Complete | The complete macOS target passed all 128 tests with no failures or skips. All 39 Connector tests, 12 OpenClaw bridge plugin tests, and 5 typed reminder-bridge tests also passed. |
 | Voice runtime testing | Pending manual check | Automated state tests cover silence submission in both modes; live multilingual recognition still requires manual inspection. |
-| Focused testing | Complete | The project-root, installed, and mounted-disk-image applications report v4.7 build 47; strict deep signature checks passed for both applications. |
-| Disconnected runtime testing | Not run | The v4.7 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Complete | The signed Local Assistant bundle passed the offline-boundary audit. The only discovered network string remains unreachable compiled model metadata; A2A exists only in the separate Connector. |
-| Interface inspection | Complete | The installed Connector's existing-installation and review/update screens were inspected. They clearly identify the one server update, fresh ZIP, three-step server action, saved Keychain state, and reminder-plus-A2A verification without exposing either saved token. |
+| Focused testing | Complete | Connector Swift type checking and whitespace checks passed. Project-root, installed, and mounted applications all report v4.8 build 48 and pass strict deep signature validation. |
+| Disconnected runtime testing | Not run | The v4.8 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Complete | Both the project-root and installed Local Assistant bundles passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. |
+| Interface inspection | Complete | The installed Connector overview and setup, Local Assistant Settings and setup guide, empty Main state, and responsive History file grid were inspected at normal and full-screen widths. Main and History result parity is enforced by the same shared `SearchResultsView`. |
 | Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The disk image passed `hdiutil verify`; its mounted Local Assistant and OpenClaw Connector report v4.7 build 47, include the A2A server adapter, and pass strict deep signature verification. SHA-256: `d553a1f98812e751f346bdd4bd1bc216f4df190596ed6b9655cbc1ca8e2d9c58`. |
+| Release artifact integrity | Complete | The disk image checksum is valid, contains only the two v4.8 build 48 applications plus the Applications link, and has SHA-256 `3692fde938f8bd815089f6796d9753b4721217476477bc06a6b78884dda3f73d`. |
 
 ### Version index
 
@@ -299,6 +299,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 | Version | What changed |
 |---|---|
+| v4.8 | [Responsive setup and consistent result cards](#v48--responsive-setup-and-consistent-result-cards) |
 | v4.7 | [Private A2A connection to OpenClaw](#v47--private-a2a-connection-to-openclaw) |
 | v4.6 | [Responsive native Markdown responses](#v46--responsive-native-markdown-responses) |
 | v4.5 | [Natural confirmation, centered processing, and dependency security](#v45--natural-confirmation-centered-processing-and-dependency-security) |
@@ -349,6 +350,25 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v4.8 — Responsive setup and consistent result cards
+
+- Gives every required Connector action a prominent full-width treatment and makes the public key
+  and server ZIP equally recognizable as separate required files.
+- Replaces compact Mac/server pills with full-width location banners and restructures wide setup
+  cards into instructions beside actions, with help sections below and one-column fallback.
+- Keeps the Connector open after both verification paths and leaves a clear success or failure
+  message directly above the owning button until the user closes the window.
+- Reorders OpenClaw Settings around enablement, health, schedule plus immediate refresh, setup
+  maintenance, and optional request behavior. Explanations use readable callout text.
+- Reuses the History file-and-folder result cards on the main command screen, preserving the
+  adaptive grid while removing the weaker duplicate presentation.
+- Advances Local Assistant and OpenClaw Connector to v4.8 build 48. Connector runtime v1.8.0 and
+  server bridge v1.4.0 remain unchanged because no transport contract changed.
+- Passed all 128 macOS tests, all 39 Connector tests, all 12 OpenClaw plugin tests, and all 5
+  typed reminder-bridge tests. The clean release build, installed and mounted version and
+  signature checks, offline-boundary audit, responsive installed-screen inspection, and disk-image
+  verification also passed.
 
 ### v4.7 — Private A2A connection to OpenClaw
 
