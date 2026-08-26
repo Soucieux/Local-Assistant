@@ -179,6 +179,123 @@ struct CommandFindingsGrid: View {
     }
 }
 
+/// Adaptive grid of reminder matches from the latest local snapshot.
+struct CommandReminderFindingsGrid: View {
+    let results: [ReminderSearchResult]
+
+    /// Builds a centered reminder label and responsive ownership-aware grid.
+    var body: some View {
+        VStack(spacing: DesignTokens.Spacing.large) {
+            CommandSectionLabel(
+                title: ReminderStrings.reminderCount(results.count).uppercased()
+            )
+
+            LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.medium) {
+                ForEach(Array(results.enumerated()), id: \.element.id) { offset, result in
+                    CommandReminderCard(result: result, index: offset + 1)
+                }
+            }
+        }
+        .frame(maxWidth: DesignTokens.Command.contentMaximumWidth)
+    }
+
+    /// Responsive columns matching local file findings.
+    private var columns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(
+                    minimum: DesignTokens.Command.findingMinimumWidth,
+                    maximum: DesignTokens.Command.findingMaximumWidth
+                ),
+                spacing: DesignTokens.Spacing.medium,
+                alignment: .top
+            )
+        ]
+    }
+}
+
+/// One square-edged reminder match with time and ownership evidence.
+struct CommandReminderCard: View {
+    let result: ReminderSearchResult
+    let index: Int
+
+    /// Builds reminder identity, deadline, ownership, and rank explanation.
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
+            Text(UIStrings.commandFindingNumber(index))
+                .font(.title3.monospaced().weight(.bold))
+                .foregroundStyle(DesignTokens.Color.commandAccent)
+
+            Text(result.item.text)
+                .font(.body.monospaced().weight(.semibold))
+                .foregroundStyle(DesignTokens.Color.commandInk)
+                .lineLimit(3)
+                .textSelection(.enabled)
+
+            Rectangle()
+                .fill(DesignTokens.Color.commandInk.opacity(0.72))
+                .frame(height: 1)
+
+            Label(reminderTiming, systemImage: SystemImages.deadline)
+                .font(.caption2.monospaced().weight(.medium))
+                .foregroundStyle(DesignTokens.Color.commandMutedInk)
+
+            Text(ownershipTitle.uppercased())
+                .font(.caption2.monospaced().weight(.semibold))
+                .foregroundStyle(ownershipColor)
+
+            Text(result.explanation)
+                .font(.caption2.monospaced())
+                .foregroundStyle(DesignTokens.Color.commandInk)
+                .lineLimit(2)
+        }
+        .padding(DesignTokens.Spacing.medium)
+        .frame(
+            maxWidth: .infinity,
+            minHeight: DesignTokens.Command.findingMinimumHeight,
+            alignment: .topLeading
+        )
+        .background(DesignTokens.Color.commandLightCanvas.opacity(0.86))
+        .overlay {
+            Rectangle()
+                .stroke(DesignTokens.Color.commandInk.opacity(0.72), lineWidth: 1)
+        }
+        .overlay(alignment: .topLeading) {
+            CommandAcquisitionCorner()
+        }
+        .overlay(alignment: .bottomTrailing) {
+            CommandAcquisitionCorner()
+                .rotationEffect(.degrees(180))
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    /// Formats the stored CloudBase date and optional start time.
+    private var reminderTiming: String {
+        let date = result.item.date ?? ReminderStrings.undated
+        guard let start = result.item.startTime else { return date }
+        return "\(date) · \(start)"
+    }
+
+    /// Maps reminder ownership to explicit card copy.
+    private var ownershipTitle: String {
+        switch result.item.ownership {
+        case .localAssistant: ReminderStrings.ownerLocalAssistant
+        case .openClaw: ReminderStrings.ownerOpenClaw
+        case .unknown: ReminderStrings.ownerUnknown
+        }
+    }
+
+    /// Maps reminder ownership to a supporting tint.
+    private var ownershipColor: Color {
+        switch result.item.ownership {
+        case .localAssistant: DesignTokens.Color.verifiedLocal
+        case .openClaw: DesignTokens.Color.voice
+        case .unknown: DesignTokens.Color.processing
+        }
+    }
+}
+
 /// Hairline label separating the answer from acquired file findings.
 struct CommandSectionLabel: View {
     let title: String

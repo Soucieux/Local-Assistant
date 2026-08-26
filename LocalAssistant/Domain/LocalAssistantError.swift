@@ -9,6 +9,7 @@ enum LocalAssistantError: LocalizedError, Sendable {
     case extraction(String)
     case indexing(String)
     case inference(String)
+    case connector(String)
     case voice(String)
     case unsupported(String)
     case fileUnavailable
@@ -24,6 +25,7 @@ enum LocalAssistantError: LocalizedError, Sendable {
         case .extraction(let detail): ErrorStrings.extraction + detail
         case .indexing(let detail): ErrorStrings.indexing + detail
         case .inference(let detail): ErrorStrings.inference + detail
+        case .connector(let detail): ErrorStrings.connector + detail
         case .voice(let detail): ErrorStrings.voice + detail
         case .unsupported(let detail): ErrorStrings.unsupported + detail
         case .fileUnavailable: ErrorStrings.fileUnavailable

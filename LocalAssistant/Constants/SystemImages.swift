@@ -52,6 +52,9 @@ enum SystemImages {
     static let archive = "archivebox.fill"
     static let other = "doc.fill"
     static let refresh = "arrow.clockwise"
+    static let deadline = "calendar.badge.clock"
+    static let openClaw = "point.3.connected.trianglepath.dotted"
+    static let help = "questionmark.circle"
 
     /// Returns the most recognizable SF Symbol for an indexed item category.
     /// - Parameter kind: Indexed file or folder category.

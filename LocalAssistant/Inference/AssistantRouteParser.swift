@@ -9,10 +9,19 @@ struct AssistantRouteParser: Sendable {
     /// - Returns: A conversational reply or a normalized local search plan.
     internal func parse(modelOutput: String, originalQuestion: String) -> AssistantRoute {
         let output = modelOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let payload = routingPayload(
+            in: output,
+            token: ReminderConstants.Routing.reminderToken
+        ) {
+            return parseReminder(payload: payload)
+        }
         if requiresClarification(question: originalQuestion) {
             return .reply(RetrievalStrings.ambiguousFileRequest)
         }
-        let payload = searchPayload(in: output)
+        let payload = routingPayload(
+            in: output,
+            token: InferenceConstants.localSearchRoutingToken
+        )
         guard payload != nil || shouldRecoverLocalSearch(
             modelOutput: output,
             question: originalQuestion
@@ -43,6 +52,24 @@ struct AssistantRouteParser: Sendable {
                 filter: SearchFilter.with(kinds: kinds)
             )
         )
+    }
+
+    /// Detects the explicit standalone OpenClaw name required for any outbound request.
+    /// - Parameter text: Typed or locally transcribed user request.
+    /// - Returns: `true` for `OpenClaw` or adjacent `Open Claw` words, case-insensitively.
+    internal func isExplicitOpenClawRequest(_ text: String) -> Bool {
+        let tokens = orderedTokens(text)
+        for (index, token) in tokens.enumerated() {
+            if token == ReminderConstants.Routing.openClawCombinedToken {
+                return true
+            }
+            if token == ReminderConstants.Routing.openClawFirstToken,
+               index + 1 < tokens.count,
+               tokens[index + 1] == ReminderConstants.Routing.openClawSecondToken {
+                return true
+            }
+        }
+        return false
     }
 
     /// Removes request wording and hard file-type terms from one model-routed search.
@@ -142,17 +169,38 @@ struct AssistantRouteParser: Sendable {
     /// near miss as conversation showed the reader the raw marker and payload as the answer.
     /// - Parameter output: Cleaned model output.
     /// - Returns: The JSON payload, or `nil` when the output is ordinary conversation.
-    private func searchPayload(in output: String) -> String? {
+    private func routingPayload(in output: String, token: String) -> String? {
         let afterBrackets = output.drop {
             InferenceConstants.routingMarkerLeadingCharacters.contains($0)
         }
-        guard afterBrackets.hasPrefix(InferenceConstants.localSearchRoutingToken) else {
+        guard afterBrackets.hasPrefix(token) else {
             return nil
         }
         let payload = afterBrackets
-            .dropFirst(InferenceConstants.localSearchRoutingToken.count)
+            .dropFirst(token.count)
             .drop { InferenceConstants.routingMarkerTrailingCharacters.contains($0) }
         return String(payload)
+    }
+
+    /// Converts a model-emitted reminder JSON object into a field-limited plan.
+    private func parseReminder(payload: String) -> AssistantRoute {
+        guard let data = payload.data(using: .utf8),
+              let encoded = try? JSONDecoder().decode(EncodedReminderPlan.self, from: data) else {
+            return .reply(ReminderStrings.invalidReminderRoute)
+        }
+        let query = (encoded.query ?? encoded.id ?? AppConstants.Text.empty)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        switch encoded.operation {
+        case ReminderConstants.Routing.operationList:
+            return .reminder(.list(query: query))
+        case ReminderConstants.Routing.operationGet:
+            guard query.isEmpty == false else {
+                return .reply(ReminderStrings.invalidReminderRoute)
+            }
+            return .reminder(.get(query: query))
+        default:
+            return .reply(ReminderStrings.openClawRequired)
+        }
     }
 
     /// Recovers an explicit local-item request when the routing model returns only an acknowledgement.
@@ -235,6 +283,7 @@ struct AssistantRouteParser: Sendable {
 enum AssistantRoute: Sendable {
     case reply(String)
     case search(LocalSearchPlan)
+    case reminder(ReminderAssistantPlan)
 }
 
 /// Normalized retrieval request produced before local search begins.
@@ -246,4 +295,11 @@ struct LocalSearchPlan: Sendable {
 /// Codable payload emitted after the local-search routing marker.
 private struct EncodedSearchPlan: Decodable {
     let query: String
+}
+
+/// Field-limited JSON emitted for one reminder intent.
+private struct EncodedReminderPlan: Decodable {
+    let operation: String
+    let query: String?
+    let id: String?
 }

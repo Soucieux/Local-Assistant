@@ -9,15 +9,21 @@ struct RootView: View {
     var body: some View {
         @Bindable var model = model
         Group {
-            switch model.activeScreen {
-            case .assistant:
-                AssistantCommandView()
-            case .history:
-                ConversationHistoryView()
-            case .activity:
-                IndexActivityView()
-            case .settings:
-                SettingsView()
+            if model.isStarting {
+                startupView
+            } else {
+                switch model.activeScreen {
+                case .assistant:
+                    AssistantCommandView()
+                case .history:
+                    ConversationHistoryView()
+                case .activity:
+                    IndexActivityView()
+                case .settings:
+                    SettingsView()
+                case .openClawSetup:
+                    OpenClawSetupView()
+                }
             }
         }
             .id(model.activeScreen)
@@ -93,5 +99,25 @@ struct RootView: View {
             } message: {
                 Text(UIStrings.removeDownloadedModelsMessage)
             }
+    }
+
+    /// Explains why controls are unavailable while private local services open.
+    private var startupView: some View {
+        ZStack {
+            CompanionCanvasBackground()
+            VStack(spacing: DesignTokens.Spacing.large) {
+                ProgressView()
+                    .controlSize(.large)
+                    .accessibilityLabel(UIStrings.startupTitle)
+                Text(UIStrings.startupTitle)
+                    .font(.title2.monospaced().weight(.semibold))
+                Text(UIStrings.startupDetail)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 440)
+            }
+            .padding(DesignTokens.Spacing.xxLarge)
+        }
     }
 }

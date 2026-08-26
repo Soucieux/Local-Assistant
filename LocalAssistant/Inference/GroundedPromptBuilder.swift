@@ -10,12 +10,31 @@ struct GroundedPromptBuilder: Sendable {
     internal func assistantPrompt(question: String, history: [ChatMessage]) -> String {
         InferenceConstants.chatSystemStart
             + InferenceConstants.assistantSystemPrompt
+            + InferenceConstants.currentDatePrefix
+            + currentDateText()
+            + AppConstants.Text.newline
             + boundedHistory(history)
             + InferenceConstants.chatUserStart
             + sanitizedUntrustedText(question)
             + AppConstants.Text.newline
             + InferenceConstants.noThinkingInstruction
             + InferenceConstants.chatAssistantStart
+    }
+
+    /// Formats today's Gregorian date for time-sensitive reminder routing.
+    /// - Parameter date: Current local date, injectable for deterministic tests.
+    /// - Returns: A YYYY-MM-DD calendar date.
+    private func currentDateText(_ date: Date = Date()) -> String {
+        let components = Calendar(identifier: .gregorian).dateComponents(
+            [.year, .month, .day],
+            from: date
+        )
+        return String(
+            format: "%04d-%02d-%02d",
+            components.year ?? 0,
+            components.month ?? 0,
+            components.day ?? 0
+        )
     }
 
     /// Creates a Qwen chat prompt from a question, evidence, and recent local history.
@@ -44,6 +63,30 @@ struct GroundedPromptBuilder: Sendable {
             + InferenceConstants.chatAssistantStart
     }
 
+    /// Creates a local prompt grounded only in cached CloudBase reminder evidence.
+    /// - Parameters:
+    ///   - question: Current reminder question.
+    ///   - matches: Ranked records from the hidden reminder index.
+    ///   - history: Recent private conversation messages.
+    /// - Returns: Chat-template prompt containing bounded reminder evidence.
+    internal func reminderPrompt(
+        question: String,
+        matches: [ReminderSearchResult],
+        history: [ChatMessage]
+    ) -> String {
+        InferenceConstants.chatSystemStart
+            + InferenceConstants.reminderGroundedSystemPrompt
+            + boundedHistory(history)
+            + InferenceConstants.chatUserStart
+            + InferenceConstants.reminderContextHeader
+            + boundedReminderEvidence(matches)
+            + InferenceConstants.questionHeader
+            + sanitizedUntrustedText(question)
+            + AppConstants.Text.newline
+            + InferenceConstants.noThinkingInstruction
+            + InferenceConstants.chatAssistantStart
+    }
+
     /// Formats evidence while enforcing a conservative character budget.
     /// - Parameter citations: Ranked source excerpts.
     /// - Returns: Numbered evidence block.
@@ -57,6 +100,37 @@ struct GroundedPromptBuilder: Sendable {
                 + sanitizedUntrustedText(citation.absolutePath)
                 + InferenceConstants.sourceExcerptLabel
                 + sanitizedUntrustedText(citation.excerpt)
+                + InferenceConstants.sourceSeparator
+            if output.count + block.count > InferenceConstants.maximumEvidenceCharacters { break }
+            output += block
+        }
+        return output
+    }
+
+    /// Formats ranked reminder records under the same conservative evidence budget.
+    /// - Parameter matches: Ranked reminder records selected from the local cache.
+    /// - Returns: Numbered field-limited reminder evidence.
+    private func boundedReminderEvidence(_ matches: [ReminderSearchResult]) -> String {
+        var output = AppConstants.Text.empty
+        for (offset, match) in matches.enumerated() {
+            let item = match.item
+            let block = InferenceConstants.sourcePrefix
+                + String(offset + 1)
+                + InferenceConstants.sourceSuffix
+                + InferenceConstants.reminderIdentifierLabel
+                + sanitizedUntrustedText(item.id)
+                + InferenceConstants.reminderTextLabel
+                + sanitizedUntrustedText(item.text)
+                + InferenceConstants.reminderDateLabel
+                + sanitizedUntrustedText(item.date ?? InferenceConstants.reminderMissingValue)
+                + InferenceConstants.reminderStartLabel
+                + sanitizedUntrustedText(item.startTime ?? InferenceConstants.reminderMissingValue)
+                + InferenceConstants.reminderEndLabel
+                + sanitizedUntrustedText(item.endTime ?? InferenceConstants.reminderMissingValue)
+                + InferenceConstants.reminderTagLabel
+                + sanitizedUntrustedText(item.tag ?? InferenceConstants.reminderMissingValue)
+                + InferenceConstants.reminderLinkLabel
+                + sanitizedUntrustedText(item.link ?? InferenceConstants.reminderMissingValue)
                 + InferenceConstants.sourceSeparator
             if output.count + block.count > InferenceConstants.maximumEvidenceCharacters { break }
             output += block

@@ -7,6 +7,7 @@ import Observation
 @Observable
 final class AppModel {
     var activeScreen: AppScreen = .assistant
+    private(set) var isStarting = true
     var queryText = AppConstants.Text.empty
     var messages: [ChatMessage] = []
     var indexedRoots: [AuthorizedRoot] = []
@@ -22,12 +23,20 @@ final class AppModel {
     var modelStorageByteCount: Int64 = 0
     var indexedFileCount = 0
     var indexStorageByteCount: Int64 = 0
+    var reminderSyncState: ReminderSyncState = .disabled
+    var openClawConnectorHealth: OpenClawConnectorHealth = .off
+    var openClawConnectorAppAvailability: OpenClawConnectorAppAvailability = .checking
+    var openClawConnectorAppIssue: String?
+    var lastReminderSyncAt: Date?
+    var reminderConnectorEnabled: Bool
+    var reminderSyncIntervalMinutes: Int
+    let openClawContextID: UUID
     private(set) var voiceInputMode: VoiceInputMode
     var isBusy = false
     var isListening = false
-    private(set) var isComposingRequest = false
+    var isComposingRequest = false
     private(set) var currentRequestText = AppConstants.Text.empty
-    private(set) var currentResponse: ChatMessage?
+    var currentResponse: ChatMessage?
 
     /// Live audio levels and recognized text while the microphone is open.
     private(set) var voiceCapture: VoiceCaptureState = .preparing
@@ -43,6 +52,12 @@ final class AppModel {
     var presentedError: LocalAssistantError?
     private(set) var availableFileMatchItemIDs: Set<UUID> = []
     private var hasStarted = false
+
+    @ObservationIgnored
+    var reminderSyncTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    var connectorHealthTask: Task<Void, Never>?
 
     @ObservationIgnored
     var indexingQueue: [(
@@ -78,6 +93,28 @@ final class AppModel {
     /// - Parameter services: Local-only dependencies used by the app.
     internal init(services: ServiceContainer = ServiceContainer()) {
         self.services = services
+        reminderConnectorEnabled = UserDefaults.standard.bool(
+            forKey: ReminderConstants.Preferences.connectorEnabledKey
+        )
+        let storedSyncInterval = UserDefaults.standard.integer(
+            forKey: ReminderConstants.Preferences.syncIntervalMinutesKey
+        )
+        reminderSyncIntervalMinutes = ReminderConstants.Preferences.allowedSyncIntervalMinutes
+            .contains(storedSyncInterval)
+            ? storedSyncInterval
+            : ReminderConstants.Preferences.defaultSyncIntervalMinutes
+        if let storedContext = UserDefaults.standard.string(
+            forKey: ReminderConstants.Preferences.openClawContextIDKey
+        ).flatMap(UUID.init(uuidString:)) {
+            openClawContextID = storedContext
+        } else {
+            let contextID = UUID()
+            openClawContextID = contextID
+            UserDefaults.standard.set(
+                contextID.uuidString.lowercased(),
+                forKey: ReminderConstants.Preferences.openClawContextIDKey
+            )
+        }
         voiceInputMode = UserDefaults.standard
             .string(forKey: AppConstants.Preferences.voiceInputModeKey)
             .flatMap(VoiceInputMode.init(rawValue:))
@@ -89,7 +126,10 @@ final class AppModel {
         guard hasStarted == false else { return }
         hasStarted = true
         isBusy = true
-        defer { isBusy = false }
+        defer {
+            isBusy = false
+            isStarting = false
+        }
         do {
             let bootstrapper = ApplicationBootstrapper(
                 database: services.database,
@@ -112,6 +152,11 @@ final class AppModel {
             )
             messages = try await restoreSavedMessages(in: storedMessages)
             try await refreshFileMatchAvailability()
+            lastReminderSyncAt = try await services.reminders.lastSuccessfulSync()
+            reminderSyncState = reminderConnectorEnabled ? .idle : .disabled
+            restartReminderSyncLoop()
+            restartConnectorHealthMonitor()
+            await refreshReminderSnapshotIfStale()
             for root in indexedRoots where pausedMonitoringRootIDs.contains(root.id) == false {
                 do {
                     try startMonitoring(root)
@@ -191,13 +236,28 @@ final class AppModel {
                 history: Array(messages.dropLast()),
                 persistHistory: true
             )
+            if let openClawRequest = response.openClawRequest {
+                let answer = try await services.reminders.askOpenClaw(
+                    OpenClawRequestDraft(
+                        message: openClawRequest,
+                        contextID: openClawContextID
+                    ),
+                    connectorEnabled: reminderConnectorEnabled
+                )
+                try await appendConnectorMessage(answer)
+                Task { [weak self] in
+                    await self?.syncReminders(presentErrors: false)
+                }
+                return
+            }
             let assistantMessage = ChatMessage(
                 id: UUID(),
                 role: .assistant,
                 text: response.answer,
                 createdAt: Date(),
                 citations: response.citations,
-                fileMatches: response.alternatives
+                fileMatches: response.alternatives,
+                reminderMatches: response.reminderMatches
             )
             messages.append(assistantMessage)
             currentResponse = assistantMessage
@@ -369,6 +429,11 @@ final class AppModel {
         activeScreen = .settings
     }
 
+    /// Opens the in-app OpenClaw setup guide inside the existing main window.
+    internal func showOpenClawSetup() {
+        activeScreen = .openClawSetup
+    }
+
     /// Opens retained conversation history inside the existing main window.
     internal func showHistory() {
         activeScreen = .history
@@ -412,6 +477,10 @@ final class AppModel {
         voiceUpdatesTask?.cancel()
         voiceUpdatesTask = nil
         await services.voice.shutdown()
+        reminderSyncTask?.cancel()
+        reminderSyncTask = nil
+        connectorHealthTask?.cancel()
+        connectorHealthTask = nil
         await services.runtime.shutdown()
         await services.database.close()
     }

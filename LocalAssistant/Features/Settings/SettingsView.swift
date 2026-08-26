@@ -16,6 +16,7 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
                         privacySection
+                        openClawSection
                         folderAccessSection
                         modelsSection
                         voiceInputSection
@@ -47,6 +48,102 @@ struct SettingsView: View {
                         ?? AppConstants.Text.empty
                 )
             )
+        }
+    }
+
+    /// Presents all OpenClaw controls in one standalone section below Privacy.
+    private var openClawSection: some View {
+        settingsCard(
+            title: ReminderStrings.openClawSettingsTitle,
+            detail: ReminderStrings.openClawSettingsDetail,
+            systemImage: SystemImages.openClaw,
+            tint: DesignTokens.Color.commandAccent
+        ) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
+                Toggle(
+                    ReminderStrings.enableConnector,
+                    isOn: Binding(
+                        get: { model.reminderConnectorEnabled },
+                        set: { model.setReminderConnectorEnabled($0) }
+                    )
+                )
+
+                Text(ReminderStrings.connectorPrivacyDetail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                OpenClawHealthSummary(health: model.openClawConnectorHealth)
+
+                Divider()
+
+                HStack(spacing: DesignTokens.Spacing.medium) {
+                    Text(ReminderStrings.syncInterval)
+                        .font(.callout.weight(.semibold))
+                    Spacer()
+                    Picker(
+                        ReminderStrings.syncInterval,
+                        selection: Binding(
+                            get: { model.reminderSyncIntervalMinutes },
+                            set: { model.setReminderSyncInterval($0) }
+                        )
+                    ) {
+                        ForEach(
+                            ReminderConstants.Preferences.allowedSyncIntervalMinutes,
+                            id: \.self
+                        ) { minutes in
+                            Text(ReminderStrings.syncInterval(minutes: minutes))
+                                .tag(minutes)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 160)
+                    .disabled(model.reminderConnectorEnabled == false)
+                }
+
+                Button {
+                    Task { await model.syncReminders() }
+                } label: {
+                    Label(
+                        model.reminderSyncState == .syncing
+                            ? ReminderStrings.refreshingNow
+                            : ReminderStrings.refreshNow,
+                        systemImage: SystemImages.refresh
+                    )
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+                .disabled(
+                    model.reminderConnectorEnabled == false
+                        || model.reminderSyncState == .syncing
+                )
+
+                if model.reminderSyncState == .failed {
+                    Label(
+                        ReminderStrings.cachedSnapshotOutdated,
+                        systemImage: SystemImages.stale
+                    )
+                    .font(.caption)
+                    .foregroundStyle(DesignTokens.Color.destructive)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Text(ReminderStrings.connectorAgentDetail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    model.showOpenClawSetup()
+                } label: {
+                    Label(
+                        model.openClawConnectorHealth == .ready
+                            ? ReminderStrings.reviewSetup
+                            : ReminderStrings.openSetup,
+                        systemImage: SystemImages.openClaw
+                    )
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+            }
         }
     }
 
@@ -229,6 +326,7 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
                 privacyRow(UIStrings.privacyNetwork)
+                privacyRow(UIStrings.privacyOpenClawException)
                 privacyRow(UIStrings.privacyFiles)
                 privacyRow(UIStrings.privacyWrites)
             }

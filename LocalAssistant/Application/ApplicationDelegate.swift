@@ -13,7 +13,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         self.model = model
         guard shortcutService == nil else { return }
         let service = GlobalShortcutService { [weak self] in
-            self?.presentAssistant()
+            self?.presentQuickCall()
         }
         let isAvailable = service.register()
         model.setShortcutAvailable(isAvailable)
@@ -37,7 +37,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         _ sender: NSApplication,
         hasVisibleWindows flag: Bool
     ) -> Bool {
-        presentAssistant()
+        restoreMainWindow()
         return true
     }
 
@@ -65,10 +65,16 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         shortcutService?.unregister()
     }
 
-    /// Brings the existing normal app window forward and focuses its query field.
-    private func presentAssistant() {
+    /// Restores the existing window without changing its current destination.
+    private func restoreMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
+        mainWindow?.deminiaturize(nil)
         mainWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    /// Opens the assistant composer for the explicit global quick-call shortcut.
+    private func presentQuickCall() {
+        restoreMainWindow()
         model?.showAssistant()
     }
 

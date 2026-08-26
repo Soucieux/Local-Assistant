@@ -38,6 +38,40 @@ enum AppDirectories {
         )
     }
 
+    /// Returns the owner-only spool shared with the optional connector process.
+    /// - Returns: The connector root inside this app's private container.
+    /// - Throws: A local error when application support cannot be resolved.
+    internal static func connectorDirectory() throws -> URL {
+        try applicationSupport().appendingPathComponent(
+            ReminderConstants.Identity.connectorDirectory,
+            isDirectory: true
+        )
+    }
+
+    /// Returns the queue where the app atomically publishes connector requests.
+    internal static func connectorRequestsDirectory() throws -> URL {
+        try connectorDirectory().appendingPathComponent(
+            ReminderConstants.Identity.requestDirectory,
+            isDirectory: true
+        )
+    }
+
+    /// Returns the connector-owned directory for claimed requests.
+    internal static func connectorProcessingDirectory() throws -> URL {
+        try connectorDirectory().appendingPathComponent(
+            ReminderConstants.Identity.processingDirectory,
+            isDirectory: true
+        )
+    }
+
+    /// Returns the queue where the connector atomically publishes responses.
+    internal static func connectorResponsesDirectory() throws -> URL {
+        try connectorDirectory().appendingPathComponent(
+            ReminderConstants.Identity.responseDirectory,
+            isDirectory: true
+        )
+    }
+
     /// Returns the expected SQLite database location.
     /// - Returns: A file URL in the private index directory.
     /// - Throws: A local error when application support cannot be resolved.
@@ -48,7 +82,15 @@ enum AppDirectories {
     /// Creates all private writable directories with owner-only permissions.
     /// - Throws: A local error when a directory cannot be created or protected.
     internal static func prepare() throws {
-        let directories = try [applicationSupport(), indexDirectory(), modelsDirectory()]
+        let directories = try [
+            applicationSupport(),
+            indexDirectory(),
+            modelsDirectory(),
+            connectorDirectory(),
+            connectorRequestsDirectory(),
+            connectorProcessingDirectory(),
+            connectorResponsesDirectory()
+        ]
         let fileManager = FileManager.default
 
         do {

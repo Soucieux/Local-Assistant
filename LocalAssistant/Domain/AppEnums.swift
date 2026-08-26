@@ -6,6 +6,7 @@ enum AppScreen: Hashable {
     case history
     case activity
     case settings
+    case openClawSetup
 }
 
 /// Broad categories used to present and filter indexed items.

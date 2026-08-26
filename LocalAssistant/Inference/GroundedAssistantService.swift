@@ -4,6 +4,7 @@ import Foundation
 actor GroundedAssistantService {
     private let database: AssistantDatabase
     private let retrieval: HybridRetrievalService
+    private let reminderRetrieval: ReminderRetrievalService
     private let runtime: LlamaCppRuntime
     private let promptBuilder = GroundedPromptBuilder()
     private let routeParser = AssistantRouteParser()
@@ -12,14 +13,17 @@ actor GroundedAssistantService {
     /// - Parameters:
     ///   - database: Private SQLite storage.
     ///   - retrieval: Hybrid local search engine.
+    ///   - reminderRetrieval: Local reminder retrieval and temporal ranker.
     ///   - runtime: Embedded llama.cpp runtime.
     internal init(
         database: AssistantDatabase,
         retrieval: HybridRetrievalService,
+        reminderRetrieval: ReminderRetrievalService,
         runtime: LlamaCppRuntime
     ) {
         self.database = database
         self.retrieval = retrieval
+        self.reminderRetrieval = reminderRetrieval
         self.runtime = runtime
     }
 
@@ -37,6 +41,15 @@ actor GroundedAssistantService {
     ) async throws -> AssistantResponse {
         let userMessage = ChatMessage.user(question)
         if persistHistory { try await database.insertChatMessage(userMessage) }
+        if routeParser.isExplicitOpenClawRequest(question) {
+            return AssistantResponse(
+                answer: AppConstants.Text.empty,
+                citations: [],
+                alternatives: [],
+                confidence: .high,
+                openClawRequest: question
+            )
+        }
         let assistantPrompt = promptBuilder.assistantPrompt(question: question, history: history)
         let assistantOutput = cleanedModelOutput(
             from: try await runtime.generate(prompt: assistantPrompt)
@@ -55,6 +68,14 @@ actor GroundedAssistantService {
             return response
         case let .search(plan):
             searchPlan = plan
+        case let .reminder(plan):
+            let response = try await handleReminder(
+                plan,
+                originalQuestion: question,
+                history: history
+            )
+            if persistHistory { try await persist(response: response) }
+            return response
         }
 
         let query = SearchQuery(
@@ -90,6 +111,111 @@ actor GroundedAssistantService {
         )
         if persistHistory { try await persist(response: response) }
         return response
+    }
+
+    /// Builds a locally grounded answer from the hidden complete reminder snapshot.
+    /// - Parameters:
+    ///   - plan: Read-only reminder retrieval plan.
+    ///   - originalQuestion: User wording answered from reminder evidence.
+    ///   - history: Recent private conversation context.
+    /// - Returns: A grounded local answer with the reminder cards it used.
+    private func handleReminder(
+        _ plan: ReminderAssistantPlan,
+        originalQuestion: String,
+        history: [ChatMessage]
+    ) async throws -> AssistantResponse {
+        switch plan {
+        case .list(let query):
+            let matches = try await reminderRetrieval.search(text: query)
+            return try await reminderResponse(
+                matches: matches,
+                question: originalQuestion,
+                history: history
+            )
+        case .get(let query):
+            switch try await resolveReminder(query: query) {
+            case .notFound:
+                return plainReminderResponse(ReminderStrings.reminderNotFound)
+            case .ambiguous(let matches):
+                return try await reminderResponse(
+                    matches: matches,
+                    question: originalQuestion,
+                    history: history
+                )
+            case .resolved(let match):
+                return try await reminderResponse(
+                    matches: [match],
+                    question: originalQuestion,
+                    history: history
+                )
+            }
+        }
+    }
+
+    /// Selects one exact or clearly top-ranked reminder without guessing.
+    private func resolveReminder(query: String) async throws -> ReminderResolution {
+        let matches = try await reminderRetrieval.search(text: query, limit: 3)
+        guard let first = matches.first else { return .notFound }
+        let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        let exact = matches.filter {
+            $0.item.id.folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            ) == normalized
+            || $0.item.text.folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            ) == normalized
+        }
+        if exact.count == 1, let match = exact.first { return .resolved(match) }
+        if exact.count > 1 { return .ambiguous(exact) }
+        if matches.count > 1,
+           first.score - matches[1].score < ReminderConstants.Retrieval.ambiguityScoreGap {
+            return .ambiguous(matches)
+        }
+        return .resolved(first)
+    }
+
+    /// Generates one local answer grounded only in retrieved reminder records.
+    /// - Parameters:
+    ///   - matches: Ranked reminders from the hidden full-snapshot index.
+    ///   - question: Current user question.
+    ///   - history: Recent local conversation context.
+    /// - Returns: A local answer and the reminder cards that support it.
+    private func reminderResponse(
+        matches: [ReminderSearchResult],
+        question: String,
+        history: [ChatMessage]
+    ) async throws -> AssistantResponse {
+        guard matches.isEmpty == false else {
+            return plainReminderResponse(ReminderStrings.noReminderMatches)
+        }
+        let prompt = promptBuilder.reminderPrompt(
+            question: question,
+            matches: matches,
+            history: history
+        )
+        let answer = cleanedModelOutput(
+            from: try await runtime.generate(prompt: prompt)
+        )
+        return AssistantResponse(
+            answer: answer,
+            citations: [],
+            alternatives: [],
+            confidence: .high,
+            reminderMatches: matches
+        )
+    }
+
+    /// Builds one text-only response in the reminder domain.
+    private func plainReminderResponse(_ answer: String) -> AssistantResponse {
+        AssistantResponse(
+            answer: answer,
+            citations: [],
+            alternatives: [],
+            confidence: .low
+        )
     }
 
     /// Creates one bounded evidence list from ranked results.
@@ -169,8 +295,16 @@ actor GroundedAssistantService {
             text: response.answer,
             createdAt: Date(),
             citations: response.citations,
-            fileMatches: response.alternatives
+            fileMatches: response.alternatives,
+            reminderMatches: response.reminderMatches
         )
         try await database.insertChatMessage(message)
     }
+}
+
+/// Outcome of resolving one mutation target from the local reminder cache.
+private enum ReminderResolution {
+    case notFound
+    case ambiguous([ReminderSearchResult])
+    case resolved(ReminderSearchResult)
 }

@@ -9,6 +9,7 @@ enum ErrorStrings {
     static let extraction = "Content extraction failed: "
     static let indexing = "Indexing failed: "
     static let inference = "Local inference failed: "
+    static let connector = "Connector error: "
     static let voice = "Voice input failed: "
     static let unsupported = "Unsupported content: "
     static let fileUnavailable =

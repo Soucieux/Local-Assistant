@@ -118,8 +118,9 @@ struct AssistantCommandView: View {
 
     /// Current local processing state presented in the center of the telemetry rail.
     private var commandHeaderStatus: String {
-        model.isIndexing
-            ? UIStrings.commandIndexingStatus
+        if model.isIndexing { return UIStrings.commandIndexingStatus }
+        return model.reminderConnectorEnabled
+            ? UIStrings.commandConnectorStatus
             : UIStrings.commandLocalStatus
     }
 
@@ -158,6 +159,10 @@ struct AssistantCommandView: View {
                         .transition(.opacity)
                     if response.fileMatches.isEmpty == false {
                         CommandFindingsGrid(results: response.fileMatches)
+                            .transition(.opacity)
+                    }
+                    if response.reminderMatches.isEmpty == false {
+                        CommandReminderFindingsGrid(results: response.reminderMatches)
                             .transition(.opacity)
                     }
                 }
@@ -402,4 +407,3 @@ private enum CommandFocusTarget: Hashable {
     case input
     case surface
 }
-

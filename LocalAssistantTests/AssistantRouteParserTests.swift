@@ -20,10 +20,79 @@ struct AssistantRouteParserTests {
         return nil
     }
 
+    /// Returns the reminder plan, or `nil` for every other route.
+    private func reminderPlan(_ route: AssistantRoute) -> ReminderAssistantPlan? {
+        if case let .reminder(plan) = route { return plan }
+        return nil
+    }
+
     @Test("Output without the routing marker is returned as conversation")
-    func treatsPlainOutputAsReply() {
+    internal func treatsPlainOutputAsReply() {
         let route = parser.parse(modelOutput: "Swift is a language.", originalQuestion: "what is swift")
         #expect(reply(route) == "Swift is a language.")
+    }
+
+    @Test("A reminder list marker becomes a hidden-cache read plan")
+    internal func parsesReminderList() {
+        let output = """
+            [[REMINDER_ACTION]]
+            {"operation":"list","query":"tomorrow permit"}
+            """
+        let route = parser.parse(
+            modelOutput: output,
+            originalQuestion: "what permit reminder is due tomorrow"
+        )
+        guard case let .list(query) = reminderPlan(route) else {
+            Issue.record("Expected a reminder list plan")
+            return
+        }
+        #expect(query == "tomorrow permit")
+    }
+
+    @Test("A reminder mutation marker is rejected in favor of explicit OpenClaw")
+    internal func rejectsReminderMutation() {
+        let output = """
+            [[REMINDER_ACTION]]
+            {"operation":"update","query":"Renew permit","set":{"date":"2026-08-25"},"unset":["startTime"]}
+            """
+        let route =
+            parser.parse(modelOutput: output, originalQuestion: "move the permit reminder")
+        #expect(reply(route) == ReminderStrings.openClawRequired)
+    }
+
+    @Test("Malformed reminder JSON is never shown as a raw model marker")
+    internal func rejectsMalformedReminderMarker() {
+        let route = parser.parse(
+            modelOutput: "[[REMINDER_ACTION]]{broken",
+            originalQuestion: "delete a reminder"
+        )
+        #expect(reply(route) == ReminderStrings.invalidReminderRoute)
+    }
+
+    @Test(
+        "Standalone OpenClaw names are deterministic outbound gates",
+        arguments: [
+            "OpenClaw, add a reminder",
+            "openclaw update it",
+            "OPEN CLAW remove that reminder",
+            "Please ask Open Claw about tomorrow"
+        ]
+    )
+    internal func detectsExplicitOpenClaw(_ request: String) {
+        #expect(parser.isExplicitOpenClawRequest(request))
+    }
+
+    @Test(
+        "Substrings never become OpenClaw consent",
+        arguments: [
+            "openclaws are fictional",
+            "myopenclawtool should stay local",
+            "open the claw file",
+            "ask the other agent"
+        ]
+    )
+    internal func rejectsOpenClawSubstrings(_ request: String) {
+        #expect(parser.isExplicitOpenClawRequest(request) == false)
     }
 
     @Test("A folder request recovers when the model returns only an acknowledgement")
@@ -49,13 +118,13 @@ struct AssistantRouteParserTests {
     }
 
     @Test("Surrounding whitespace is trimmed from a conversational reply")
-    func trimsReplyWhitespace() {
+    internal func trimsReplyWhitespace() {
         let route = parser.parse(modelOutput: "  Hello.  \n", originalQuestion: "hi")
         #expect(reply(route) == "Hello.")
     }
 
     @Test("A well-formed routing payload becomes a search plan")
-    func parsesRoutingPayload() {
+    internal func parsesRoutingPayload() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"quarterly budget","kinds":["pdf"]}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find the quarterly budget pdf"))
         #expect(parsed?.text == "quarterly budget")
@@ -63,7 +132,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("A payload without kinds searches every file type")
-    func parsesPayloadWithoutKinds() {
+    internal func parsesPayloadWithoutKinds() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"tax return"}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find my tax return"))
         #expect(parsed?.text == "tax return")
@@ -71,21 +140,21 @@ struct AssistantRouteParserTests {
     }
 
     @Test("Model-invented kinds are ignored instead of becoming hard filters")
-    func ignoresModelInventedKinds() {
+    internal func ignoresModelInventedKinds() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"notes","kinds":["pdf","hologram"]}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find my notes"))
         #expect(parsed?.filter.kinds.isEmpty == true)
     }
 
     @Test("A type stated by the user remains a hard filter when the model omits it")
-    func preservesExplicitUserKind() {
+    internal func preservesExplicitUserKind() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"quarterly budget","kinds":[]}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find quarterly budget PDFs"))
         #expect(parsed?.filter.kinds == [.pdf])
     }
 
     @Test("An embedded image request reports the current visual-index limitation")
-    func rejectsUnsupportedEmbeddedImageConstraint() {
+    internal func rejectsUnsupportedEmbeddedImageConstraint() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"people","kinds":["pdf"]}"#
         let route = parser.parse(
             modelOutput: output,
@@ -95,7 +164,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("An ordinary visual knowledge question remains conversation")
-    func preservesVisualKnowledgeConversation() {
+    internal func preservesVisualKnowledgeConversation() {
         let output = "A portrait is an image representing a person."
         let route = parser.parse(
             modelOutput: output,
@@ -105,7 +174,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("A malformed payload still searches, using the user's own words")
-    func fallsBackWhenPayloadIsNotJSON() {
+    internal func fallsBackWhenPayloadIsNotJSON() {
         let output = "[[SEARCH_LOCAL_FILES]]not json at all"
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find the roof invoice"))
         #expect(parsed != nil)
@@ -113,34 +182,34 @@ struct AssistantRouteParserTests {
     }
 
     @Test("The fallback plan recovers file types from the user's question")
-    func inferssKindsInFallbackPlan() {
+    internal func inferssKindsInFallbackPlan() {
         let output = "[[SEARCH_LOCAL_FILES]]{broken"
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find the roof invoice pdf"))
         #expect(parsed?.filter.kinds.contains(.pdf) == true)
     }
 
     @Test("A bare singular file-type request asks for clarification instead of guessing")
-    func asksForClarificationOnBareRequest() {
+    internal func asksForClarificationOnBareRequest() {
         let route = parser.parse(modelOutput: "[[SEARCH_LOCAL_FILES]]{\"query\":\"pdf\"}", originalQuestion: "open the pdf")
         #expect(reply(route) == RetrievalStrings.ambiguousFileRequest)
     }
 
     @Test("A request naming a topic is specific enough to search")
-    func searchesWhenRequestCarriesDetail() {
+    internal func searchesWhenRequestCarriesDetail() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"insurance"}"#
         let route = parser.parse(modelOutput: output, originalQuestion: "open the insurance pdf")
         #expect(plan(route) != nil)
     }
 
     @Test("A list request is specific enough and is not treated as ambiguous")
-    func searchesForListRequests() {
+    internal func searchesForListRequests() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"","kinds":["pdf"]}"#
         let route = parser.parse(modelOutput: output, originalQuestion: "show all pdf")
         #expect(plan(route) != nil)
     }
 
     @Test("A broad plural type request becomes a type-only search")
-    func normalizesBroadPluralTypeRequest() {
+    internal func normalizesBroadPluralTypeRequest() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"any PDFs","kinds":["pdf"]}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "Any PDFs?"))
         #expect(parsed?.text.isEmpty == true)
@@ -148,7 +217,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("Conversational list wording does not become semantic evidence")
-    func normalizesConversationalTypeRequest() {
+    internal func normalizesConversationalTypeRequest() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"do you have PDFs","kinds":["pdf"]}"#
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "Do I have any PDFs?"))
         #expect(parsed?.text.isEmpty == true)
@@ -156,7 +225,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("A requested file type keeps its meaningful topic")
-    func preservesTopicInTypedRequest() {
+    internal func preservesTopicInTypedRequest() {
         let output = #"[[SEARCH_LOCAL_FILES]]{"query":"PDFs","kinds":["pdf"]}"#
         let parsed = plan(
             parser.parse(
@@ -169,7 +238,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("A malformed type-only route still produces a broad listing")
-    func normalizesMalformedTypeOnlyRoute() {
+    internal func normalizesMalformedTypeOnlyRoute() {
         let parsed = plan(
             parser.parse(
                 modelOutput: "[[SEARCH_LOCAL_FILES]]{broken",
@@ -181,41 +250,41 @@ struct AssistantRouteParserTests {
     }
 
     @Test("A definition question is answered rather than treated as a file request")
-    func answersDefinitionQuestions() {
+    internal func answersDefinitionQuestions() {
         let route = parser.parse(modelOutput: "A PDF is a document format.", originalQuestion: "what is a pdf")
         #expect(reply(route) == "A PDF is a document format.")
     }
 
     @Test("A single bracketed marker routes to search instead of being shown as an answer")
-    func acceptsSingleBracketMarker() {
+    internal func acceptsSingleBracketMarker() {
         let output = #"[SEARCH_LOCAL_FILES]{"query":"","kinds":["pdf"]}"#
         let route = parser.parse(modelOutput: output, originalQuestion: "show all pdf")
         #expect(plan(route)?.filter.kinds == [.pdf])
     }
 
     @Test("A marker on its own line routes to search")
-    func acceptsMarkerOnSeparateLine() {
+    internal func acceptsMarkerOnSeparateLine() {
         let output = "[SEARCH_LOCAL_FILES]\n{\"query\":\"budget\",\"kinds\":[]}"
         let route = parser.parse(modelOutput: output, originalQuestion: "find the budget")
         #expect(plan(route)?.text == "budget")
     }
 
     @Test("An unbracketed marker routes to search")
-    func acceptsUnbracketedMarker() {
+    internal func acceptsUnbracketedMarker() {
         let output = #"SEARCH_LOCAL_FILES {"query":"notes","kinds":[]}"#
         let route = parser.parse(modelOutput: output, originalQuestion: "find my notes")
         #expect(plan(route)?.text == "notes")
     }
 
     @Test("Ordinary prose containing braces is answered, not treated as a file request")
-    func answersProseContainingBraces() {
+    internal func answersProseContainingBraces() {
         let output = "JSON looks like {\"key\": \"value\"} in most languages."
         let route = parser.parse(modelOutput: output, originalQuestion: "what is json")
         #expect(reply(route) == output)
     }
 
     @Test("A marker the reader would see raw never becomes the visible answer")
-    func neverShowsRawMarkerAsReply() {
+    internal func neverShowsRawMarkerAsReply() {
         for output in [
             #"[SEARCH_LOCAL_FILES]{"query":"","kinds":["pdf"]}"#,
             #"[[SEARCH_LOCAL_FILES]]{"query":"","kinds":["pdf"]}"#,

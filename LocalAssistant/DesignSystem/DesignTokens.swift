@@ -21,6 +21,7 @@ enum DesignTokens {
         static let compactIconButtonSize: CGFloat = 32
         static let appIconSize: CGFloat = 40
         static let statusTileMinimumHeight: CGFloat = 128
+        static let setupStepMinimumHeight: CGFloat = 184
         static let shortcutKeyMinimumWidth: CGFloat = 26
         static let shortcutKeyHeight: CGFloat = 24
     }

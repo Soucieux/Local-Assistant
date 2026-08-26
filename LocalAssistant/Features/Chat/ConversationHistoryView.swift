@@ -31,6 +31,11 @@ struct ConversationHistoryView: View {
                                     if message.fileMatches.isEmpty == false {
                                         SearchResultsView(results: message.fileMatches)
                                     }
+                                    if message.reminderMatches.isEmpty == false {
+                                        CommandReminderFindingsGrid(
+                                            results: message.reminderMatches
+                                        )
+                                    }
                                 }
                             }
                             Color.clear

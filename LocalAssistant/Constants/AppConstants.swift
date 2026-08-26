@@ -25,6 +25,7 @@ enum AppConstants {
         static let modelAssetManifestFilename = "model-assets.sha256"
         static let folderMonitorQueueLabel = "com.soucieux.LocalAssistant.folder-monitoring"
         static let bundleShortVersionKey = "CFBundleShortVersionString"
+        static let bundleVersionKey = "CFBundleVersion"
         static let fallbackVersion = "Unknown"
     }
 

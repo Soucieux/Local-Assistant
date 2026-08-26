@@ -158,6 +158,48 @@ enum SQLStatements {
 
         CREATE INDEX IF NOT EXISTS index_activity_events_occurred_at
             ON index_activity_events(occurred_at DESC);
+
+        CREATE TABLE IF NOT EXISTS reminder_items (
+            row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            text TEXT NOT NULL,
+            date TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            tag TEXT,
+            link TEXT,
+            managed_by TEXT,
+            client_request_id TEXT,
+            sync_pair_id TEXT,
+            source_message_id TEXT,
+            ownership TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            last_synced_at REAL NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS reminder_items_date ON reminder_items(date);
+        CREATE INDEX IF NOT EXISTS reminder_items_ownership ON reminder_items(ownership);
+        CREATE INDEX IF NOT EXISTS reminder_items_client_request_id
+            ON reminder_items(client_request_id);
+
+        CREATE VIRTUAL TABLE IF NOT EXISTS reminder_fts USING fts5(
+            reminder_id UNINDEXED,
+            text,
+            date,
+            tag,
+            link,
+            tokenize='unicode61 remove_diacritics 2'
+        );
+
+        CREATE VIRTUAL TABLE IF NOT EXISTS reminder_vectors USING vec0(
+            embedding float[1024]
+        );
+
+        CREATE TABLE IF NOT EXISTS reminder_sync_state (
+            singleton INTEGER PRIMARY KEY NOT NULL CHECK(singleton = 1),
+            last_successful_sync REAL NOT NULL,
+            item_count INTEGER NOT NULL
+        );
         """
 
     static let beginTransaction = "BEGIN IMMEDIATE TRANSACTION;"
@@ -262,6 +304,79 @@ enum SQLStatements {
     static let insertChatMessage = "INSERT OR REPLACE INTO chat_messages (id, role, payload, created_at) VALUES (?, ?, ?, ?);"
     static let fetchChatMessages = "SELECT payload FROM chat_messages ORDER BY created_at DESC LIMIT ?;"
     static let clearChatMessages = "DELETE FROM chat_messages;"
+
+    static let fetchReminders = """
+        SELECT id, text, date, start_time, end_time, tag, link, managed_by,
+               client_request_id, sync_pair_id, source_message_id, ownership,
+               content_hash, last_synced_at
+        FROM reminder_items
+        ORDER BY
+            CASE WHEN date IS NULL THEN 1 ELSE 0 END,
+            date COLLATE NOCASE,
+            CASE WHEN start_time IS NULL THEN 1 ELSE 0 END,
+            start_time COLLATE NOCASE,
+            text COLLATE NOCASE;
+        """
+    static let fetchReminderContentHashes = "SELECT id, content_hash FROM reminder_items;"
+    static let fetchReminderIDs = "SELECT id FROM reminder_items;"
+    static let fetchReminderRowID = "SELECT row_id FROM reminder_items WHERE id = ?;"
+    static let upsertReminder = """
+        INSERT INTO reminder_items (
+            id, text, date, start_time, end_time, tag, link, managed_by,
+            client_request_id, sync_pair_id, source_message_id, ownership,
+            content_hash, last_synced_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            text = excluded.text,
+            date = excluded.date,
+            start_time = excluded.start_time,
+            end_time = excluded.end_time,
+            tag = excluded.tag,
+            link = excluded.link,
+            managed_by = excluded.managed_by,
+            client_request_id = excluded.client_request_id,
+            sync_pair_id = excluded.sync_pair_id,
+            source_message_id = excluded.source_message_id,
+            ownership = excluded.ownership,
+            content_hash = excluded.content_hash,
+            last_synced_at = excluded.last_synced_at;
+        """
+    static let deleteReminder = "DELETE FROM reminder_items WHERE id = ?;"
+    static let deleteReminderFTS = "DELETE FROM reminder_fts WHERE reminder_id = ?;"
+    static let deleteReminderVector = "DELETE FROM reminder_vectors WHERE rowid = ?;"
+    static let insertReminderFTS = """
+        INSERT INTO reminder_fts (reminder_id, text, date, tag, link)
+        VALUES (?, ?, ?, ?, ?);
+        """
+    static let insertReminderVector = """
+        INSERT INTO reminder_vectors(rowid, embedding) VALUES (?, ?);
+        """
+    static let upsertReminderSyncState = """
+        INSERT INTO reminder_sync_state (singleton, last_successful_sync, item_count)
+        VALUES (1, ?, ?)
+        ON CONFLICT(singleton) DO UPDATE SET
+            last_successful_sync = excluded.last_successful_sync,
+            item_count = excluded.item_count;
+        """
+    static let fetchReminderSyncState = """
+        SELECT last_successful_sync, item_count
+        FROM reminder_sync_state WHERE singleton = 1;
+        """
+    static let reminderKeywordSearch = """
+        SELECT reminder_fts.reminder_id,
+               bm25(reminder_fts, 0.0, 6.0, 1.0, 2.0, 1.0) AS rank
+        FROM reminder_fts
+        WHERE reminder_fts MATCH ?
+        ORDER BY rank
+        LIMIT ?;
+        """
+    static let reminderSemanticSearch = """
+        SELECT r.id, v.distance
+        FROM reminder_vectors AS v
+        JOIN reminder_items AS r ON r.row_id = v.rowid
+        WHERE v.embedding MATCH ? AND k = ?
+        ORDER BY v.distance;
+        """
 
     static let upsertMonitoringState = """
         INSERT INTO folder_monitoring_states (root_id, is_enabled, updated_at)
