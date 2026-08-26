@@ -69,7 +69,7 @@ enum VoiceInputMode: String, CaseIterable, Sendable {
 
     /// Whether quiet audio should finish and submit the active capture.
     var stopsAfterSilence: Bool {
-        self == .clickToSpeak
+        true
     }
 }
 

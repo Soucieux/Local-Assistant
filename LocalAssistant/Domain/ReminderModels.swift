@@ -144,6 +144,7 @@ enum OpenClawConnectorHealth: String, Sendable {
     case off
     case checking
     case notDetected
+    case updateRequired
     case runningUnverified
     case runningUnreachable
     case ready
@@ -163,6 +164,7 @@ enum OpenClawConnectorAppAvailability: String, Sendable {
 /// Non-secret heartbeat written into the owner-only connector spool.
 struct OpenClawConnectorStatusDocument: Codable, Hashable, Sendable {
     let schemaVersion: Int
+    let runtimeContractVersion: Int?
     let running: Bool
     let lastSeenAt: String
     let lastSuccessAt: String?
@@ -170,16 +172,49 @@ struct OpenClawConnectorStatusDocument: Codable, Hashable, Sendable {
     let pid: Int
 }
 
-/// Exact explicit A2A message routed to OpenClaw.
+/// Exact A2A message routed to OpenClaw after the required local authorization.
 struct OpenClawRequestDraft: Hashable, Sendable {
     let message: String
     let contextID: UUID
 }
 
-/// Safe read intent selected by local inference for the hidden reminder cache.
+/// Local authorization proving why one exact request may cross the Connector boundary.
+enum OpenClawRequestAuthorization: Hashable, Sendable {
+    case explicitInvocation
+    case confirmedReminderMutation(ReminderMutationKind)
+}
+
+/// Outbound request selected by local inference before presentation applies its safety gate.
+struct OpenClawRequestIntent: Hashable, Sendable {
+    let message: String
+    let authorization: OpenClawRequestAuthorization
+}
+
+/// Reminder changes that require an explicit confirmation before OpenClaw is contacted.
+enum ReminderMutationKind: String, Codable, Hashable, Sendable {
+    case create
+    case update
+    case remove
+}
+
+/// Local-model interpretation of the user's conversational confirmation reply.
+enum ReminderConfirmationDecision: String, Hashable, Sendable {
+    case confirm
+    case decline
+    case unclear
+}
+
+/// Card treatment retained with a reminder answer in private conversation history.
+enum ReminderCardPresentation: String, Codable, Hashable, Sendable {
+    case focused
+    case grouped
+}
+
+/// Read or confirmation-gated write intent selected by local inference.
 enum ReminderAssistantPlan: Hashable, Sendable {
     case list(query: String)
     case get(query: String)
+    case mutate(kind: ReminderMutationKind, request: String)
 }
 
 /// JSON payload union used only by the local connector spool.
@@ -200,6 +235,7 @@ struct ReminderConnectorRequest: Codable, Hashable, Sendable {
     let idempotencyKey: UUID
     let calendarPolicy: String
     let confirmed: Bool
+    let authorization: String?
     let payload: ReminderTaskPayload
 }
 

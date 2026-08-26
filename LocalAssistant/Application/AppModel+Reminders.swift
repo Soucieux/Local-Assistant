@@ -59,7 +59,10 @@ extension AppModel {
         do {
             try await performReminderSync()
         } catch {
-            if presentErrors { handle(error) }
+            if presentErrors {
+                await presentConversationError(error)
+                showAssistant()
+            }
         }
     }
 
@@ -296,9 +299,9 @@ extension AppModel {
         return .nearby
     }
 
-    /// Adds one connector-originated answer to visible and private conversation history.
-    /// - Parameter text: OpenClaw's answer to the explicit user request.
-    internal func appendConnectorMessage(_ text: String) async throws {
+    /// Adds one assistant answer to visible and private conversation history.
+    /// - Parameter text: Safe assistant or Connector text.
+    internal func appendAssistantMessage(_ text: String) async throws {
         let message = ChatMessage(
             id: UUID(),
             role: .assistant,
@@ -311,6 +314,12 @@ extension AppModel {
         try await services.database.insertChatMessage(message)
         messages.append(message)
         currentResponse = message
+    }
+
+    /// Adds one connector-originated answer through the shared assistant-message path.
+    /// - Parameter text: OpenClaw's answer to the authorized user request.
+    internal func appendConnectorMessage(_ text: String) async throws {
+        try await appendAssistantMessage(text)
     }
 
     /// Replaces hidden reminder knowledge only after a successful complete snapshot.

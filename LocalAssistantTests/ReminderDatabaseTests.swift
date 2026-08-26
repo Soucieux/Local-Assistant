@@ -66,6 +66,44 @@ struct ReminderDatabaseTests {
         await database.close()
     }
 
+    @Test("A complete reminder list returns every row committed from the connector snapshot")
+    internal func returnsEveryReminderFromCompleteSnapshot() async throws {
+        let fixture = try DatabaseFixture()
+        defer { fixture.remove() }
+        let database = AssistantDatabase(databaseURL: fixture.databaseURL)
+        try await database.open()
+
+        let reminders = (1...15).map { index in
+            ReminderItem(
+                id: "reminder-\(index)",
+                text: "Reminder \(index)",
+                date: "2026-09-01",
+                ownership: .unknown,
+                contentHash: "v\(index)",
+                lastSyncedAt: Date(timeIntervalSince1970: 2)
+            )
+        }
+        let embeddings = Dictionary(uniqueKeysWithValues: reminders.map {
+            ($0.id, zeroEmbedding)
+        })
+        try await database.reconcileReminders(
+            reminders,
+            embeddings: embeddings,
+            syncedAt: Date(timeIntervalSince1970: 2)
+        )
+
+        let retrieval = ReminderRetrievalService(
+            database: database,
+            embeddings: LocalEmbeddingService(runtime: LlamaCppRuntime())
+        )
+        let listed = try await retrieval.completeList()
+        let metadata = try await database.reminderSyncMetadata()
+        #expect(listed.count == reminders.count)
+        #expect(Set(listed.map(\.item.id)) == Set(reminders.map(\.id)))
+        #expect(metadata?.count == reminders.count)
+        await database.close()
+    }
+
     /// Creates one app-owned reminder with deterministic metadata.
     private func reminder(text: String, hash: String) -> ReminderItem {
         ReminderItem(

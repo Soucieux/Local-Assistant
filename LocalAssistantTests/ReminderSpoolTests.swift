@@ -63,6 +63,29 @@ struct ReminderSpoolTests {
         #expect(health == .ready)
     }
 
+    @Test("A heartbeat from an older runtime requires a Connector update")
+    internal func reportsOutdatedRuntimeHeartbeat() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+            UUID().uuidString,
+            isDirectory: true
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        try writeStatus(
+            to: root,
+            lastSeenAt: now,
+            lastSuccessAt: now,
+            lastError: nil,
+            running: false,
+            runtimeContractVersion: nil
+        )
+        let spool = ReminderSpoolService(rootURL: root)
+
+        let health = await spool.connectorHealth(now: now)
+
+        #expect(health == .updateRequired)
+    }
+
     @Test("A completed success remains ready while active and completed failures differ")
     internal func reportsUnhealthyHeartbeats() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(
@@ -122,6 +145,7 @@ struct ReminderSpoolTests {
             idempotencyKey: UUID(),
             calendarPolicy: ReminderConstants.Identity.calendarPolicyNever,
             confirmed: false,
+            authorization: nil,
             payload: .empty
         )
 
@@ -176,6 +200,7 @@ struct ReminderSpoolTests {
             idempotencyKey: UUID(),
             calendarPolicy: ReminderConstants.Identity.calendarPolicyNever,
             confirmed: false,
+            authorization: nil,
             payload: .empty
         )
 
@@ -267,7 +292,8 @@ struct ReminderSpoolTests {
         lastSeenAt: Date,
         lastSuccessAt: Date?,
         lastError: String?,
-        running: Bool
+        running: Bool,
+        runtimeContractVersion: Int? = ReminderConstants.Connector.runtimeContractVersion
     ) throws {
         try FileManager.default.createDirectory(
             at: root,
@@ -276,6 +302,7 @@ struct ReminderSpoolTests {
         let formatter = ISO8601DateFormatter()
         let document = OpenClawConnectorStatusDocument(
             schemaVersion: ReminderConstants.Connector.schemaVersion,
+            runtimeContractVersion: runtimeContractVersion,
             running: running,
             lastSeenAt: formatter.string(from: lastSeenAt),
             lastSuccessAt: lastSuccessAt.map(formatter.string(from:)),

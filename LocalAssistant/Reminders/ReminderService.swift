@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-/// Owns read-only full-snapshot reconciliation and explicit OpenClaw requests.
+/// Owns read-only full-snapshot reconciliation and locally authorized OpenClaw requests.
 actor ReminderService {
     private let database: AssistantDatabase
     private let embeddings: LocalEmbeddingService
@@ -84,31 +84,45 @@ actor ReminderService {
         )
     }
 
-    /// Sends one explicitly named OpenClaw request with no local reminder or file context.
+    /// Sends one locally authorized OpenClaw request with no reminder or file context.
     /// - Parameters:
     ///   - draft: Exact submitted text and stable A2A conversation identity.
+    ///   - authorization: Explicit invocation or a user-confirmed reminder mutation.
     ///   - connectorEnabled: Explicit connector opt-in state.
     /// - Returns: OpenClaw's visible answer text.
     /// - Throws: A connector or response-validation error.
     internal func askOpenClaw(
         _ draft: OpenClawRequestDraft,
+        authorization: OpenClawRequestAuthorization,
         connectorEnabled: Bool
     ) async throws -> String {
         try requireEnabled(connectorEnabled)
-        guard routeParser.isExplicitOpenClawRequest(draft.message),
-              draft.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false,
+        guard draft.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false,
               draft.message.count
                 <= ReminderConstants.Connector.maximumAgentMessageCharacters else {
             throw LocalAssistantError.connector(ReminderStrings.invalidReminderRoute)
         }
+        if case .explicitInvocation = authorization,
+           routeParser.isExplicitOpenClawRequest(draft.message) == false {
+            throw LocalAssistantError.connector(ReminderStrings.invalidReminderRoute)
+        }
         var payload = ReminderTaskPayload()
         payload.message = draft.message
+        let authorizationValue: String
+        switch authorization {
+        case .explicitInvocation:
+            authorizationValue = ReminderConstants.Connector.authorizationExplicitOpenClaw
+        case .confirmedReminderMutation(_):
+            authorizationValue =
+                ReminderConstants.Connector.authorizationConfirmedReminderMutation
+        }
         let request = connectorRequest(
             skill: ReminderConstants.Identity.agentSkill,
             operation: ReminderConstants.Routing.operationChat,
             calendarPolicy: ReminderConstants.Identity.calendarPolicyOpenClawDefault,
             confirmed: true,
             payload: payload,
+            authorization: authorizationValue,
             contextID: draft.contextID
         )
         let response = try await spool.perform(request)
@@ -123,12 +137,22 @@ actor ReminderService {
     }
 
     /// Creates one exact schema-v1 connector envelope.
+    /// - Parameters:
+    ///   - skill: Narrow reminder-snapshot or agent lane.
+    ///   - operation: Lane-specific list or chat operation.
+    ///   - calendarPolicy: Calendar mutation boundary required by the lane.
+    ///   - confirmed: Whether the user authorized a write-capable agent request.
+    ///   - payload: Field-limited connector request body.
+    ///   - authorization: Explicit-name or confirmed-reminder authorization proof.
+    ///   - contextID: Stable optional A2A conversation identity.
+    /// - Returns: Validated request shape ready for the owner-only spool.
     private func connectorRequest(
         skill: String,
         operation: String,
         calendarPolicy: String,
         confirmed: Bool,
         payload: ReminderTaskPayload,
+        authorization: String? = nil,
         contextID: UUID? = nil
     ) -> ReminderConnectorRequest {
         ReminderConnectorRequest(
@@ -140,6 +164,7 @@ actor ReminderService {
             idempotencyKey: UUID(),
             calendarPolicy: calendarPolicy,
             confirmed: confirmed,
+            authorization: authorization,
             payload: payload
         )
     }

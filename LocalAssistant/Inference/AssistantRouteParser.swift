@@ -1,19 +1,51 @@
 import Foundation
 
-/// Interprets the local model's response as conversation or a constrained file search.
+/// Interprets local-model output as conversation, file search, or reminder intent.
 struct AssistantRouteParser: Sendable {
+    /// Accepts clear standalone confirmation language or one exact local-model label.
+    /// - Parameters:
+    ///   - reply: User's newest conversational confirmation reply.
+    ///   - modelOutput: Cleaned embedded-model output.
+    /// - Returns: Confirm, decline, or a safe unclear fallback.
+    internal func reminderConfirmationDecision(
+        reply: String,
+        modelOutput: String
+    ) -> ReminderConfirmationDecision {
+        let normalizedReply = orderedTokens(reply).joined(separator: AppConstants.Text.space)
+        if ReminderConstants.Routing.confirmationAffirmativePhrases.contains(normalizedReply) {
+            return .confirm
+        }
+        if ReminderConstants.Routing.confirmationDeclinePhrases.contains(normalizedReply) {
+            return .decline
+        }
+        switch modelOutput.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() {
+        case InferenceConstants.confirmationOutput:
+            return .confirm
+        case InferenceConstants.declineOutput:
+            return .decline
+        default:
+            return .unclear
+        }
+    }
+
     /// Converts one cleaned local-model response into an assistant action.
     /// - Parameters:
     ///   - modelOutput: Visible output returned by the embedded chat model.
     ///   - originalQuestion: Original user text used only as a safe fallback.
-    /// - Returns: A conversational reply or a normalized local search plan.
+    /// - Returns: Conversational reply, local search, local reminder read, or gated mutation.
     internal func parse(modelOutput: String, originalQuestion: String) -> AssistantRoute {
         let output = modelOutput.trimmingCharacters(in: .whitespacesAndNewlines)
         if let payload = routingPayload(
             in: output,
             token: ReminderConstants.Routing.reminderToken
         ) {
-            return parseReminder(payload: payload)
+            return parseReminder(
+                payload: payload,
+                originalQuestion: originalQuestion
+            )
+        }
+        if let reminderPlan = inferredReminderPlan(question: originalQuestion) {
+            return .reminder(reminderPlan)
         }
         if requiresClarification(question: originalQuestion) {
             return .reply(RetrievalStrings.ambiguousFileRequest)
@@ -22,10 +54,11 @@ struct AssistantRouteParser: Sendable {
             in: output,
             token: InferenceConstants.localSearchRoutingToken
         )
-        guard payload != nil || shouldRecoverLocalSearch(
+        let recoversLocalSearch = shouldRecoverLocalSearch(
             modelOutput: output,
             question: originalQuestion
-        ) else {
+        )
+        guard payload != nil || recoversLocalSearch else {
             return .reply(output)
         }
         if requiresVisualUnderstanding(question: originalQuestion) {
@@ -54,7 +87,7 @@ struct AssistantRouteParser: Sendable {
         )
     }
 
-    /// Detects the explicit standalone OpenClaw name required for any outbound request.
+    /// Detects the standalone OpenClaw name used by explicit non-reminder requests.
     /// - Parameter text: Typed or locally transcribed user request.
     /// - Returns: `true` for `OpenClaw` or adjacent `Open Claw` words, case-insensitively.
     internal func isExplicitOpenClawRequest(_ text: String) -> Bool {
@@ -183,7 +216,14 @@ struct AssistantRouteParser: Sendable {
     }
 
     /// Converts a model-emitted reminder JSON object into a field-limited plan.
-    private func parseReminder(payload: String) -> AssistantRoute {
+    /// - Parameters:
+    ///   - payload: Model-emitted reminder routing object.
+    ///   - originalQuestion: Exact user wording retained for confirmation-gated writes.
+    /// - Returns: Safe local read, confirmation request, or clarification response.
+    private func parseReminder(
+        payload: String,
+        originalQuestion: String
+    ) -> AssistantRoute {
         guard let data = payload.data(using: .utf8),
               let encoded = try? JSONDecoder().decode(EncodedReminderPlan.self, from: data) else {
             return .reply(ReminderStrings.invalidReminderRoute)
@@ -198,9 +238,136 @@ struct AssistantRouteParser: Sendable {
                 return .reply(ReminderStrings.invalidReminderRoute)
             }
             return .reminder(.get(query: query))
+        case ReminderConstants.Routing.operationCreate,
+             ReminderConstants.Routing.operationAdd:
+            return reminderMutation(
+                kind: .create,
+                originalQuestion: originalQuestion
+            )
+        case ReminderConstants.Routing.operationUpdate,
+             ReminderConstants.Routing.operationComplete:
+            return reminderMutation(
+                kind: .update,
+                originalQuestion: originalQuestion
+            )
+        case ReminderConstants.Routing.operationRemove,
+             ReminderConstants.Routing.operationDelete:
+            return reminderMutation(
+                kind: .remove,
+                originalQuestion: originalQuestion
+            )
         default:
-            return .reply(ReminderStrings.openClawRequired)
+            return .reply(ReminderStrings.invalidReminderRoute)
         }
+    }
+
+    /// Builds a confirmation-gated reminder mutation from exact user wording.
+    /// - Parameters:
+    ///   - kind: Create, update, or remove operation inferred locally.
+    ///   - originalQuestion: Exact text that may later be sent after confirmation.
+    /// - Returns: Safe mutation plan or clarification when the text is empty.
+    private func reminderMutation(
+        kind: ReminderMutationKind,
+        originalQuestion: String
+    ) -> AssistantRoute {
+        let request = originalQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard request.isEmpty == false else {
+            return .reply(ReminderStrings.invalidReminderRoute)
+        }
+        return .reminder(.mutate(kind: kind, request: request))
+    }
+
+    /// Recovers common English reminder wording when the model omits its routing marker.
+    /// - Parameter question: Original typed or locally transcribed request.
+    /// - Returns: Conservative reminder plan, or `nil` when ordinary conversation is plausible.
+    private func inferredReminderPlan(question: String) -> ReminderAssistantPlan? {
+        let tokens = orderedTokens(question)
+        guard tokens.isEmpty == false,
+              isReminderDefinition(tokens) == false else {
+            return nil
+        }
+        let tokenSet = Set(tokens)
+        let hasReminderTerm = tokenSet.isDisjoint(
+            with: ReminderConstants.Routing.explicitReminderTerms
+        ) == false
+
+        if hasReminderTerm {
+            if tokenSet.isDisjoint(with: ReminderConstants.Routing.reminderRemoveTerms) == false {
+                return .mutate(kind: .remove, request: question)
+            }
+            if tokenSet.isDisjoint(with: ReminderConstants.Routing.reminderUpdateTerms) == false {
+                return .mutate(kind: .update, request: question)
+            }
+            if tokenSet.isDisjoint(with: ReminderConstants.Routing.reminderCreateTerms) == false {
+                return .mutate(kind: .create, request: question)
+            }
+            if tokenSet.isDisjoint(with: ReminderConstants.Routing.reminderReadTerms) == false {
+                return .list(query: inferredReminderQuery(tokens: tokens))
+            }
+        }
+
+        guard let needIndex = sequenceIndex(
+            ReminderConstants.Routing.needToDoSequence,
+            in: tokens
+        ) else {
+            return nil
+        }
+        let followingIndex = needIndex + ReminderConstants.Routing.needToDoSequence.count
+        if followingIndex < tokens.count,
+           tokens[followingIndex] == ReminderConstants.Routing.infinitiveToken {
+            return nil
+        }
+        guard tokenSet.isDisjoint(with: ReminderConstants.Routing.reminderReadTerms) == false
+                || followingIndex == tokens.count else {
+            return nil
+        }
+        if followingIndex == tokens.count {
+            return .list(query: AppConstants.Text.empty)
+        }
+        return .list(query: question)
+    }
+
+    /// Removes read-action filler while preserving subjects and temporal expressions.
+    /// - Parameter tokens: Ordered normalized request tokens.
+    /// - Returns: Empty text for a complete list or distinguishing reminder terms.
+    private func inferredReminderQuery(tokens: [String]) -> String {
+        let tokenSet = Set(tokens)
+        if tokenSet.isDisjoint(with: ReminderConstants.Routing.reminderTemporalTerms) == false {
+            return tokens.joined(separator: AppConstants.Text.space)
+        }
+        let fillerTerms = ReminderConstants.Routing.reminderQueryFillerTerms.union(
+            ReminderConstants.Routing.explicitReminderTerms
+        )
+        return tokens.filter {
+            fillerTerms.contains($0) == false
+        }.joined(separator: AppConstants.Text.space)
+    }
+
+    /// Finds one exact contiguous token sequence.
+    /// - Parameters:
+    ///   - sequence: Ordered phrase tokens.
+    ///   - tokens: Normalized request tokens.
+    /// - Returns: Start index of the phrase, or `nil` when absent.
+    private func sequenceIndex(_ sequence: [String], in tokens: [String]) -> Int? {
+        guard sequence.isEmpty == false, tokens.count >= sequence.count else { return nil }
+        for index in 0...(tokens.count - sequence.count) {
+            if Array(tokens[index..<(index + sequence.count)]) == sequence {
+                return index
+            }
+        }
+        return nil
+    }
+
+    /// Excludes general questions about the meaning of reminders.
+    /// - Parameter tokens: Normalized request tokens.
+    /// - Returns: `true` for a short "what is a reminder" definition form.
+    private func isReminderDefinition(_ tokens: [String]) -> Bool {
+        guard tokens.count <= 5,
+              tokens.starts(with: ReminderConstants.Routing.reminderDefinitionPrefix),
+              let last = tokens.last else {
+            return false
+        }
+        return ReminderConstants.Routing.explicitReminderTerms.contains(last)
     }
 
     /// Recovers an explicit local-item request when the routing model returns only an acknowledgement.

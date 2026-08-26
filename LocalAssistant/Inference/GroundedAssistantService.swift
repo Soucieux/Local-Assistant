@@ -41,20 +41,22 @@ actor GroundedAssistantService {
     ) async throws -> AssistantResponse {
         let userMessage = ChatMessage.user(question)
         if persistHistory { try await database.insertChatMessage(userMessage) }
-        if routeParser.isExplicitOpenClawRequest(question) {
-            return AssistantResponse(
-                answer: AppConstants.Text.empty,
-                citations: [],
-                alternatives: [],
-                confidence: .high,
-                openClawRequest: question
-            )
-        }
         let assistantPrompt = promptBuilder.assistantPrompt(question: question, history: history)
         let assistantOutput = cleanedModelOutput(
             from: try await runtime.generate(prompt: assistantPrompt)
         )
         let route = routeParser.parse(modelOutput: assistantOutput, originalQuestion: question)
+        if routeParser.isExplicitOpenClawRequest(question) {
+            switch route {
+            case .reminder(_):
+                break
+            case .reply(_), .search(_):
+                return openClawResponse(
+                    message: question,
+                    authorization: .explicitInvocation
+                )
+            }
+        }
         let searchPlan: LocalSearchPlan
         switch route {
         case let .reply(reply):
@@ -74,7 +76,9 @@ actor GroundedAssistantService {
                 originalQuestion: question,
                 history: history
             )
-            if persistHistory { try await persist(response: response) }
+            if persistHistory, response.openClawRequest == nil {
+                try await persist(response: response)
+            }
             return response
         }
 
@@ -113,12 +117,38 @@ actor GroundedAssistantService {
         return response
     }
 
-    /// Builds a locally grounded answer from the hidden complete reminder snapshot.
+    /// Uses the embedded local model to interpret one conversational confirmation reply.
     /// - Parameters:
-    ///   - plan: Read-only reminder retrieval plan.
-    ///   - originalQuestion: User wording answered from reminder evidence.
+    ///   - reply: User's newest yes, no, or ambiguous response.
+    ///   - request: Exact pending reminder mutation intent.
+    /// - Returns: A strict confirmation decision; unexpected output remains unclear.
+    internal func reminderConfirmationDecision(
+        reply: String,
+        request: OpenClawRequestIntent
+    ) async throws -> ReminderConfirmationDecision {
+        guard case let .confirmedReminderMutation(kind) = request.authorization else {
+            return .unclear
+        }
+        let prompt = promptBuilder.reminderConfirmationPrompt(
+            reply: reply,
+            request: request.message,
+            kind: kind
+        )
+        let output = cleanedModelOutput(
+            from: try await runtime.generate(prompt: prompt)
+        )
+        return routeParser.reminderConfirmationDecision(
+            reply: reply,
+            modelOutput: output
+        )
+    }
+
+    /// Builds a local read response or a confirmation-gated reminder mutation intent.
+    /// - Parameters:
+    ///   - plan: Locally inferred reminder read or mutation plan.
+    ///   - originalQuestion: User wording answered locally or retained for confirmation.
     ///   - history: Recent private conversation context.
-    /// - Returns: A grounded local answer with the reminder cards it used.
+    /// - Returns: Grounded local answer or exact outbound intent awaiting confirmation.
     private func handleReminder(
         _ plan: ReminderAssistantPlan,
         originalQuestion: String,
@@ -126,11 +156,23 @@ actor GroundedAssistantService {
     ) async throws -> AssistantResponse {
         switch plan {
         case .list(let query):
-            let matches = try await reminderRetrieval.search(text: query)
-            return try await reminderResponse(
-                matches: matches,
-                question: originalQuestion,
-                history: history
+            let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            let matches = normalizedQuery.isEmpty
+                ? try await reminderRetrieval.completeList()
+                : try await reminderRetrieval.search(text: normalizedQuery, limit: Int.max)
+            guard matches.isEmpty == false else {
+                return plainReminderResponse(ReminderStrings.noReminderMatches)
+            }
+            return AssistantResponse(
+                answer: ReminderStrings.reminderListSummary(
+                    count: matches.count,
+                    groupCount: reminderGroupCount(matches)
+                ),
+                citations: [],
+                alternatives: [],
+                confidence: .high,
+                reminderMatches: matches,
+                reminderPresentation: .grouped
             )
         case .get(let query):
             switch try await resolveReminder(query: query) {
@@ -149,7 +191,29 @@ actor GroundedAssistantService {
                     history: history
                 )
             }
+        case .mutate(let kind, let request):
+            return openClawResponse(
+                message: request,
+                authorization: .confirmedReminderMutation(kind)
+            )
         }
+    }
+
+    /// Counts stable tag sections without exposing reminder content in prose.
+    /// - Parameter matches: Reminder cards selected for one list response.
+    /// - Returns: Number of normalized tag groups, including the untagged group.
+    private func reminderGroupCount(_ matches: [ReminderSearchResult]) -> Int {
+        var groups: Set<String> = []
+        for match in matches {
+            let tag = match.item.tag?.trimmingCharacters(in: .whitespacesAndNewlines)
+                ?? AppConstants.Text.empty
+            groups.insert(
+                tag.isEmpty
+                    ? ReminderStrings.noTag.lowercased()
+                    : tag.lowercased()
+            )
+        }
+        return groups.count
     }
 
     /// Selects one exact or clearly top-ranked reminder without guessing.
@@ -215,6 +279,27 @@ actor GroundedAssistantService {
             citations: [],
             alternatives: [],
             confidence: .low
+        )
+    }
+
+    /// Builds one outbound request without attaching local evidence or history.
+    /// - Parameters:
+    ///   - message: Exact typed or locally transcribed user request.
+    ///   - authorization: Explicit invocation or confirmation-required reminder change.
+    /// - Returns: Empty local response carrying only the typed outbound intent.
+    private func openClawResponse(
+        message: String,
+        authorization: OpenClawRequestAuthorization
+    ) -> AssistantResponse {
+        AssistantResponse(
+            answer: AppConstants.Text.empty,
+            citations: [],
+            alternatives: [],
+            confidence: .high,
+            openClawRequest: OpenClawRequestIntent(
+                message: message,
+                authorization: authorization
+            )
         )
     }
 
@@ -296,7 +381,8 @@ actor GroundedAssistantService {
             createdAt: Date(),
             citations: response.citations,
             fileMatches: response.alternatives,
-            reminderMatches: response.reminderMatches
+            reminderMatches: response.reminderMatches,
+            reminderPresentation: response.reminderPresentation
         )
         try await database.insertChatMessage(message)
     }

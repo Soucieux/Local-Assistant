@@ -34,6 +34,7 @@ enum ReminderConstants {
 
     enum Connector {
         static let schemaVersion = 1
+        static let runtimeContractVersion = 2
         static let responsePollNanoseconds: UInt64 = 250_000_000
         static let responseTimeoutSeconds: TimeInterval = 45
         static let healthPollNanoseconds: UInt64 = 1_000_000_000
@@ -45,6 +46,9 @@ enum ReminderConstants {
         static let maximumReminderTextCharacters = 2_000
         static let maximumOptionalFieldCharacters = 1_000
         static let maximumAgentMessageCharacters = 8_000
+        static let authorizationExplicitOpenClaw = "explicit-openclaw"
+        static let authorizationConfirmedReminderMutation =
+            "confirmed-reminder-mutation"
     }
 
     enum Retrieval {
@@ -63,18 +67,65 @@ enum ReminderConstants {
 
     enum DateText {
         static let calendarDateFormat = "yyyy-MM-dd"
+        static let posixLocaleIdentifier = "en_US_POSIX"
         static let today = "today"
         static let tomorrow = "tomorrow"
         static let overdue = "overdue"
+    }
+
+    enum Presentation {
+        static let untaggedGroupIdentifier = "__untagged__"
+        static let tagGroupPrefix = "tag:"
     }
 
     enum Routing {
         static let reminderToken = "REMINDER_ACTION"
         static let operationList = "list"
         static let operationGet = "get"
+        static let operationCreate = "create"
+        static let operationAdd = "add"
+        static let operationUpdate = "update"
+        static let operationComplete = "complete"
+        static let operationRemove = "remove"
+        static let operationDelete = "delete"
         static let operationChat = "chat"
         static let openClawCombinedToken = "openclaw"
         static let openClawFirstToken = "open"
         static let openClawSecondToken = "claw"
+        static let explicitReminderTerms: Set<String> = [
+            "reminder", "reminders", "remind", "todo", "todos", "deadline", "deadlines"
+        ]
+        static let reminderReadTerms: Set<String> = [
+            "show", "list", "what", "which", "when", "anything", "due", "overdue", "upcoming"
+        ]
+        static let reminderCreateTerms: Set<String> = [
+            "add", "create", "remind", "schedule"
+        ]
+        static let reminderUpdateTerms: Set<String> = [
+            "update", "change", "move", "reschedule", "rename", "complete", "completed", "done"
+        ]
+        static let reminderRemoveTerms: Set<String> = [
+            "remove", "delete", "cancel"
+        ]
+        static let reminderTemporalTerms: Set<String> = [
+            "today", "tomorrow", "overdue", "monday", "tuesday", "wednesday",
+            "thursday", "friday", "saturday", "sunday"
+        ]
+        static let reminderQueryFillerTerms: Set<String> = [
+            "show", "list", "what", "which", "when", "anything", "all", "my", "me",
+            "i", "do", "have", "are", "there", "please", "the", "reminder", "reminders",
+            "due", "upcoming"
+        ]
+        static let needToDoSequence = ["need", "to", "do"]
+        static let infinitiveToken = "to"
+        static let reminderDefinitionPrefix = ["what", "is"]
+        static let confirmationAffirmativePhrases: Set<String> = [
+            "yes", "yes please", "confirm", "continue", "please continue", "proceed",
+            "please proceed", "go ahead", "send it", "do it", "ok", "okay", "sure"
+        ]
+        static let confirmationDeclinePhrases: Set<String> = [
+            "no", "decline", "cancel", "stop", "never mind", "nevermind",
+            "do not continue", "do not send it", "don t continue", "don t send it"
+        ]
     }
 }

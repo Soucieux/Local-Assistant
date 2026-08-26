@@ -59,6 +59,10 @@ actor ReminderSpoolService {
                     <= ReminderConstants.Connector.maximumStatusErrorCharacters else {
                 return .needsAttention
             }
+            guard document.runtimeContractVersion
+                == ReminderConstants.Connector.runtimeContractVersion else {
+                return .updateRequired
+            }
             let age = now.timeIntervalSince(lastSeenAt)
             guard age >= -ReminderConstants.Connector.maximumFutureClockSkewSeconds else {
                 return .needsAttention

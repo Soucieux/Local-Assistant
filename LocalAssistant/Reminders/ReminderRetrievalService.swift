@@ -42,13 +42,7 @@ actor ReminderRetrievalService {
         let reminders = try await database.fetchReminders()
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard query.isEmpty == false else {
-            return Array(reminders.prefix(limit)).map {
-                ReminderSearchResult(
-                    item: $0,
-                    score: ReminderConstants.Retrieval.temporalScore,
-                    explanation: temporalExplanation(for: $0, now: now)
-                )
-            }
+            return Array((try await completeList(now: now)).prefix(limit))
         }
 
         let keywordIDs = try await database.reminderKeywordSearch(
@@ -126,6 +120,19 @@ actor ReminderRetrievalService {
         }
         .prefix(limit)
         .map { $0 }
+    }
+
+    /// Returns every row from the latest committed complete snapshot with no retrieval cap.
+    /// - Parameter now: Current time used for visible deadline explanations.
+    /// - Returns: One result for every cached reminder in database display order.
+    internal func completeList(now: Date = Date()) async throws -> [ReminderSearchResult] {
+        try await database.fetchReminders().map {
+            ReminderSearchResult(
+                item: $0,
+                score: ReminderConstants.Retrieval.temporalScore,
+                explanation: temporalExplanation(for: $0, now: now)
+            )
+        }
     }
 
     /// Adds reciprocal-rank evidence from one retrieval channel.

@@ -49,6 +49,7 @@ final class AppModel {
     var activityClearConfirmationIsPresented = false
     var modelRemovalConfirmationIsPresented = false
     var searchIndexClearConfirmationIsPresented = false
+    private(set) var pendingOpenClawRequest: OpenClawRequestIntent?
     var presentedError: LocalAssistantError?
     private(set) var availableFileMatchItemIDs: Set<UUID> = []
     private var hasStarted = false
@@ -223,30 +224,41 @@ final class AppModel {
     internal func submit() async {
         let question = queryText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard question.isEmpty == false, isBusy == false else { return }
+        let priorHistory = messages
         queryText = AppConstants.Text.empty
         currentRequestText = question
         isComposingRequest = false
         currentResponse = nil
-        messages.append(ChatMessage.user(question))
+        let userMessage = ChatMessage.user(question)
+        messages.append(userMessage)
         isBusy = true
         defer { isBusy = false }
         do {
+            if let pendingRequest = pendingOpenClawRequest {
+                try await services.database.insertChatMessage(userMessage)
+                await handleReminderConfirmationReply(
+                    question,
+                    pendingRequest: pendingRequest
+                )
+                return
+            }
             let response = try await services.assistant.answer(
                 question: question,
-                history: Array(messages.dropLast()),
+                history: priorHistory,
                 persistHistory: true
             )
             if let openClawRequest = response.openClawRequest {
-                let answer = try await services.reminders.askOpenClaw(
-                    OpenClawRequestDraft(
-                        message: openClawRequest,
-                        contextID: openClawContextID
-                    ),
-                    connectorEnabled: reminderConnectorEnabled
-                )
-                try await appendConnectorMessage(answer)
-                Task { [weak self] in
-                    await self?.syncReminders(presentErrors: false)
+                switch openClawRequest.authorization {
+                case .explicitInvocation:
+                    try await performOpenClawRequest(openClawRequest)
+                case let .confirmedReminderMutation(kind):
+                    pendingOpenClawRequest = openClawRequest
+                    try await appendAssistantMessage(
+                        ReminderStrings.mutationConfirmationMessage(
+                            kind: kind,
+                            request: openClawRequest.message
+                        )
+                    )
                 }
                 return
             }
@@ -257,7 +269,8 @@ final class AppModel {
                 createdAt: Date(),
                 citations: response.citations,
                 fileMatches: response.alternatives,
-                reminderMatches: response.reminderMatches
+                reminderMatches: response.reminderMatches,
+                reminderPresentation: response.reminderPresentation
             )
             messages.append(assistantMessage)
             currentResponse = assistantMessage
@@ -265,7 +278,101 @@ final class AppModel {
                 response.alternatives.map(\.item.id)
             )
         } catch {
-            handle(error)
+            await presentConversationError(error)
+        }
+    }
+
+    /// Interprets a natural confirmation reply locally and keeps unclear or failed requests pending.
+    /// - Parameters:
+    ///   - reply: User's newest conversational confirmation response.
+    ///   - pendingRequest: Exact reminder request that remains unsent.
+    private func handleReminderConfirmationReply(
+        _ reply: String,
+        pendingRequest: OpenClawRequestIntent
+    ) async {
+        do {
+            let decision = try await services.assistant.reminderConfirmationDecision(
+                reply: reply,
+                request: pendingRequest
+            )
+            switch decision {
+            case .confirm:
+                let health = await services.reminderSpool.connectorHealth()
+                openClawConnectorHealth = health
+                guard health != .updateRequired else {
+                    try await appendAssistantMessage(
+                        ReminderStrings.connectorRuntimeUpdateConversation
+                    )
+                    return
+                }
+                do {
+                    try await performOpenClawRequest(pendingRequest)
+                    pendingOpenClawRequest = nil
+                } catch {
+                    await presentConversationError(error)
+                }
+            case .decline:
+                pendingOpenClawRequest = nil
+                try await appendAssistantMessage(
+                    ReminderStrings.reminderConfirmationDeclined
+                )
+            case .unclear:
+                try await appendAssistantMessage(
+                    ReminderStrings.reminderConfirmationUnclear
+                )
+            }
+        } catch {
+            await presentConversationError(error)
+        }
+    }
+
+    /// Sends one already-authorized exact request and refreshes reminders after success.
+    /// - Parameter request: Explicit or user-confirmed OpenClaw request intent.
+    /// - Throws: Connector, response-validation, or private-history persistence errors.
+    private func performOpenClawRequest(_ request: OpenClawRequestIntent) async throws {
+        let answer = try await services.reminders.askOpenClaw(
+            OpenClawRequestDraft(
+                message: request.message,
+                contextID: openClawContextID
+            ),
+            authorization: request.authorization,
+            connectorEnabled: reminderConnectorEnabled
+        )
+        try await appendConnectorMessage(answer)
+        Task { [weak self] in
+            await self?.syncReminders(presentErrors: false)
+        }
+    }
+
+    /// Adds a privacy-safe request failure to the conversation instead of opening a dialog.
+    /// - Parameter error: Local or Connector failure approved for user presentation.
+    internal func presentConversationError(_ error: Error) async {
+        let detail: String
+        if let localError = error as? LocalAssistantError {
+            detail = localError.localizedDescription
+        } else {
+            detail = LocalAssistantError.unexpected(
+                error.localizedDescription
+            ).localizedDescription
+        }
+        if detail.localizedCaseInsensitiveContains("connector request is invalid") {
+            openClawConnectorHealth = .updateRequired
+        }
+        let text = ReminderStrings.conversationalError(detail)
+        do {
+            try await appendAssistantMessage(text)
+        } catch {
+            let message = ChatMessage(
+                id: UUID(),
+                role: .assistant,
+                text: text,
+                createdAt: Date(),
+                citations: [],
+                fileMatches: [],
+                reminderMatches: []
+            )
+            messages.append(message)
+            currentResponse = message
         }
     }
 

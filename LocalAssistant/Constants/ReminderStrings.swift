@@ -22,6 +22,9 @@ enum ReminderStrings {
     static let connectorNotDetected = "Not configured"
     static let connectorNotDetectedDetail =
         "No connector result was found. Open the setup guide to prepare the restricted SSH access."
+    static let connectorUpdateRequired = "Update required"
+    static let connectorUpdateRequiredDetail =
+        "The installed Connector runtime is older than this Local Assistant release. Open OpenClaw Connector and choose Update and Verify Existing Connector."
     static let connectorRunning = "Connecting"
     static let connectorRunningDetail =
         "The one-shot connector is opening its temporary SSH tunnel for a queued request."
@@ -112,7 +115,7 @@ enum ReminderStrings {
         "Select OpenClaw Connector.app in Applications or an opened Local Assistant release disk image."
     static let connectorAppLocatePrompt = "Open Connector"
     static let connectorAgentDetail =
-        "Include OpenClaw as a separate word in a typed or spoken request to send only that exact request. No reminder rows, files, or conversation history are attached. A successful request is followed by a complete reminder refresh."
+        "Ask about reminders naturally. Read-only questions stay local. Before adding, changing, completing, or removing a reminder, the assistant repeats the exact request in the conversation and waits for your yes or no reply."
     static let syncInterval = "Refresh hidden reminder knowledge"
     static let connectorNotEnabled =
         "Enable the OpenClaw connector in Settings before using OpenClaw or refreshing reminders."
@@ -125,10 +128,22 @@ enum ReminderStrings {
     static let reminderNotFound =
         "I could not find a matching reminder in the latest local snapshot."
     static let noReminderMatches = "No reminders matched that request."
-    static let openClawRequired =
-        "I can discuss cached reminders locally. To add, update, or remove one, include OpenClaw explicitly in your request."
     static let invalidReminderRoute =
         "I could not safely interpret that reminder question. Please restate which reminder or deadline you mean."
+    static let noTag = "No tag"
+    static let overdue = "Overdue"
+    static let dueToday = "Today"
+    static let dueTomorrow = "Tomorrow"
+    static let upcoming = "Upcoming"
+    static let linkIncluded = "Link included"
+    static let reminderConfirmationDetail =
+        "I will send only this exact request. I will not attach cached reminders, files, or conversation history."
+    static let reminderConfirmationUnclear =
+        "I still need a clear instruction. You can say continue, proceed, send it, or cancel."
+    static let reminderConfirmationDeclined =
+        "Okay. I did not send that reminder request to OpenClaw."
+    static let connectorRuntimeUpdateConversation =
+        "I have not sent the reminder request yet. The installed Connector runtime needs to be updated first. Open OpenClaw Connector, choose Update and Verify Existing Connector, then return here and tell me to continue."
 
     /// Returns the concise title for one observed connector health state.
     /// - Parameter health: Current local connector health.
@@ -138,6 +153,7 @@ enum ReminderStrings {
         case .off: return connectorOff
         case .checking: return connectorChecking
         case .notDetected: return connectorNotDetected
+        case .updateRequired: return connectorUpdateRequired
         case .runningUnverified: return connectorRunning
         case .runningUnreachable: return connectorRunningUnreachable
         case .ready: return connectorReady
@@ -153,6 +169,7 @@ enum ReminderStrings {
         case .off: return connectorOffDetail
         case .checking: return connectorCheckingDetail
         case .notDetected: return connectorNotDetectedDetail
+        case .updateRequired: return connectorUpdateRequiredDetail
         case .runningUnverified: return connectorRunningDetail
         case .runningUnreachable: return connectorRunningUnreachableDetail
         case .ready: return connectorReadyDetail
@@ -189,5 +206,44 @@ enum ReminderStrings {
     /// - Returns: Singular or plural reminder count.
     internal static func reminderCount(_ count: Int) -> String {
         count == 1 ? "1 reminder" : "\(count) reminders"
+    }
+
+    /// Summarizes a tag-grouped reminder collection without repeating card content.
+    /// - Parameters:
+    ///   - count: Number of reminder cards shown.
+    ///   - groupCount: Number of visible tag sections.
+    /// - Returns: Concise card-only result acknowledgement.
+    internal static func reminderListSummary(count: Int, groupCount: Int) -> String {
+        let reminderText = reminderCount(count)
+        let groupText = groupCount == 1 ? "1 tag group" : "\(groupCount) tag groups"
+        return "\(reminderText) across \(groupText) are shown below."
+    }
+
+    /// Builds the assistant's conversational double-confirmation turn.
+    /// - Parameters:
+    ///   - kind: Reminder operation inferred by the local model.
+    ///   - request: Exact user wording that would cross the Connector boundary.
+    /// - Returns: A clear conversational question that repeats the exact pending request.
+    internal static func mutationConfirmationMessage(
+        kind: ReminderMutationKind,
+        request: String
+    ) -> String {
+        let action: String
+        switch kind {
+        case .create: action = "add"
+        case .update: action = "update"
+        case .remove: action = "remove"
+        }
+        return "Before I ask OpenClaw to \(action) a reminder, I need to confirm the exact request with you.\n\n“\(request)”\n\n\(reminderConfirmationDetail) Tell me to continue, proceed, send it, or cancel."
+    }
+
+    /// Turns a privacy-safe local failure into an assistant conversation message.
+    /// - Parameter detail: Localized error text already approved for presentation.
+    /// - Returns: Recovery-oriented wording without a modal alert.
+    internal static func conversationalError(_ detail: String) -> String {
+        if detail.localizedCaseInsensitiveContains("connector request is invalid") {
+            return connectorRuntimeUpdateConversation
+        }
+        return "I could not complete that request. Nothing was changed. \(detail)"
     }
 }

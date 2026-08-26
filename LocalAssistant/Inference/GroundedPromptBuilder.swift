@@ -87,6 +87,31 @@ struct GroundedPromptBuilder: Sendable {
             + InferenceConstants.chatAssistantStart
     }
 
+    /// Creates the local-only yes, no, or unclear confirmation-classification prompt.
+    /// - Parameters:
+    ///   - reply: User's newest conversational response.
+    ///   - request: Exact reminder request still awaiting authorization.
+    ///   - kind: Pending reminder mutation category.
+    /// - Returns: A bounded prompt that treats both user strings as untrusted text.
+    internal func reminderConfirmationPrompt(
+        reply: String,
+        request: String,
+        kind: ReminderMutationKind
+    ) -> String {
+        InferenceConstants.chatSystemStart
+            + InferenceConstants.reminderConfirmationSystemPrompt
+            + InferenceConstants.chatUserStart
+            + InferenceConstants.pendingReminderKindLabel
+            + kind.rawValue
+            + InferenceConstants.pendingReminderRequestLabel
+            + sanitizedUntrustedText(request)
+            + InferenceConstants.confirmationReplyLabel
+            + sanitizedUntrustedText(reply)
+            + AppConstants.Text.newline
+            + InferenceConstants.noThinkingInstruction
+            + InferenceConstants.chatAssistantStart
+    }
+
     /// Formats evidence while enforcing a conservative character budget.
     /// - Parameter citations: Ranked source excerpts.
     /// - Returns: Numbered evidence block.

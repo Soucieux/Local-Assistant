@@ -144,6 +144,7 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
     let citations: [EvidenceCitation]
     let fileMatches: [SearchResult]
     let reminderMatches: [ReminderSearchResult]
+    let reminderPresentation: ReminderCardPresentation
 
     /// Creates one persistable message with any file cards attached to that turn.
     /// - Parameters:
@@ -154,6 +155,7 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
     ///   - citations: Bounded local evidence used by the answer.
     ///   - fileMatches: Ranked file snapshots displayed beneath the answer.
     ///   - reminderMatches: Ranked reminder snapshots displayed beneath the answer.
+    ///   - reminderPresentation: Focused or tag-grouped reminder-card treatment.
     internal init(
         id: UUID,
         role: MessageRole,
@@ -161,7 +163,8 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
         createdAt: Date,
         citations: [EvidenceCitation],
         fileMatches: [SearchResult],
-        reminderMatches: [ReminderSearchResult] = []
+        reminderMatches: [ReminderSearchResult] = [],
+        reminderPresentation: ReminderCardPresentation = .focused
     ) {
         self.id = id
         self.role = role
@@ -170,6 +173,7 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
         self.citations = citations
         self.fileMatches = fileMatches
         self.reminderMatches = reminderMatches
+        self.reminderPresentation = reminderPresentation
     }
 
     /// Decodes current messages and older payloads created before file cards were stored.
@@ -190,6 +194,10 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
             [ReminderSearchResult].self,
             forKey: .reminderMatches
         ) ?? []
+        reminderPresentation = try container.decodeIfPresent(
+            ReminderCardPresentation.self,
+            forKey: .reminderPresentation
+        ) ?? .focused
     }
 
     /// Encodes the visible message and its reusable file-card snapshots.
@@ -204,6 +212,7 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
         try container.encode(citations, forKey: .citations)
         try container.encode(fileMatches, forKey: .fileMatches)
         try container.encode(reminderMatches, forKey: .reminderMatches)
+        try container.encode(reminderPresentation, forKey: .reminderPresentation)
     }
 
     /// Creates a new user-authored message.
@@ -217,7 +226,8 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
             createdAt: Date(),
             citations: [],
             fileMatches: [],
-            reminderMatches: []
+            reminderMatches: [],
+            reminderPresentation: .focused
         )
     }
 
@@ -226,11 +236,13 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
     ///   - text: Card-aware assistant text to display and retain.
     ///   - fileMatches: File cards restored or retained for this message.
     ///   - reminderMatches: Reminder cards restored or retained for this message.
+    ///   - reminderPresentation: Optional replacement reminder-card treatment.
     /// - Returns: A replacement preserving the original identity and timestamp.
     internal func restoring(
         text: String,
         fileMatches: [SearchResult],
-        reminderMatches: [ReminderSearchResult]? = nil
+        reminderMatches: [ReminderSearchResult]? = nil,
+        reminderPresentation: ReminderCardPresentation? = nil
     ) -> ChatMessage {
         ChatMessage(
             id: id,
@@ -239,7 +251,8 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
             createdAt: createdAt,
             citations: citations,
             fileMatches: fileMatches,
-            reminderMatches: reminderMatches ?? self.reminderMatches
+            reminderMatches: reminderMatches ?? self.reminderMatches,
+            reminderPresentation: reminderPresentation ?? self.reminderPresentation
         )
     }
 
@@ -251,6 +264,7 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
         case citations
         case fileMatches
         case reminderMatches
+        case reminderPresentation
     }
 }
 
@@ -261,7 +275,8 @@ struct AssistantResponse: Hashable, Sendable {
     let alternatives: [SearchResult]
     let confidence: ConfidenceLevel
     let reminderMatches: [ReminderSearchResult]
-    let openClawRequest: String?
+    let reminderPresentation: ReminderCardPresentation
+    let openClawRequest: OpenClawRequestIntent?
 
     /// Creates a conversational, file, or reminder response.
     internal init(
@@ -270,13 +285,15 @@ struct AssistantResponse: Hashable, Sendable {
         alternatives: [SearchResult],
         confidence: ConfidenceLevel,
         reminderMatches: [ReminderSearchResult] = [],
-        openClawRequest: String? = nil
+        reminderPresentation: ReminderCardPresentation = .focused,
+        openClawRequest: OpenClawRequestIntent? = nil
     ) {
         self.answer = answer
         self.citations = citations
         self.alternatives = alternatives
         self.confidence = confidence
         self.reminderMatches = reminderMatches
+        self.reminderPresentation = reminderPresentation
         self.openClawRequest = openClawRequest
     }
 }

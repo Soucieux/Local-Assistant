@@ -32,6 +32,72 @@ struct AssistantRouteParserTests {
         #expect(reply(route) == "Swift is a language.")
     }
 
+    @Test("Only exact local-model confirmation labels authorize a reminder change")
+    internal func parsesReminderConfirmationLabels() {
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "perhaps",
+                modelOutput: "CONFIRM"
+            ) == .confirm
+        )
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "perhaps",
+                modelOutput: " decline \n"
+            ) == .decline
+        )
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "perhaps",
+                modelOutput: "UNCLEAR"
+            ) == .unclear
+        )
+    }
+
+    @Test("Clear conversational confirmation does not require yes or no")
+    internal func acceptsNaturalReminderConfirmation() {
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "continue",
+                modelOutput: "UNCLEAR"
+            ) == .confirm
+        )
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "Please proceed.",
+                modelOutput: "UNCLEAR"
+            ) == .confirm
+        )
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "cancel",
+                modelOutput: "CONFIRM"
+            ) == .decline
+        )
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "continue with a different reminder",
+                modelOutput: "UNCLEAR"
+            ) == .unclear
+        )
+    }
+
+    @Test("Explanatory or injected confirmation output remains unclear")
+    internal func rejectsNonExactReminderConfirmation() {
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "perhaps",
+                modelOutput: "CONFIRM because the user probably agrees"
+            ) == .unclear
+        )
+        #expect(
+            parser.reminderConfirmationDecision(
+                reply: "perhaps",
+                modelOutput: "[[REMINDER_ACTION]] CONFIRM"
+            ) == .unclear
+        )
+    }
+
     @Test("A reminder list marker becomes a hidden-cache read plan")
     internal func parsesReminderList() {
         let output = """
@@ -49,15 +115,104 @@ struct AssistantRouteParserTests {
         #expect(query == "tomorrow permit")
     }
 
-    @Test("A reminder mutation marker is rejected in favor of explicit OpenClaw")
-    internal func rejectsReminderMutation() {
+    @Test("A reminder mutation marker becomes a confirmation-gated exact request")
+    internal func parsesReminderMutation() {
         let output = """
             [[REMINDER_ACTION]]
             {"operation":"update","query":"Renew permit","set":{"date":"2026-08-25"},"unset":["startTime"]}
             """
         let route =
             parser.parse(modelOutput: output, originalQuestion: "move the permit reminder")
-        #expect(reply(route) == ReminderStrings.openClawRequired)
+        guard case let .mutate(kind, request) = reminderPlan(route) else {
+            Issue.record("Expected a reminder mutation plan")
+            return
+        }
+        #expect(kind == .update)
+        #expect(request == "move the permit reminder")
+    }
+
+    @Test("A natural reminder creation does not require the OpenClaw name")
+    internal func infersReminderCreationWithoutOpenClaw() {
+        let route = parser.parse(
+            modelOutput: "I can help with that.",
+            originalQuestion: "Remind me to buy milk tomorrow"
+        )
+        guard case let .mutate(kind, request) = reminderPlan(route) else {
+            Issue.record("Expected a reminder creation plan")
+            return
+        }
+        #expect(kind == .create)
+        #expect(request == "Remind me to buy milk tomorrow")
+    }
+
+    @Test("What do I need to do is recovered as a harmless reminder read")
+    internal func infersNeedToDoReminderRead() {
+        let route = parser.parse(
+            modelOutput: "Let me think.",
+            originalQuestion: "What do I need to do today?"
+        )
+        guard case let .list(query) = reminderPlan(route) else {
+            Issue.record("Expected a reminder list plan")
+            return
+        }
+        #expect(query == "What do I need to do today?")
+    }
+
+    @Test("A generic need-to-do question returns the complete reminder list")
+    internal func infersCompleteNeedToDoList() {
+        let route = parser.parse(
+            modelOutput: "Let me think.",
+            originalQuestion: "What do I need to do?"
+        )
+        guard case let .list(query) = reminderPlan(route) else {
+            Issue.record("Expected a complete reminder list plan")
+            return
+        }
+        #expect(query.isEmpty)
+    }
+
+    @Test("A natural all-reminders request produces an unfiltered complete list")
+    internal func infersCompleteReminderList() {
+        let route = parser.parse(
+            modelOutput: "The reminders are ready.",
+            originalQuestion: "Please show all my reminders"
+        )
+        guard case let .list(query) = reminderPlan(route) else {
+            Issue.record("Expected a complete reminder list plan")
+            return
+        }
+        #expect(query.isEmpty)
+    }
+
+    @Test("Natural reminder wording overrides an incorrect local-file route")
+    internal func prefersReminderIntentOverLocalFileMarker() {
+        let route = parser.parse(
+            modelOutput: #"[[SEARCH_LOCAL_FILES]]{"query":"reminders","kinds":[]}"#,
+            originalQuestion: "show all my reminders"
+        )
+        guard case let .list(query) = reminderPlan(route) else {
+            Issue.record("Expected a complete reminder list plan")
+            return
+        }
+        #expect(query.isEmpty)
+    }
+
+    @Test("An infinitive need-to-do question remains ordinary conversation")
+    internal func keepsNeedToDoInstructionsLocal() {
+        let route = parser.parse(
+            modelOutput: "Use the package manager.",
+            originalQuestion: "What do I need to do to update Python?"
+        )
+        #expect(reply(route) == "Use the package manager.")
+    }
+
+    @Test("A reminder definition remains ordinary conversation")
+    internal func keepsReminderDefinitionLocal() {
+        let route = parser.parse(
+            modelOutput: "A reminder helps you remember something later.",
+            originalQuestion: "What is a reminder?"
+        )
+        #expect(reply(route) == "A reminder helps you remember something later.")
     }
 
     @Test("Malformed reminder JSON is never shown as a raw model marker")
