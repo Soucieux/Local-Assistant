@@ -2,7 +2,7 @@
 
 ## Runtime boundary
 
-Local Assistant has two separate runtime boundaries.
+Local Assistant has two separate parts with different permissions.
 
 **Offline application**
 
@@ -13,17 +13,17 @@ Local Assistant has two separate runtime boundaries.
 **Optional OpenClaw Connector**
 
 ```text
-Local Assistant → owner-only spool → one-shot Connector → pinned SSH tunnel
-                                                        ├─→ A2A v1.0
+Local Assistant → private task folder → one-shot Connector → temporary SSH tunnel
+                                                        ├─→ Agent-to-Agent (A2A) v1.0
                                                         │   Agent Card + SendMessage
                                                         │   → OpenClaw agent and tools
                                                         └─→ read-only reminder snapshot
                                                             → CloudBase reminders
 ```
 
-- **Reminder lane:** fetches a complete read-only snapshot with its own token.
+- **Reminder lane:** fetches a complete read-only copy of the reminder list with its own token.
 - **A2A lane:** handles every delegated OpenClaw conversation and every confirmed reminder
-  change. It validates the Agent Card, then sends the exact message with JSON-RPC `SendMessage`.
+  change. It validates the Agent Card, then sends the exact message with A2A `SendMessage`.
 - Every tunnel closes after its request.
 - Files, reminder rows, the database, and conversation history are never attached.
 
@@ -106,6 +106,29 @@ Selected source files are never modified, and their security-scoped bookmarks re
 
 </details>
 
+## Key terms
+
+- **Local model or LLM:** the local Large Language Model that writes responses on the Mac.
+- **OCR:** recognition that turns visible words inside images or scanned PDFs into searchable text.
+- **RAG:** Retrieval-Augmented Generation; retrieve local evidence first, then answer from it.
+- **Embedding:** a model-created numerical representation of text.
+- **Vector:** the list of numbers produced by the embedding model.
+- **FTS5:** SQLite Full-Text Search 5 for matching words and phrases.
+- **sqlite-vec:** SQLite vector search for text with similar meaning.
+- **Embedded SQLite:** a relational database engine inside the app process. User data remains in a
+  separate private database file.
+- **Spool:** a private folder containing small, validated request and response files.
+- **SSH tunnel:** a temporary encrypted Secure Shell connection from the Connector to the server.
+- **Gateway:** OpenClaw's private server interface, reachable only through that tunnel.
+- **A2A:** the Agent-to-Agent protocol used for every delegated OpenClaw agent request.
+- **Agent Card:** OpenClaw's description of the A2A service and supported operation.
+
+Local RAG follows one short path:
+
+```text
+question → FTS5 words + sqlite-vec meaning → ranked evidence → local LLM → answer
+```
+
 ## Conversation and search routing
 
 Typed and transcribed requests are classified locally. The result is one of five paths:
@@ -122,6 +145,9 @@ The app invokes OpenClaw only when:
 - a non-reminder request explicitly contains `OpenClaw` or `Open Claw`.
 
 The routing pass sees recent local conversation but no file excerpts or reminder rows.
+
+<details>
+<summary>Detailed trust zones, storage, retrieval, indexing, voice, and design choices</summary>
 
 ## Trust zones
 
@@ -319,6 +345,11 @@ llama.cpp and whisper.cpp can expose overlapping ggml symbols in one native bina
 
 No Feishu integration exists in the application. Adding a network entitlement to this binary would break its privacy contract. The implemented connector follows the separate-process boundary: narrow file-spool IPC, a pinned restricted SSH tunnel opened only for one request, separate Keychain credentials, a read-only snapshot lane, and typed authorization for exact-message OpenClaw A2A. OpenClaw can continue using Feishu independently; this app neither reads nor processes those messages.
 
+</details>
+
+<details>
+<summary>Developer test, preview, and release-gate details</summary>
+
 ## Automated tests and interface previews
 
 `LocalAssistantTests` is a native unit-test bundle that loads the application and exercises its pure decision logic: request routing, standalone OpenClaw detection, search-text escaping, passage offsets and overlap, card-aware answer formatting, scanner exclusions, reminder snapshot reconciliation, read-only ownership classification, and no-follow spool handling. Exclusion and spool tests operate on real files in a temporary directory — including an actual symbolic link, hidden file, credential extension, and symlinked connector response — so they test the resource values the runtime reads rather than a mock of them. They resolve the real account home through the user record, because the test host is sandboxed and its container home is not the path the policy excludes.
@@ -363,5 +394,7 @@ entitlement to Local Assistant.
 The v4.6 response surface parses bounded block Markdown into native SwiftUI components. Headings, paragraphs, emphasis, lists, quotations, fenced code, dividers, and pipe tables remain selectable without a WebView or active links. The current answer and retained assistant history expand with the live window width. Tables use equal-width native cells, a distinct header row, wrapped text, and horizontal scrolling only when the available width cannot keep every column readable. Presentation remains entirely inside the network-denied Local Assistant target.
 
 The v4.5 source keeps complete CloudBase reminder snapshots as hidden read-only RAG knowledge. Natural reminder and to-do questions retrieve locally without confirmation or Connector access. Clear reminder mutations receive an in-conversation double confirmation: the assistant repeats the exact request, the embedded local LLM classifies the reply, and a bounded local phrase layer guarantees that clear standalone instructions such as continue, proceed, send it, or cancel do not require the literal words yes or no. Only a strict confirmation can add the typed authorization before the request enters the external Connector. Declines, unclear replies, stale-runtime guidance, and request failures remain assistant messages; no reminder-operation dialog is presented, and a failed mutation remains pending for retry. While a request is running, its processing label and progress bar occupy the center of the available assistant workspace rather than the top of the result scroller. The app reads the Connector's non-secret runtime contract before sending, so an older installed runtime is routed to Update and Verify instead of receiving an incompatible request. Standalone OpenClaw naming remains the gate for non-reminder agent requests. Complete reminder lists return all cached rows as concise, tag-grouped cards without duplicating their contents in prose. Reminder and file/folder grids change columns live with the window width, and applicable Settings, Activity, History, and setup surfaces use available space without fixed whole-screen margins or artificial lower gaps. Both voice modes submit after about two seconds of silence, while Hold Space release can submit sooner. Local Assistant still presents three short completion cards while the Connector owns the five actionable setup steps, uses the administrator SSH access the user already has, creates a dedicated key only on demand, and keeps OpenClaw on server loopback. A complete existing installation presents one connection-review route alongside update and verification; credential replacement remains inside Step 4 and reveals empty secure fields only on request. Existing-install discovery reuses public settings and the SSH identity, and obtains only bounded metadata-level Keychain presence results without returning token values to Swift. Confirmed cleanup removes only Connector state while preserving Local Assistant and its reminder cache. The server installer creates a non-root forwarding-only account constrained to `127.0.0.1:23116`, waits for the authenticated bridge route, and prints the host key and two scoped tokens only after a complete snapshot succeeds. The Connector embeds the credential-free server payload, pins the server host key, opens no tunnel between tasks, classifies common SSH failures without exposing raw diagnostics, and reports success before closing only after one authenticated complete snapshot proves the server route, reminder credential, and no-Calendar boundary. Local Assistant launches only an exactly matching Connector version, the release build rejects mismatched application versions, startup shows progress before controls become active, and the current screen survives a Dock reopen. Connector packaging uses pinned Hatchling rather than the vulnerable setuptools build path. launchd runs the Connector briefly for queued work and due schedule checks, including a missed check after wake. Build, static boundary audit, automated suites, and focused checks are recorded separately in the release-status table in README. Live speech recognition and formal disconnected runtime observation remain manual gates. No CloudBase function, VPN application, public Gateway, or continuous tunnel is deployed by the repository build.
+
+</details>
 
 </details>

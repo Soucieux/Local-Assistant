@@ -28,6 +28,18 @@ Current release components:
 - Connector runtime: **v1.8.0**
 - OpenClaw server bridge: **v1.4.0**
 
+## Terms used in setup
+
+- **Connector:** the separate Mac app that is allowed to contact OpenClaw.
+- **Spool:** the private folder used to exchange small request and response files with Local Assistant.
+- **SSH:** Secure Shell, the encrypted remote-connection tool already included with macOS.
+- **SSH tunnel:** a temporary encrypted path to OpenClaw's private server interface.
+- **Public key:** the safe half of the Connector identity that is copied to the server.
+- **Host key:** the server identity copied back to the Connector so it can reject an impostor.
+- **Token:** a secret value that grants one specific type of OpenClaw access.
+- **A2A:** Agent-to-Agent, the protocol used for every delegated OpenClaw agent request.
+- **Agent Card:** the description the Connector checks before sending an A2A message.
+
 ## Normal installed-app setup
 
 Open **Local Assistant → Settings → OpenClaw Connection → Open Setup**. Local Assistant opens
@@ -86,6 +98,9 @@ the last committed reminder cache and RAG index. Deleting either application bun
 not delete Keychain entries, which is why cleanup is an explicit in-app action.
 
 </details>
+
+<details>
+<summary>Developer: source installation, configuration, and checks</summary>
 
 The following sections are only for a developer who deliberately cloned the repository.
 
@@ -151,3 +166,5 @@ runtime build, strict project-root, installed, and mounted signature checks, and
 installed-screen inspection at normal and full-screen widths. Its disk image contains no saved
 server values or credentials; those remain outside the application bundle in Connector Application
 Support and macOS Keychain.
+
+</details>

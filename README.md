@@ -6,16 +6,17 @@ Local Assistant runs on one Mac and keeps its main application offline. It can:
 
 - answer ordinary questions with an embedded local model;
 - search only folders the user authorizes;
-- understand text, Office files, PDFs, OCR content, images, and folder context;
+- understand text, Office files, PDFs, and text recognized inside images (OCR);
 - accept typed or spoken requests; and
-- answer reminder questions from a local CloudBase snapshot.
+- answer reminder questions from a local copy of the CloudBase reminder list.
 
 OpenClaw is optional and remains outside the app:
 
 - Reminder reads stay local.
 - Reminder changes require an in-conversation confirmation.
 - Other OpenClaw tasks require the user to say `OpenClaw` or `Open Claw`.
-- Authorized agent messages use A2A v1.0 through the separate one-shot Connector.
+- Authorized requests use Agent-to-Agent (A2A) v1.0 through a separate Connector that starts only
+  when needed and exits after the request.
 - Only the exact submitted message is sent; files, reminder rows, and conversation history are not attached.
 
 ## Quick start
@@ -37,16 +38,16 @@ Open **Settings → OpenClaw Connection → Open Setup**. The guide opens the ma
 
 What is required:
 
-- the server address and SSH port already used for administration;
-- administrator SSH access to the OpenClaw server;
-- the public key and server ZIP created by the Connector; and
-- the host key and two tokens printed by the server installer.
+- the server address and port already used for Secure Shell (SSH) login;
+- an administrator account that can open the OpenClaw server terminal;
+- the Connector public key and server ZIP created on the Mac; and
+- the server host key and two secret access tokens printed by the server installer.
 
 No Python, Git, VPN, public Gateway, or permanent tunnel is required on the Mac.
 
 #### Connector step 1 — Identify the existing SSH server
 
-- Enter the DNS name or IP address used for SSH administration.
+- Enter the server name or numeric IP address used for SSH administration.
 - Enter the SSH port, normally `22`.
 - Confirm the same address and port work in the existing administrator login.
 
@@ -72,18 +73,18 @@ cd "OpenClaw Server Setup"
 
 The installer:
 
-- keeps OpenClaw private on server loopback;
+- keeps OpenClaw reachable only from the server itself;
 - installs the reminder snapshot and A2A routes;
-- creates a forwarding-only SSH account; and
+- creates a restricted connection account with no shell access; and
 - prints **SERVER SETUP COMPLETE** when verification succeeds.
 
 #### Connector step 4 — Enter the completed server values
 
 After **SERVER SETUP COMPLETE**, copy these printed values into the Connector:
 
-- the complete Ed25519 SSH host-key line;
-- the reminder bridge token; and
-- the OpenClaw A2A/operator token.
+- the complete SSH host-key line printed by the installer, which identifies the server;
+- the reminder bridge token, which permits read-only snapshots; and
+- the OpenClaw operator token, which permits A2A requests.
 
 The Connector fills the restricted username automatically.
 
@@ -94,8 +95,8 @@ The Connector fills the restricted username automatically.
 - Wait for the success message above the button.
 - Close the Connector manually.
 
-Verification checks the reminder snapshot and A2A Agent Card through one temporary SSH tunnel.
-The tunnel closes after the check.
+Verification checks the reminder snapshot and A2A service description through one temporary
+encrypted SSH connection. The connection closes after the check.
 
 #### Finish in Local Assistant — enable and refresh
 
@@ -106,34 +107,64 @@ The tunnel closes after the check.
 The Connector also runs briefly when a request is queued, after wake when a refresh was missed,
 and after a confirmed reminder change. A failed refresh keeps the last complete local snapshot.
 
-#### Advanced developer source setup
+### Keyboard shortcut
 
-The commands in [OpenClawConnector/README.md](OpenClawConnector/README.md) are only for developers
-working from a source checkout.
+Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to bring its window
+forward. Closing the window keeps the shortcut available; quitting the app disables it.
 
-Press **Control–Option–Space** (`⌃⌥Space`) while the application is running to bring its window forward and focus the composer. Closing the window keeps the shortcut available; quitting the application disables it.
-
-#### Example requests
+### Example requests
 
 | Request | Expected behavior |
 |---|---|
 | `Hello` | Gives a local conversational answer without file cards. |
 | `What is a PDF?` | Answers from the local model without searching files. |
 | `Show me PDFs` | Shows only indexed PDF cards without repeating their names or paths in the answer. |
-| `Find the automotive consulting PDF` | Applies a PDF constraint and ranks the remaining topic terms. |
+| `Find the automotive consulting PDF` | Filters to PDFs, then finds the most relevant topic match. |
 | `Which PDF?` | Requests a topic, filename, folder, or date instead of guessing. |
-| `Find the latest budget spreadsheet` | Applies a spreadsheet constraint and hybrid relevance ranking. |
-| `Find my school files` | Matches an indexed School folder, then promotes files and folders contained inside it. |
-| `What reminders are due tomorrow?` | Searches the latest complete local CloudBase snapshot with temporal and semantic ranking. |
+| `Find the latest budget spreadsheet` | Filters to spreadsheets, then combines word, meaning, and date matches. |
+| `Find my school files` | Finds the School folder and shows relevant items inside it. |
+| `What reminders are due tomorrow?` | Uses the latest local reminder snapshot, including deadline and meaning matches. |
 | `Create a reminder to renew the permit tomorrow at 09:00` | Asks for confirmation, then sends only that exact submitted request to OpenClaw. |
 | `Delete the permit reminder` | Asks for confirmation before sending the exact request; saying OpenClaw is not required for a clear reminder change. |
 | `OpenClaw, delete the permit reminder` | Still asks for confirmation because every reminder change is confirmation-gated. |
 | `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 | `OpenClaw, summarize today's weather plan` | Sends the exact non-reminder request to OpenClaw through A2A. |
 
+## How local RAG works
+
+RAG means **Retrieval-Augmented Generation**. The app first finds relevant local evidence, then
+gives only that evidence to the local language model for the answer.
+
+```text
+Your question
+   ├─→ FTS5 finds matching words
+   └─→ sqlite-vec finds similar meaning
+              ↓
+       combined local evidence
+              ↓
+       local model writes the answer
+```
+
+The pieces have separate jobs:
+
+- **Embedding model:** converts text into a list of numbers called a vector.
+- **Vector:** a numerical representation of the text's meaning.
+- **FTS5:** SQLite's full-text search for matching words and phrases.
+- **sqlite-vec:** stores and compares vectors to find text with similar meaning.
+- **RAG:** retrieves the best evidence and supplies it to the local model.
+
+Files and reminders use this same local pattern. Reminder deadlines also contribute to ranking.
+OpenClaw is not contacted for RAG questions.
+
+The app stores its index in relational SQLite tables. The SQLite engine is part of the app, but
+the user's `assistant.sqlite3` data file is created separately inside the private app sandbox.
+
 ---
 
 ### Build and install from source
+
+<details>
+<summary>Developer: show offline build and installation steps</summary>
 
 > **Offline boundary:** Downloads occur only during preparation on a trusted connected Mac. The destination Mac remains disconnected, and the installed application never downloads dependencies or models at runtime.
 
@@ -253,9 +284,18 @@ Microphone audio is never written to disk. Speech is recognized from memory whil
 
 SQLite may create `-wal` and `-shm` files beside the database. Conversation history remains local until it is cleared through the application or its container is removed. While the application process is running, native macOS folder events schedule incremental updates; reopening the application performs a catch-up scan. Quitting stops folder monitoring completely. Local Assistant itself has no login item, background helper, localhost service, or runtime network route. The optional separate Connector installs a one-shot per-user launchd job that wakes only for queued work or schedule checks, closes every SSH tunnel, and exits.
 
+</details>
+
 ## Release notes
 
 ### Current release status
+
+The current source release is **v4.8 (build 48)**. The application, Connector, documentation, and
+release package are complete. Live multilingual voice review and full disconnected runtime
+observation remain manual checks.
+
+<details>
+<summary>Detailed build, test, privacy, and release evidence</summary>
 
 | Release area | v4.8 status | Meaning |
 |---|---|---|
@@ -274,6 +314,8 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
 | Release artifact integrity | Complete | The disk image checksum is valid, contains only the two v4.8 build 48 applications plus the Applications link, and has SHA-256 `3692fde938f8bd815089f6796d9753b4721217476477bc06a6b78884dda3f73d`. |
+
+</details>
 
 ### Version index
 
@@ -350,6 +392,8 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
   SSH boundary, and A2A delegation.
 - Labels A2A directly in the architecture flow and explains that embedded SQLite is relational,
   while the database file remains separate from the application bundle.
+- Adds a beginner glossary and local RAG diagram, shortens troubleshooting, and collapses
+  developer-only build, test, and implementation details.
 - Gives every required Connector action a prominent full-width treatment and makes the public key
   and server ZIP equally recognizable as separate required files.
 - Replaces compact Mac/server pills with full-width location banners and restructures wide setup
@@ -878,7 +922,7 @@ Every request is classified locally:
 A2A v1.0 is the Connector's standard protocol for OpenClaw agent work:
 
 - It discovers and validates OpenClaw's Agent Card.
-- It sends every delegated conversation with JSON-RPC `SendMessage`.
+- It sends every delegated conversation with the standard A2A `SendMessage` operation.
 - It carries confirmed reminder changes and explicit non-reminder OpenClaw requests.
 - It preserves a stable conversation context without attaching local files or history.
 
@@ -926,7 +970,12 @@ Local Assistant/
 
 ### Why does Settings say a feature is not installed or damaged?
 
-Open **Settings → Models**. **Not installed** means the model files are absent, so install the verified offline model package. **Damaged** means a file no longer matches the checksum recorded at installation, so reinstall the package to replace it. Do not add runtime network access as a repair for either state.
+Open **Settings → Models**:
+
+- **Not installed:** install the verified offline model package.
+- **Damaged:** reinstall the package because a model file failed its integrity check.
+
+The app cannot download a replacement itself.
 
 ### Why is an authorized folder unavailable?
 
@@ -958,7 +1007,11 @@ Another application may already own `⌃⌥Space`. Quit or reconfigure the confl
 
 ### Why does voice input not start?
 
-Confirm that microphone permission is allowed and that **Settings → Models** reports Voice input as ready. Voice input is reported unavailable when the `openai_whisper-small` directory is incomplete, including a missing `tokenizer.json` or `tokenizer_config.json`; reinstall the verified offline model package to restore it. Recording begins immediately, but the first transcription of a session waits for the speech model to finish loading.
+- Confirm that macOS microphone permission is allowed.
+- Confirm that **Settings → Models** reports Voice input as ready.
+- If it is unavailable, reinstall the verified offline model package.
+
+The first transcription may wait briefly while the local speech model loads.
 
 ### Why does offline package resolution fail?
 
@@ -994,7 +1047,14 @@ macOS remains the final authority. A bookmark cannot bypass system permissions, 
 - Built-in conversational knowledge may be incomplete; file-specific answers remain bounded by displayed evidence.
 - The only optional network boundary is the separately packaged OpenClaw connector. Local Assistant has no direct Feishu, CloudBase, calendar, email, or general internet client.
 
-Preparation tools may use the internet on a trusted staging Mac, but they are not packaged or invoked by the runtime application. For an app-only physically offline deployment, prepare and verify all assets first, transfer them using trusted media, disconnect the destination Mac, and then install and use Local Assistant without enabling OpenClaw. The optional connector requires a separately approved private network route to the OpenClaw server.
+For a physically offline installation:
+
+1. Prepare and verify all assets on a trusted connected Mac.
+2. Transfer them using trusted media.
+3. Disconnect the destination Mac.
+4. Install and use Local Assistant without enabling OpenClaw.
+
+The optional Connector requires an approved route to the OpenClaw server.
 
 ## License
 
