@@ -1,85 +1,56 @@
 # OpenClaw Connector
 
-This optional networked companion is installed and run separately from `Local Assistant.app`. The
-normal release packages its Python runtime and LangGraph dependencies inside
-`OpenClaw Connector.app`; an installed-app user does not need Python, Git, a source checkout, a VPN,
-or another networking app. The Connector cannot read Local Assistant's authorized files, search
-results, or conversation database.
+OpenClaw Connector is the only part of Local Assistant that can use the network. It is a separate
+app with its own packaged runtime.
 
-Local Assistant and the Connector exchange schema-validated tasks through an owner-only local file
-spool. For each queued task, the Connector starts the Mac's built-in SSH client, opens one
-encrypted local-forwarding tunnel to the server's loopback-only OpenClaw Gateway, performs the
-request, closes the tunnel, and exits. There is no continuously running tunnel or networking app.
+For each request, it:
 
-The Connector has two narrow lanes:
+1. reads one validated task from the owner-only spool;
+2. opens a pinned SSH tunnel to the server's loopback-only Gateway;
+3. completes the request; and
+4. closes the tunnel and exits.
 
-- `cloudbase-reminders` accepts only an unconfirmed complete-list snapshot with
-  `calendarPolicy: "never"`. It calls the read-only OpenClaw plugin and requires the response to
-  assert `calendarChanged: false`.
-- `openclaw-agent` requires one typed authorization. An explicit non-reminder OpenClaw request must
-  contain standalone `OpenClaw` or `Open Claw`. A clear reminder create, update, complete,
-  reschedule, or remove request instead carries Local Assistant's recorded user confirmation and
-  does not need to name OpenClaw. It discovers the authenticated OpenClaw Agent Card and sends an
-  A2A v1.0 JSON-RPC `SendMessage` request. It does not attach reminder rows, files, indexed text,
-  or conversation history.
+It has two lanes:
 
-Both lanes use the same pinned SSH server identity and separate credentials in macOS Keychain. The
-non-secret configuration contains the SSH host, SSH port, fixed restricted username, spool path,
-and bounded timeout. The private SSH key remains owner-only in Connector Application Support. It
-is never exported, added to the server ZIP, or placed in a command argument.
+- **Reminder snapshot:** fetches a complete read-only CloudBase list and proves Calendar was not changed.
+- **A2A agent:** validates OpenClaw's Agent Card and sends the exact authorized message with A2A v1.0 `SendMessage`.
 
-The v4.8 build 48 application packages Connector runtime v1.8.0 and server bridge v1.4.0. The
-runtime publishes a non-secret
-contract version in its local status so Local Assistant can stop an incompatible request before it
-reaches an older installed runtime. The runtime rejects an agent task
-unless its authorization is either an explicit standalone OpenClaw invocation or a confirmed
-reminder mutation. In both cases the submitted message remains exact and no hidden context is
-added.
+The Connector cannot read indexed files, result cards, or conversation history. Tokens stay in
+macOS Keychain, and the private SSH key stays in Connector Application Support.
 
-The Python package uses Hatchling 1.27.0 as its pinned build backend. This avoids the vulnerable
-setuptools build path reported for versions below the unavailable patched release while preserving
-editable development installs and the packaged standalone runtime.
+Current release components:
+
+- Local Assistant and Connector: **v4.8 (build 48)**
+- Connector runtime: **v1.8.0**
+- OpenClaw server bridge: **v1.4.0**
 
 ## Normal installed-app setup
 
-Open Local Assistant, then choose **Settings → OpenClaw Connection → Open Setup**. Local Assistant
-opens only a Connector whose marketing version and build number match exactly. If Applications
-contains an older copy, Local Assistant opens the matching copy from the current release image and
-explains that the older Applications copy should be replaced.
+Open **Local Assistant → Settings → OpenClaw Connection → Open Setup**. Local Assistant opens
+only a Connector with the same version and build.
 
-The Connector first checks for an existing installation. This check returns only the saved server
-address, SSH port, public host key, and yes/no credential-presence flags. It never loads either
-token into the Swift interface. A complete existing installation therefore opens a short
-**Update and Verify Existing Connector** screen. For v4.8, first create a fresh server ZIP and run
-its setup once on the OpenClaw server. The packaged Mac runtime can then reuse the existing SSH
-key, settings, and Keychain tokens, verify both the reminder snapshot and A2A Agent Card, and
-restart the one-shot job without requesting any value again.
+For an existing installation:
 
-A first installation, incomplete repair, or explicit settings review uses five action-only steps.
-Definitions, security details, transfer alternatives, and recovery remain collapsed under their
-owning step:
+- create and run a fresh server ZIP once for this release;
+- choose **Update and Verify Existing Connector**; and
+- reuse the saved SSH settings and Keychain credentials.
 
-1. Enter only the server address and SSH port from the existing administrator SSH login. The
-   address has no username, scheme, path, or OpenClaw port.
-2. Choose **Create Key and Save Public Key…**, then **Create Server Setup ZIP…**. Both required
-   actions use the same prominent button style and remain explicit and user-controlled. The public
-   key is a separate file and is not contained in the ZIP; nothing is uploaded automatically.
-3. Transfer both files to the OpenClaw owner's home folder and run the four commands shown in the
-   Connector. The optional SCP template is unnecessary when the files are already on the server.
-   The installer keeps OpenClaw on
-   `127.0.0.1:23116`, installs the reminder and A2A bridge routes, and creates a non-root
-   `local-assistant-tunnel` account
-   restricted to local forwarding to that exact destination. It grants no shell, PTY, X11,
-   SSH-agent forwarding, remote forwarding, or alternative destination.
-4. Continue only after `SERVER SETUP COMPLETE`, then paste the printed SSH host key, reminder bridge
-   token, and A2A/operator token into the Connector. The restricted username is filled automatically.
-   Existing Keychain tokens remain hidden; **Replace Saved Credentials** reveals two empty fields
-   only when replacement is intentional.
-5. Choose **Save and Verify Connector**. New tokens travel to the packaged runtime through bounded
-   standard input, enter macOS Keychain, and are immediately cleared from the Swift fields before
-   remote verification. After verification succeeds, a confirmation remains above the button and
-   the user closes the Connector manually. Then enable the connection in Local Assistant, choose
-   the two-, four-, or eight-hour schedule, and use **Refresh Now** once.
+For a new setup:
+
+1. Enter the server address and SSH port used for administration.
+2. Create the public key and server ZIP. Save them together.
+3. Transfer both files and run the four commands shown in the Connector.
+4. After **SERVER SETUP COMPLETE**, paste the printed host key and two tokens.
+5. Choose **Save and Verify Connector**, wait for success, then close the Connector manually.
+
+Finish in Local Assistant:
+
+- enable **OpenClaw connection**;
+- choose the reminder refresh schedule; and
+- select **Refresh Now** once.
+
+<details>
+<summary>Verification, scheduling, and cleanup details</summary>
 
 Verification performs a real complete read-only snapshot and fetches the authenticated A2A v1.0
 Agent Card through temporary tunnels. A green confirmation appears above the verification button
@@ -109,6 +80,8 @@ configuration, and checkpoint), deletes the Connector's two exact Keychain entri
 pending spool lanes. It does not delete Local Assistant, indexed files, conversation history, or
 the last committed reminder cache and RAG index. Deleting either application bundle by itself does
 not delete Keychain entries, which is why cleanup is an explicit in-app action.
+
+</details>
 
 The following sections are only for a developer who deliberately cloned the repository.
 

@@ -1,69 +1,67 @@
 # Local Assistant
 
-> A private macOS assistant for conversation, evidence-backed file search, and local reminder intelligence, with no network access in the application process.
+> A private macOS assistant for local conversation, file search, and reminder knowledge.
 
-Local Assistant is designed for one person and one Mac. Open the application normally or press **Control–Option–Space**, then type or speak through its focused light command surface. Voice input can use a click followed by automatic sending after a pause, or hold-to-talk with the Space bar. The main screen presents only the current request, response, and file findings; the complete retained conversation remains available from **History**. It can answer ordinary questions, retain recent conversational context for follow-up requests, ask for clarification when a file request is ambiguous, and search only the folders explicitly authorized through macOS.
+Local Assistant runs on one Mac and keeps its main application offline. It can:
 
-Conversation, retrieval, text embeddings, speech recognition, OCR, and data storage all run inside the sandboxed application. Semantic search compares plain-language requests with text extracted from files, including OCR text from images and image-only PDF pages. Authorized roots and descendant folders are also indexed with local context, so a request such as “files for school” can use the matching folder as the scope even when individual files do not contain the word “school.” Search answers stay concise while reusable result modules present item identity, matching evidence, and explicit Open or Reveal actions. The application runtime does not depend on a local server, a cloud service, telemetry, or an updater.
+- answer ordinary questions with an embedded local model;
+- search only folders the user authorizes;
+- understand text, Office files, PDFs, OCR content, images, and folder context;
+- accept typed or spoken requests; and
+- answer reminder questions from a local CloudBase snapshot.
 
-An optional, separately installed OpenClaw connector exchanges schema-validated tasks through an owner-only local file spool. The app keeps complete CloudBase reminder snapshots as hidden local knowledge and answers reminder questions with exact, lexical, semantic, and deadline-aware retrieval. It never shows a reminder-management screen, changes CloudBase itself, or schedules reminder notifications. Read-only reminder questions stay entirely local and need no confirmation. A reminder create, update, complete, reschedule, or remove request requires explicit confirmation before only that submitted text is sent to OpenClaw. Standalone `OpenClaw` or `Open Claw` remains the gate for unrelated OpenClaw requests. General agent messages use A2A v1.0 between the Connector and OpenClaw while the complete-snapshot reminder route remains separate. The app bundle still has no networking entitlement, and the connector's scoped credentials remain in separate macOS Keychain entries.
+OpenClaw is optional and remains outside the app:
+
+- Reminder reads stay local.
+- Reminder changes require an in-conversation confirmation.
+- Other OpenClaw tasks require the user to say `OpenClaw` or `Open Claw`.
+- Authorized agent messages use A2A v1.0 through the separate one-shot Connector.
+- Only the exact submitted message is sent; files, reminder rows, and conversation history are not attached.
 
 ## Quick start
 
-Choose the path that matches what you need. If Local Assistant is already installed, begin with the first path. The source-build path is for preparing a new installation without giving the finished application network access.
+Use the installed application for normal work. The source-build section is only for developers preparing an offline release.
 
 ### Use the installed application
 
 1. Open **Local Assistant**.
-2. Open **Settings** and choose **Add Folder**.
-3. Select only the folder the assistant should read.
-4. Follow the folder's progress in Settings, or continue using the assistant while indexing runs in the background.
-5. In **Voice input**, choose **Click to speak** or **Hold Space**, then return to the assistant and type or speak a request.
-6. Review the centered answer and responsive findings before choosing **Open File**, **Open Folder**, or **Reveal in Finder**.
-7. Open **History** to review the complete retained conversation, including the current session.
+2. In **Settings**, choose **Add Folder** and select what the app may read.
+3. Type a request, click to speak, or hold Space to talk.
+4. Review the answer and result cards. Files open only after an explicit action.
+5. Use **History** for earlier conversations and results.
 
 ### OpenClaw connector setup
 
-Local Assistant never opens a network connection. This connection uses two applications and the
-Mac's built-in SSH client:
+Open **Settings → OpenClaw Connection → Open Setup**. The guide opens the matching
+`OpenClaw Connector.app` and walks through five steps.
 
-- `Local Assistant.app`, the sandboxed offline application;
-- `OpenClaw Connector.app`, the only application component that contacts OpenClaw;
-- a dedicated Connector SSH key and restricted server account that can forward only to
-  `127.0.0.1:23116`.
+What is required:
 
-`OpenClaw Connector.app` contains the versioned server-only deployment payload. It never writes that payload automatically. In the Connector, the user chooses **Create Server Setup ZIP…**, selects a save location, and receives `OpenClaw Server Setup.zip`. The ZIP is assembled locally, downloads nothing, and contains no credentials or application source.
+- the server address and SSH port already used for administration;
+- administrator SSH access to the OpenClaw server;
+- the public key and server ZIP created by the Connector; and
+- the host key and two tokens printed by the server installer.
 
-The installed-app setup assumes the Mac has no Python, Git, source checkout, VPN, connector
-configuration, or extra networking application. The OpenClaw host may remain completely CLI-only.
-The user needs only the existing server address, SSH port, and administrator SSH access.
-
-Open Local Assistant and choose **Settings → OpenClaw Connection → Open Setup**. Local Assistant
-shows three short completion cards: open the matching Connector, enable the connection after it
-verifies, and run the first refresh. The Connector owns the five actionable setup steps and keeps
-less common recovery instructions in collapsed **Questions and fixes** disclosures.
+No Python, Git, VPN, public Gateway, or permanent tunnel is required on the Mac.
 
 #### Connector step 1 — Identify the existing SSH server
 
-Record the server DNS name or IP address and SSH port already used for administration. Confirm the
-administrator login works before continuing. Port `23116` must remain closed to the public and the
-OpenClaw Gateway must not be bound to a public interface.
+- Enter the DNS name or IP address used for SSH administration.
+- Enter the SSH port, normally `22`.
+- Confirm the same address and port work in the existing administrator login.
 
 #### Connector step 2 — Create both server files
 
-Open the exact Connector version selected by Local Assistant. Choose **Create Key and Save Public
-Key…** and save `local-assistant-connector.pub`, then choose **Create Server Setup ZIP…** and save
-the ZIP beside it. Only the public key is transferred; the owner-only private key stays in the
-current Mac user's Connector Application Support directory. The ZIP contains only generic files
-embedded in the Connector and is created only after the user chooses a destination.
+- Choose **Create Key and Save Public Key…**.
+- Choose **Create Server Setup ZIP…**.
+- Save both files in the same folder.
+
+The private key stays on the Mac. The ZIP contains no credentials or application source.
 
 #### Connector step 3 — Transfer both files and run setup
 
-Transfer both unchanged files to the OpenClaw owner's home folder using the existing trusted SSH,
-SFTP, Finder, or SCP method. The optional SCP template is only an alternative file-transfer method;
-skip it when the files are already on the server. Run the following on the OpenClaw server as the
-account that owns the working installation. The installer asks for administrator approval only
-when it creates the restricted SSH account and configuration:
+Transfer both files to the OpenClaw owner's home folder. Then run these commands on the OpenClaw
+server as the account that owns OpenClaw:
 
 ```bash
 cd "$HOME"
@@ -72,59 +70,46 @@ cd "OpenClaw Server Setup"
 ./setup-server.sh "$HOME/local-assistant-connector.pub"
 ```
 
-The installer keeps the Gateway on `127.0.0.1:23116`, disables OpenClaw's Tailscale mode, installs
-the read-only reminder route and private A2A v1.0 routes, waits for them to become ready, and
-verifies a complete snapshot plus the A2A Agent Card locally. It creates a non-root
-`local-assistant-tunnel` account whose authorized key can perform local port forwarding only to
-that exact loopback destination. Shell access, PTY, X11, SSH-agent forwarding, remote forwarding,
-and every other destination are denied. A failed `sshd` validation restores the previous SSH
-configuration. It is safe to rerun after a partial failure.
+The installer:
+
+- keeps OpenClaw private on server loopback;
+- installs the reminder snapshot and A2A routes;
+- creates a forwarding-only SSH account; and
+- prints **SERVER SETUP COMPLETE** when verification succeeds.
 
 #### Connector step 4 — Enter the completed server values
 
-Continue only after **SERVER SETUP COMPLETE**. Record the server's complete Ed25519 host-key line,
-the reminder bridge token, and the OpenClaw A2A/operator token. The installer also prints the host-key
-fingerprint for comparison through the already trusted administrator SSH session. The server
-address and SSH port remain the values from step 1; the restricted username is always
-`local-assistant-tunnel`.
+After **SERVER SETUP COMPLETE**, copy these printed values into the Connector:
+
+- the complete Ed25519 SSH host-key line;
+- the reminder bridge token; and
+- the OpenClaw A2A/operator token.
+
+The Connector fills the restricted username automatically.
 
 #### Connector step 5 — Save and verify
 
-Local Assistant searches Applications, beside its own app, macOS application registration, and the
-root of a mounted release disk image. It launches only a Connector whose marketing version and
-build number exactly match Local Assistant. When Applications contains an older copy, the setup
-screen tells the user to replace it instead of silently opening it. If no matching copy is found, a
-Finder-backed picker accepts only the matching Connector.
+- Enter the server values and two tokens.
+- Choose **Save and Verify Connector**.
+- Wait for the success message above the button.
+- Close the Connector manually.
 
-Enter the server address and SSH port, paste the complete host-key line and two tokens, then choose
-**Save and Verify Connector**. The Connector pins that host key, opens one encrypted tunnel,
-performs an authenticated complete read-only reminder snapshot, requires proof that Calendar was
-unchanged, validates the authenticated A2A v1.0 Agent Card, and closes the tunnel. On success, a
-green message remains above the button until the user closes the setup app. On failure, the same
-stable message position provides an actionable explanation. Existing installations must create
-and run a fresh server ZIP once before updating and verifying the v4.8 Connector runtime.
+Verification checks the reminder snapshot and A2A Agent Card through one temporary SSH tunnel.
+The tunnel closes after the check.
 
 #### Finish in Local Assistant — enable and refresh
 
-Return to Settings, enable **OpenClaw connection**, and select the two-, four-, or eight-hour
-refresh interval. A per-user `launchd` job runs the Connector briefly when a request is queued and
-at scheduled catch-up checks; the Connector opens its tunnel only when a snapshot is due. A missed
-calendar interval is handled after the Mac wakes. The same one-shot path runs at Local Assistant
-launch when stale, on **Refresh Now**, and after a successful confirmed reminder add, update,
-complete, reschedule, or delete request.
+- Return to **Settings** and enable **OpenClaw connection**.
+- Choose a two-, four-, or eight-hour reminder refresh schedule.
+- Select **Refresh Now** once.
 
-Every successful complete snapshot transactionally replaces the local reminder cache and RAG
-index. Rows missing from the new snapshot disappear, so remote `updatedAt` values and deletion
-tombstones are unnecessary. A failed fetch or local validation leaves the last complete cache and
-index untouched and marks reminder knowledge as potentially outdated. Reminder questions always
-use that local cache; they never contact OpenClaw.
+The Connector also runs briefly when a request is queued, after wake when a refresh was missed,
+and after a confirmed reminder change. A failed refresh keeps the last complete local snapshot.
 
 #### Advanced developer source setup
 
-The commands in `OpenClawConnector/README.md` are for developers who deliberately cloned this repository. They are not part of installed-app setup. That reference labels every command that runs unchanged, every value that must be replaced, and confirms that the connector CLI creates its configuration automatically.
-
-Once enabled, Local Assistant refreshes its hidden reminder snapshot at launch when stale, after a
-successful confirmed reminder change, on manual request, and through the selected macOS schedule.
+The commands in [OpenClawConnector/README.md](OpenClawConnector/README.md) are only for developers
+working from a source checkout.
 
 Press **Control–Option–Space** (`⌃⌥Space`) while the application is running to bring its window forward and focus the composer. Closing the window keeps the shortcut available; quitting the application disables it.
 
@@ -144,6 +129,7 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the application is runn
 | `Delete the permit reminder` | Asks for confirmation before sending the exact request; saying OpenClaw is not required for a clear reminder change. |
 | `OpenClaw, delete the permit reminder` | Still asks for confirmation because every reminder change is confirmation-gated. |
 | `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
+| `OpenClaw, summarize today's weather plan` | Sends the exact non-reminder request to OpenClaw through A2A. |
 
 ---
 
@@ -275,6 +261,7 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 |---|---|---|
 | Approved scope | Complete | Connector and Settings cards now use responsive content hierarchy, consistent controls, readable explanations, and stable verification messages. Main-screen file and folder results reuse the richer History presentation. |
 | Source implementation | Complete | The v4.8 Swift interfaces remove automatic Connector termination, keep schedule and refresh controls together, preserve narrow-window stacking, and share one file-result card implementation between Main and History. Connector runtime v1.8.0 and server bridge v1.4.0 are unchanged. |
+| Documentation | Complete | Setup, request routing, reminder RAG, the one-shot SSH boundary, and A2A delegation now use short steps and bullets. Detailed history and reference material remain available in collapsed sections. |
 | Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
 | Debug compilation | Complete | Local Assistant and the standalone Connector compile with the v4.8 interface changes. |
 | Release build | Complete | The clean offline build produced signed v4.8 build 48 copies of Local Assistant and OpenClaw Connector plus the refreshed clean-Mac disk image. The matching applications are installed in `/Applications`. |
@@ -289,6 +276,12 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 | Release artifact integrity | Complete | The disk image checksum is valid, contains only the two v4.8 build 48 applications plus the Applications link, and has SHA-256 `3692fde938f8bd815089f6796d9753b4721217476477bc06a6b78884dda3f73d`. |
 
 ### Version index
+
+<details>
+<summary>Complete version history (v4.8 to v0.1)</summary>
+
+The entries below preserve the full release record. They are collapsed so current setup and
+architecture remain easy to scan.
 
 The table and notes below are the durable record of what each release contained. Only the
 current project-root release set is retained; rebuilding never leaves a previous copy. Each
@@ -353,6 +346,8 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 
 ### v4.8 — Responsive setup and consistent result cards
 
+- Simplifies the README and architecture guide around local routing, reminder RAG, the one-shot
+  SSH boundary, and A2A delegation.
 - Gives every required Connector action a prominent full-width treatment and makes the public key
   and server ZIP equally recognizable as separate required files.
 - Replaces compact Mac/server pills with full-width location banners and restructures wide setup
@@ -792,7 +787,12 @@ history are not rewritten.
 
 - Established the sandboxed SwiftUI application, read-only folder authorization, local indexing, embedded inference, hybrid retrieval, OCR, and local voice foundation.
 
+</details>
+
 ## Product reference
+
+<details>
+<summary>Detailed capability and file-format reference</summary>
 
 ### Capabilities
 
@@ -857,34 +857,27 @@ Complex formulas, charts, comments, embedded objects, encrypted files, and propr
 
 SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
 
+</details>
+
 ## Architecture and project structure
 
 ### Request flow
 
-```text
-Typed or spoken request
-          │
-          ▼
- Local intent decision
-   ┌──────┼──────────────┐
-   ▼      ▼              ▼
- Chat  Clarification  Search plan
-                         │
-            normalized terms + file kinds
-                         │
-                         ▼
-      filename/path + FTS5 + sqlite-vec
-                         │
-                         ▼
-             constrained local ranking
-                         │
-                         ▼
-         grounded answer + reusable cards
-```
+Every request is classified locally:
 
-The first model pass decides whether to answer conversationally, ask for clarification, or search. A search plan then runs against the private index. For file-grounded answers, a second model pass receives only bounded ranked paths and excerpts. Indexed text is treated as untrusted evidence; chat-control markers are neutralized and the model is explicitly instructed not to follow instructions found in excerpts.
+- **Conversation:** embedded model → local answer.
+- **File request:** private index → grounded answer and result cards.
+- **Reminder read:** local reminder cache/RAG → answer or reminder cards.
+- **Reminder change:** local confirmation → one-shot Connector → A2A → OpenClaw.
+- **Other OpenClaw task:** explicit `OpenClaw` wording → one-shot Connector → A2A → OpenClaw.
+
+Only bounded evidence reaches the local grounding pass. Indexed content is treated as data, never
+as an instruction.
 
 ### Source layout
+
+<details>
+<summary>Source directory map</summary>
 
 ```text
 Local Assistant/
@@ -912,6 +905,8 @@ Local Assistant/
 ├── Vendor/                       # Recreated pinned dependencies; excluded from Git
 └── outputs/                      # Generated offline transfer kit; excluded from Git
 ```
+
+</details>
 
 ## Troubleshooting
 
