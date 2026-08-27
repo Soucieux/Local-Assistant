@@ -13,12 +13,17 @@ Local Assistant has two separate runtime boundaries.
 **Optional OpenClaw Connector**
 
 ```text
-Local Assistant → owner-only spool → one-shot Connector
-                → pinned SSH tunnel → OpenClaw loopback Gateway
+Local Assistant → owner-only spool → one-shot Connector → pinned SSH tunnel
+                                                        ├─→ A2A v1.0
+                                                        │   Agent Card + SendMessage
+                                                        │   → OpenClaw agent and tools
+                                                        └─→ read-only reminder snapshot
+                                                            → CloudBase reminders
 ```
 
 - **Reminder lane:** fetches a complete read-only snapshot with its own token.
-- **A2A lane:** validates the Agent Card, then sends the exact message with JSON-RPC `SendMessage`.
+- **A2A lane:** handles every delegated OpenClaw conversation and every confirmed reminder
+  change. It validates the Agent Card, then sends the exact message with JSON-RPC `SendMessage`.
 - Every tunnel closes after its request.
 - Files, reminder rows, the database, and conversation history are never attached.
 
@@ -173,12 +178,19 @@ Both are removed. Offline mode is unconditional and a caller cannot re-enable do
 
 ## Persistence and retrieval
 
-One embedded SQLite database provides:
+**Embedded SQLite** means the SQLite engine is linked into the app and runs in the same process.
+The user's data is not baked into the application bundle; it is created as the private
+`assistant.sqlite3` file inside the app's sandbox.
 
-1. relational storage for authorized roots, monitoring preferences, indexed items, chunks, local chat history, and 30-day indexing activity;
-2. FTS5 indexing for names, paths, and extracted text; and
-3. a statically registered sqlite-vec table for 1,024-dimensional float embeddings; and
-4. the latest complete reminder snapshot, reminder FTS/vector rows, and last successful snapshot metadata.
+This is a **relational database**, not a document database. It uses tables, rows, columns, keys,
+and transactions. Search extensions add full-text and vector indexes without changing that model.
+
+The database provides:
+
+- relational tables for authorized roots, indexed items, chunks, chat history, and activity;
+- FTS5 indexes for names, paths, and extracted text;
+- sqlite-vec indexes for 1,024-dimensional embeddings; and
+- reminder snapshot rows, reminder search indexes, and last-sync metadata.
 
 SQLite extension loading is not enabled. sqlite-vec is compiled into the application and registered on the existing connection.
 

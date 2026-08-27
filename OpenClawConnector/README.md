@@ -15,6 +15,10 @@ It has two lanes:
 - **Reminder snapshot:** fetches a complete read-only CloudBase list and proves Calendar was not changed.
 - **A2A agent:** validates OpenClaw's Agent Card and sends the exact authorized message with A2A v1.0 `SendMessage`.
 
+A2A is the standard protocol for all delegated OpenClaw agent work, including explicit general
+requests and confirmed reminder changes. The complete reminder snapshot uses the separate
+read-only lane instead.
+
 The Connector cannot read indexed files, result cards, or conversation history. Tokens stay in
 macOS Keychain, and the private SSH key stays in Connector Application Support.
 

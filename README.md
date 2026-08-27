@@ -348,6 +348,8 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 
 - Simplifies the README and architecture guide around local routing, reminder RAG, the one-shot
   SSH boundary, and A2A delegation.
+- Labels A2A directly in the architecture flow and explains that embedded SQLite is relational,
+  while the database file remains separate from the application bundle.
 - Gives every required Connector action a prominent full-width treatment and makes the public key
   and server ZIP equally recognizable as separate required files.
 - Replaces compact Mac/server pills with full-width location banners and restructures wide setup
@@ -870,6 +872,18 @@ Every request is classified locally:
 - **Reminder read:** local reminder cache/RAG → answer or reminder cards.
 - **Reminder change:** local confirmation → one-shot Connector → A2A → OpenClaw.
 - **Other OpenClaw task:** explicit `OpenClaw` wording → one-shot Connector → A2A → OpenClaw.
+
+### How A2A is used
+
+A2A v1.0 is the Connector's standard protocol for OpenClaw agent work:
+
+- It discovers and validates OpenClaw's Agent Card.
+- It sends every delegated conversation with JSON-RPC `SendMessage`.
+- It carries confirmed reminder changes and explicit non-reminder OpenClaw requests.
+- It preserves a stable conversation context without attaching local files or history.
+
+Reminder snapshot synchronization does not use A2A. It remains a separate complete, read-only
+route with its own credential.
 
 Only bounded evidence reaches the local grounding pass. Indexed content is treated as data, never
 as an instruction.
