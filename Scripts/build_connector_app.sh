@@ -89,7 +89,9 @@ SWIFT_MODULE_CACHE_PATH="${BUILD_DIR}/swift-module-cache" \
   "${CONNECTOR_DIR}/CompanionApp/ConnectorSetupConstants.swift" \
   "${CONNECTOR_DIR}/CompanionApp/ConnectorDesignSystem.swift" \
   "${CONNECTOR_DIR}/CompanionApp/ConnectorSetupModel.swift" \
+  "${CONNECTOR_DIR}/CompanionApp/ConnectorSetupModel+Runtime.swift" \
   "${CONNECTOR_DIR}/CompanionApp/ConnectorSetupView.swift" \
+  "${CONNECTOR_DIR}/CompanionApp/ConnectorSetupView+Components.swift" \
   "${CONNECTOR_DIR}/CompanionApp/OpenClawConnectorApp.swift" \
   -o "${OUTPUT_APP}/Contents/MacOS/OpenClawConnectorSetup"
 

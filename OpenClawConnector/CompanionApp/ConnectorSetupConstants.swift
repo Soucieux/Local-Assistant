@@ -32,7 +32,26 @@ enum ConnectorSetupConstants {
             "Data/Library/Application Support/LocalAssistant/Connector"
         static let libraryApplicationSupportPath = "Library/Application Support"
         static let libraryContainersPath = "Library/Containers"
-        static let pendingSpoolDirectories = ["Requests", "Processing", "Responses"]
+        static let requestsDirectory = "Requests"
+        static let processingDirectory = "Processing"
+        static let responsesDirectory = "Responses"
+        static let pendingSpoolDirectories = [
+            requestsDirectory,
+            processingDirectory,
+            responsesDirectory
+        ]
+    }
+
+    /// Exact `ERROR_*` values the connector runtime writes to standard error.
+    /// Source of truth: `src/local_assistant_connector/constants.py`.
+    enum RuntimeError {
+        static let sshHostKeyMismatch = "the pinned SSH host key does not match the server"
+        static let sshPublicKeyRejected = "the server rejected the Connector public key"
+        static let sshHostUnresolved = "the SSH server address could not be resolved"
+        static let sshConnectionRefused = "the SSH server refused the connection"
+        static let sshConnectionTimeout = "the SSH server connection timed out"
+        static let sshNetworkUnreachable = "the SSH server is unreachable from this Mac"
+        static let tunnelUnreachable = "the restricted SSH tunnel could not reach OpenClaw"
     }
 
     enum Configuration {

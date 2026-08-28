@@ -214,6 +214,7 @@ final class ConnectorSetupModel: ObservableObject {
     }
 
     /// Writes one non-secret command group to the macOS pasteboard.
+    /// - Parameter value: Non-secret command text shown in the setup step.
     private func copyToPasteboard(_ value: String) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
@@ -307,6 +308,7 @@ final class ConnectorSetupModel: ObservableObject {
     }
 
     /// Applies only credential-free values returned by setup discovery.
+    /// - Parameter state: Reusable non-secret values and credential-presence flags.
     private func applyExistingState(_ state: ExistingConnectorState) {
         existingState = state
         sshHost = state.sshHost
@@ -355,6 +357,7 @@ final class ConnectorSetupModel: ObservableObject {
     }
 
     /// Shows one user-safe failure without remote content or credentials.
+    /// - Parameter error: Failure whose description is already approved for display.
     private func showFailure(_ error: Error) {
         statusMessage = ConnectorSetupConstants.Text.setupFailedPrefix
             + error.localizedDescription
@@ -612,7 +615,10 @@ final class ConnectorSetupModel: ObservableObject {
             ConnectorSetupConstants.LaunchAgent.runAtLoadKey: false,
             ConnectorSetupConstants.LaunchAgent.watchPathsKey: [
                 URL(fileURLWithPath: spoolPath, isDirectory: true)
-                    .appendingPathComponent("Requests", isDirectory: true).path
+                    .appendingPathComponent(
+                        ConnectorSetupConstants.Identity.requestsDirectory,
+                        isDirectory: true
+                    ).path
             ],
             ConnectorSetupConstants.LaunchAgent.startCalendarIntervalKey:
                 stride(from: 0, to: 24, by: 2).map {
@@ -650,266 +656,6 @@ final class ConnectorSetupModel: ObservableObject {
         }
     }
 
-    /// Runs the packaged read-only verification command without exposing credentials.
-    /// - Throws: A user-safe error matched to the failed connection stage.
-    nonisolated private static func verifyRuntimeConnection() throws {
-        let process = Process()
-        let errorPipe = Pipe()
-        process.executableURL = runtimeExecutableURL()
-        process.arguments = [ConnectorSetupConstants.Identity.connectorVerifyArgument]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = errorPipe
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            throw ConnectorSetupError.message(
-                ConnectorSetupConstants.Text.verificationFailed
-            )
-        }
-        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        switch process.terminationStatus {
-        case 0:
-            return
-        case ConnectorSetupConstants.Configuration.verificationExitAuthentication:
-            throw ConnectorSetupError.message(
-                ConnectorSetupConstants.Text.verificationAuthenticationFailed
-            )
-        case ConnectorSetupConstants.Configuration.verificationExitUnreachable:
-            throw ConnectorSetupError.message(
-                verificationSSHMessage(from: errorData)
-            )
-        case ConnectorSetupConstants.Configuration.verificationExitSnapshot:
-            throw ConnectorSetupError.message(
-                ConnectorSetupConstants.Text.verificationSnapshotFailed
-            )
-        case ConnectorSetupConstants.Configuration.verificationExitA2A:
-            throw ConnectorSetupError.message(
-                ConnectorSetupConstants.Text.verificationA2AFailed
-            )
-        default:
-            throw ConnectorSetupError.message(
-                ConnectorSetupConstants.Text.verificationFailed
-            )
-        }
-    }
-
-    /// Accepts only known credential-free runtime errors and discards all other output.
-    nonisolated private static func verificationSSHMessage(from data: Data) -> String {
-        guard data.count <= ConnectorSetupConstants.Configuration.maximumVerificationErrorBytes,
-              let raw = String(data: data, encoding: .utf8)?
-                .trimmingCharacters(in: .whitespacesAndNewlines) else {
-            return ConnectorSetupConstants.Text.verificationUnreachable
-        }
-        let messages: [String: String] = [
-            "the pinned SSH host key does not match the server":
-                ConnectorSetupConstants.Text.sshHostKeyMismatch,
-            "the server rejected the Connector public key":
-                ConnectorSetupConstants.Text.sshPublicKeyRejected,
-            "the SSH server address could not be resolved":
-                ConnectorSetupConstants.Text.sshHostUnresolved,
-            "the SSH server refused the connection":
-                ConnectorSetupConstants.Text.sshConnectionRefused,
-            "the SSH server connection timed out":
-                ConnectorSetupConstants.Text.sshConnectionTimeout,
-            "the SSH server is unreachable from this Mac":
-                ConnectorSetupConstants.Text.sshNetworkUnreachable,
-            "the restricted SSH tunnel could not reach OpenClaw":
-                ConnectorSetupConstants.Text.verificationUnreachable
-        ]
-        return messages[raw] ?? ConnectorSetupConstants.Text.verificationUnreachable
-    }
-
-    /// Reads credential-free setup JSON from the runtime embedded in this app.
-    /// - Returns: Existing local setup facts without Keychain values.
-    /// - Throws: A safe error if the runtime or bounded JSON response is invalid.
-    nonisolated private static func readExistingSetupState() throws -> ExistingConnectorState {
-        let process = Process()
-        let output = Pipe()
-        process.executableURL = try bundledRuntimeExecutableURL()
-        process.arguments = [ConnectorSetupConstants.Identity.connectorSetupStateArgument]
-        process.standardInput = FileHandle.nullDevice
-        process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
-        try process.run()
-        process.waitUntilExit()
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        guard process.terminationStatus == 0,
-              data.count <= ConnectorSetupConstants.Configuration.maximumSetupStateBytes else {
-            throw ConnectorSetupError.message(ConnectorSetupConstants.Text.setupStateFailed)
-        }
-        do {
-            return try JSONDecoder().decode(ExistingConnectorState.self, from: data)
-        } catch {
-            throw ConnectorSetupError.message(ConnectorSetupConstants.Text.setupStateFailed)
-        }
-    }
-
-    /// Invokes exact Connector cleanup from the runtime embedded in this app.
-    /// - Throws: A safe error when cleanup cannot complete.
-    nonisolated private static func forgetRuntimeData() throws {
-        let process = Process()
-        process.executableURL = try bundledRuntimeExecutableURL()
-        process.arguments = [ConnectorSetupConstants.Identity.connectorForgetArgument]
-        process.standardInput = FileHandle.nullDevice
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw ConnectorSetupError.message(ConnectorSetupConstants.Text.removalFailed)
-        }
-    }
-
-    /// Stops an existing connector service before replacing its runtime or credentials.
-    private func stopExistingLaunchAgent() {
-        let domain = ConnectorSetupConstants.LaunchAgent.domainPrefix + String(getuid())
-        _ = Self.runLaunchctl(
-            arguments: [
-                ConnectorSetupConstants.LaunchAgent.bootout,
-                domain,
-                Self.launchAgentPlistURL().path
-            ]
-        )
-    }
-
-    /// Runs one bounded launchctl operation without a shell.
-    /// - Parameter arguments: Exact launchctl arguments.
-    /// - Returns: Process termination status.
-    private static func runLaunchctl(arguments: [String]) -> Int32 {
-        let process = Process()
-        process.executableURL = URL(
-            fileURLWithPath: ConnectorSetupConstants.LaunchAgent.executable
-        )
-        process.arguments = arguments
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        do {
-            try process.run()
-            process.waitUntilExit()
-            return process.terminationStatus
-        } catch {
-            return -1
-        }
-    }
-
-    /// Returns the Connector runtime directory embedded in this app.
-    /// - Returns: Bundled runtime directory URL.
-    /// - Throws: A safe error when release resources are incomplete.
-    nonisolated private static func bundledRuntimeDirectoryURL() throws -> URL {
-        guard let source = Bundle.main.resourceURL?.appendingPathComponent(
-            ConnectorSetupConstants.Identity.embeddedRuntimeDirectory,
-            isDirectory: true
-        ), FileManager.default.fileExists(atPath: source.path) else {
-            throw ConnectorSetupError.message(ConnectorSetupConstants.Text.runtimeMissing)
-        }
-        return source
-    }
-
-    /// Returns the Connector executable embedded in this app.
-    /// - Returns: Bundled executable used for discovery and cleanup.
-    /// - Throws: A safe error when release resources are incomplete.
-    nonisolated private static func bundledRuntimeExecutableURL() throws -> URL {
-        let executable = try bundledRuntimeDirectoryURL().appendingPathComponent(
-            ConnectorSetupConstants.Identity.connectorExecutable,
-            isDirectory: false
-        )
-        guard FileManager.default.isExecutableFile(atPath: executable.path) else {
-            throw ConnectorSetupError.message(ConnectorSetupConstants.Text.runtimeMissing)
-        }
-        return executable
-    }
-
-    /// Returns the connector's stable user Application Support directory.
-    /// - Returns: Owner-local connector directory.
-    nonisolated private static func connectorApplicationSupportURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.libraryApplicationSupportPath,
-                isDirectory: true
-            )
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.applicationSupportDirectory,
-                isDirectory: true
-            )
-    }
-
-    /// Returns the stable installed connector runtime executable.
-    /// - Returns: Executable URL used by setup and launchd.
-    nonisolated private static func runtimeExecutableURL() -> URL {
-        connectorApplicationSupportURL()
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.runtimeDirectory,
-                isDirectory: true
-            )
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.connectorExecutable,
-                isDirectory: false
-            )
-    }
-
-    /// Returns the private directory holding the dedicated forwarding identity.
-    /// - Returns: Owner-local SSH directory.
-    private static func sshDirectoryURL() -> URL {
-        connectorApplicationSupportURL().appendingPathComponent(
-            ConnectorSetupConstants.Identity.sshDirectory,
-            isDirectory: true
-        )
-    }
-
-    /// Returns the dedicated private-key path.
-    /// - Returns: Owner-only Ed25519 private key URL.
-    private static func sshPrivateKeyURL() -> URL {
-        sshDirectoryURL().appendingPathComponent(
-            ConnectorSetupConstants.Identity.sshPrivateKeyFilename,
-            isDirectory: false
-        )
-    }
-
-    /// Returns the shareable public-key path.
-    /// - Returns: Ed25519 public key URL.
-    private static func sshPublicKeyURL() -> URL {
-        sshDirectoryURL().appendingPathComponent(
-            ConnectorSetupConstants.Identity.sshPublicKeyFilename,
-            isDirectory: false
-        )
-    }
-
-    /// Returns the current user's LaunchAgents directory.
-    /// - Returns: Stable per-user launchd configuration directory.
-    private static func launchAgentsDirectoryURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
-            ConnectorSetupConstants.Identity.launchAgentsDirectory,
-            isDirectory: true
-        )
-    }
-
-    /// Returns the connector's per-user LaunchAgent property-list path.
-    /// - Returns: Stable launchd configuration URL.
-    private static func launchAgentPlistURL() -> URL {
-        launchAgentsDirectoryURL().appendingPathComponent(
-            ConnectorSetupConstants.Identity.launchAgentFilename,
-            isDirectory: false
-        )
-    }
-
-    /// Returns the installed Local Assistant sandbox spool location.
-    /// - Returns: Absolute expected spool directory.
-    private static func localAssistantSpoolURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.libraryContainersPath,
-                isDirectory: true
-            )
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.localAssistantBundleIdentifier,
-                isDirectory: true
-            )
-            .appendingPathComponent(
-                ConnectorSetupConstants.Identity.localAssistantSpoolRelativePath,
-                isDirectory: true
-            )
-    }
 }
 
 /// User-safe setup failure whose text contains no credential or remote response body.
