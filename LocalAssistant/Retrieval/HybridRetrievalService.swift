@@ -56,7 +56,22 @@ actor HybridRetrievalService {
             guard searchText.isEmpty || result.score.hasQueryEvidence else { continue }
             results.append(result)
         }
-        return Array(results.sorted { $0.score.total > $1.score.total }.prefix(query.limit))
+        return Array(results.sorted(by: rankedBefore).prefix(query.limit))
+    }
+
+    /// Orders two results so equal scores never depend on dictionary iteration order.
+    ///
+    /// Scores are fused from several channels, so ties are common. Without the name and
+    /// identifier fallbacks the same request returns a different set of files each launch.
+    /// - Parameters:
+    ///   - left: First result being compared.
+    ///   - right: Second result being compared.
+    /// - Returns: `true` when the first result ranks ahead of the second.
+    private func rankedBefore(_ left: SearchResult, _ right: SearchResult) -> Bool {
+        if left.score.total != right.score.total { return left.score.total > right.score.total }
+        let names = left.item.displayName.localizedCaseInsensitiveCompare(right.item.displayName)
+        if names != .orderedSame { return names == .orderedAscending }
+        return left.item.id.uuidString < right.item.id.uuidString
     }
 
     /// Fetches every retrieval channel and fuses their signals into per-item scores.
@@ -197,9 +212,9 @@ actor HybridRetrievalService {
         for (rank, item) in items.enumerated() {
             var accumulator = accumulators[item.id] ?? ScoreAccumulator()
             if item.displayName.compare(queryText, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame {
-                accumulator.exactName = 1
+                accumulator.exactName = RetrievalConstants.metadataExactNameMatch
             } else if item.displayName.localizedCaseInsensitiveContains(queryText) {
-                accumulator.exactName = 0.65
+                accumulator.exactName = RetrievalConstants.metadataNameMatch
             } else if tokens.isEmpty == false,
                       tokens.allSatisfy(item.displayName.localizedCaseInsensitiveContains) {
                 accumulator.exactName = RetrievalConstants.metadataTokenMatch
@@ -294,7 +309,13 @@ actor HybridRetrievalService {
                 isLiteral: literalFolderIDs.contains(itemID)
             )
         }
-        .sorted { left, right in left.strength > right.strength }
+        .sorted { left, right in
+            if left.strength != right.strength { return left.strength > right.strength }
+            let names = left.folder.displayName
+                .localizedCaseInsensitiveCompare(right.folder.displayName)
+            if names != .orderedSame { return names == .orderedAscending }
+            return left.folder.id.uuidString < right.folder.id.uuidString
+        }
         .prefix(RetrievalConstants.maximumFolderScopeCount)
         .map { $0 }
     }
@@ -360,7 +381,7 @@ actor HybridRetrievalService {
             + fileType * RetrievalConstants.fileTypeWeight
             + recency * RetrievalConstants.recencyWeight
             + accumulator.reciprocalRank
-        let normalized = min(1, total / 10)
+        let normalized = min(1, total / RetrievalConstants.scoreNormalizationDivisor)
         let confidence: ConfidenceLevel = if normalized >= RetrievalConstants.highConfidenceThreshold {
             .high
         } else if normalized >= RetrievalConstants.mediumConfidenceThreshold {
@@ -429,8 +450,8 @@ actor HybridRetrievalService {
     /// - Returns: Value between zero and one.
     private func recencyScore(date: Date?) -> Double {
         guard let date else { return 0 }
-        let days = max(0, Date().timeIntervalSince(date) / 86_400)
-        return exp(-days / 365)
+        let days = max(0, Date().timeIntervalSince(date) / RetrievalConstants.secondsPerDay)
+        return exp(-days / RetrievalConstants.recencyDecayDays)
     }
 
     /// Returns a reciprocal-rank-fusion contribution.
@@ -460,7 +481,9 @@ actor HybridRetrievalService {
         matchesFileType: Bool,
         confidence: ConfidenceLevel
     ) -> String {
-        if accumulator.exactName == 1 { return RetrievalStrings.exactNameEvidence }
+        if accumulator.exactName == RetrievalConstants.metadataExactNameMatch {
+            return RetrievalStrings.exactNameEvidence
+        }
         if let folderName = accumulator.folderEvidence {
             return RetrievalStrings.folderScopeEvidence(folderName)
         }

@@ -23,6 +23,8 @@ enum RetrievalConstants {
     static let maximumExcerptCharacters = 480
     static let minimumSemanticSimilarity = 0.18
     static let minimumFolderScopeSemanticSimilarity = 0.50
+    static let metadataExactNameMatch = 1.00
+    static let metadataNameMatch = 0.65
     static let metadataTokenMatch = 0.35
     static let metadataPathMatch = 1.20
     static let metadataPathTokenMatch = 0.80
@@ -31,6 +33,9 @@ enum RetrievalConstants {
     static let pathFolderScopeMatch = 1.00
     static let maximumFolderScopeCount = 3
     static let maximumExplanationEvidenceCharacters = 180
+    static let scoreNormalizationDivisor = 10.0
+    static let recencyDecayDays = 365.0
+    static let secondsPerDay = 86_400.0
     static let fileTypeTerms: [IndexedItemKind: Set<String>] = [
         .folder: ["folder", "folders", "directory", "directories"],
         .document: ["document", "documents", "doc", "docx", "word"],
