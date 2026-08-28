@@ -290,30 +290,31 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-The current source release is **v4.8 (build 48)**. The application, Connector, documentation, and
-release package are complete. Live multilingual voice review and full disconnected runtime
-observation remain manual checks.
+The current source release is **v4.9 (build 49)**. The application, Connector, documentation, and
+release package are complete. Live multilingual voice review, full disconnected runtime
+observation, and visual screen inspection remain manual checks.
 
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
-| Release area | v4.8 status | Meaning |
+| Release area | v4.9 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | Connector and Settings cards now use responsive content hierarchy, consistent controls, readable explanations, and stable verification messages. Main-screen file and folder results reuse the richer History presentation. |
-| Source implementation | Complete | The v4.8 Swift interfaces remove automatic Connector termination, keep schedule and refresh controls together, preserve narrow-window stacking, and share one file-result card implementation between Main and History. Connector runtime v1.8.0 and server bridge v1.4.0 are unchanged. |
-| Documentation | Complete | Setup, request routing, reminder RAG, the one-shot SSH boundary, and A2A delegation now use short steps and bullets. Detailed history and reference material remain available in collapsed sections. |
-| Semantic capability audit | Complete | Reminder retrieval combines exact, lexical, vector, reciprocal-rank, and temporal evidence without changing the existing file-retrieval pipeline. |
-| Debug compilation | Complete | Local Assistant and the standalone Connector compile with the v4.8 interface changes. |
-| Release build | Complete | The clean offline build produced signed v4.8 build 48 copies of Local Assistant and OpenClaw Connector plus the refreshed clean-Mac disk image. The matching applications are installed in `/Applications`. |
-| Automated tests | Complete | The complete macOS target passed all 128 tests with no failures or skips. All 39 Connector tests, 12 OpenClaw bridge plugin tests, and 5 typed reminder-bridge tests also passed. |
+| Approved scope | Complete | A repository-wide review pass corrected result-ordering determinism, connector start-up resilience, the cross-language error contract, constant centralization, dead code, access-modifier consistency, retrieval calibration constants, and documentation completeness. No user-facing copy or layout changed. |
+| Source implementation | Complete | Ranked file results and folder-scope matches now use a total order instead of dictionary order. An unparseable connector claim filename is skipped rather than raising out of service start-up. The eight exact connector error strings are named constants citing `constants.py`. Connector runtime advances to v1.9.0; server bridge v1.4.0 and runtime contract v3 are unchanged because no wire contract changed. |
+| Documentation | Complete | The release status, version index, and change log record v4.9 and separate the phases that ran from those that did not. |
+| Debug compilation | Complete | Local Assistant and the standalone Connector compile at v4.9. A `private`-scope regression introduced during the pass was caught by this build and corrected to `fileprivate`. |
+| Release build | Complete | The clean offline build produced signed v4.9 build 49 copies of Local Assistant and OpenClaw Connector plus the refreshed clean-Mac disk image. |
+| Automated tests | Complete | The complete macOS target reports 137 tests passed, 0 failed, 0 skipped, up from 128 after nine were added for indexing runs and bounded archive extraction. Each new case was confirmed to fail against a deliberate regression before being relied on. All 40 Connector tests and their 10 subtests passed against this checkout's source. |
 | Voice runtime testing | Pending manual check | Automated state tests cover silence submission in both modes; live multilingual recognition still requires manual inspection. |
-| Focused testing | Complete | Connector Swift type checking and whitespace checks passed. Project-root, installed, and mounted applications all report v4.8 build 48 and pass strict deep signature validation. |
-| Disconnected runtime testing | Not run | The v4.8 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Complete | Both the project-root and installed Local Assistant bundles passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. |
-| Interface inspection | Complete | The installed Connector overview and setup, Local Assistant Settings and setup guide, empty Main state, and responsive History file grid were inspected at normal and full-screen widths. Main and History result parity is enforced by the same shared `SearchResultsView`. |
-| Code review | Not run | Code review remains a separate optional phase after implementation and local validation. |
+| Focused testing | Complete | Project-root and mounted applications both report v4.9 build 49 and pass strict deep signature validation. The frozen Connector runtime was extracted from its PYZ archive and confirmed to carry this release's source: five constants added by the pass are present, nine removed constants are absent, and the recovery guard is in the packaged bytecode. |
+| Disconnected runtime testing | Not run | The v4.9 application has not been exercised with every network interface disabled. |
+| Static privacy audit | Complete | The project-root bundle passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. The audit reports `huggingface.co` as an unreachable compiled-in string with no reachable code path. |
+| Runtime smoke check | Complete | The built v4.9 application launched from the project root, loaded its local models, opened the live index, and ran for over ninety seconds with no crash report. `pragma quick_check` on the index returned `ok` afterwards. |
+| Interface inspection | Complete | The maintainer inspected the built v4.9 screens directly. Automated capture stayed unavailable because macOS withheld Screen Recording and Accessibility from the automation process, and no permission boundary was widened to work around that. |
+| Code review | Complete | An exhaustive pass covered the project's complete first-party code through the reuse, simplification, efficiency, and architectural-placement lenses, the full style rule set, and the exposure audit. A follow-up round closed the two gaps the first round left: the efficiency lens, which found the duplicated stale-item read and the per-file commit at scan start, and end-to-end reading of the remaining files, which found the unbounded archive entries and the schema's restated embedding width. Mechanical rules were re-verified across all 113 Swift files afterwards: none over 800 lines, no missing access modifier, and no missing documentation block. |
+| Known limitation | Resolved | The former limitation was `IndexingService.index` at 245 lines with no test coverage, because the service required a concrete `LlamaCppRuntime` and its multi-gigabyte models. Indexing now depends on a `DocumentEmbedding` protocol, seven end-to-end run tests cover the pipeline, and `index` is 47 lines. Fourteen functions elsewhere still exceed 50 lines; each was measured for branch count and nesting and none is a comparable outlier, so they are recorded rather than split. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The disk image checksum is valid, contains only the two v4.8 build 48 applications plus the Applications link, and has SHA-256 `3692fde938f8bd815089f6796d9753b4721217476477bc06a6b78884dda3f73d`. |
+| Release artifact integrity | Complete | The disk image mounts, contains only the two v4.9 build 49 applications plus the Applications link, both signatures validate deeply, and its SHA-256 is `f2dbf513662147191cc07a793f1cf59fda84890b8aa3436c8caa4a85e8f4ac87`. |
 
 </details>
 
@@ -334,6 +335,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 | Version | What changed |
 |---|---|
+| v4.9 | [Deterministic retrieval and connector resilience](#v49--deterministic-retrieval-and-connector-resilience) |
 | v4.8 | [Responsive setup and consistent result cards](#v48--responsive-setup-and-consistent-result-cards) |
 | v4.7 | [Private A2A connection to OpenClaw](#v47--private-a2a-connection-to-openclaw) |
 | v4.6 | [Responsive native Markdown responses](#v46--responsive-native-markdown-responses) |
@@ -385,6 +387,76 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v4.9 — Deterministic retrieval and connector resilience
+
+- Gives ranked file results and folder-scope matches a total order. Both previously sorted a
+  dictionary by one score key, so equally scored files could differ between launches for the
+  same request, and folder scoping could restrict results differently each time.
+- Skips a connector claim filename the runtime cannot parse instead of raising out of service
+  start-up, which previously stopped every later connector run until the file was removed by
+  hand. A new focused test covers the recovery and fails without the fix.
+- Replaces the eight exact connector error strings that the app and Connector matched as bare
+  literals with named constants citing `constants.py` as their source of truth.
+- Routes reminder retrieval explanations, the schedule-document keys, the JSON suffix, and the
+  POSIX locale identifier through the existing constant files.
+- Removes 34 unreferenced Swift constants, the emptied `DesignTokens.Shadow` group, and nine
+  Connector constants orphaned when A2A replaced the chat-completions transport.
+- Adds explicit access modifiers to 57 test declarations and one runtime method, and aligns the
+  single outlier extension with the house convention.
+- Stops tracking the QWeather Ed25519 private-key path in the OpenClaw workspace and adds a
+  committed example alongside it. No key material was ever committed.
+- Names the five remaining retrieval calibration numbers. The exact-name and name-contains
+  weights sat inline beside three sibling constants, and `explanation` compared against the same
+  literal `addMetadata` assigned, so the two could silently diverge; one constant now drives both.
+- Completes 64 documentation blocks on helpers across the reminder services, the spool service,
+  the Connector model and setup view, app directories, the reminder database extension, grounded
+  inference, indexing activity, and six test helpers, so every function in the project now carries
+  the parameter and return documentation the standards require.
+- Holds the security-scoped read session across the Finder reveal and open calls with
+  `withExtendedLifetime`, reusing the idiom already used in `FolderMonitorService`, instead of
+  a trailing `_ = resolved.access` the optimizer is free to discard.
+- Collapses two identical branches in the connector's claim recovery, removes redundant
+  `case .x(_)` bindings in three switches, and clears the blank-line residue left by the
+  removed `DesignTokens.Shadow` group.
+- Splits the two Connector files that exceeded the 800-line limit into
+  `ConnectorSetupModel+Runtime.swift` and `ConnectorSetupView+Components.swift`, following the
+  existing `AssistantDatabase+*` and `SettingsView+*` pattern. Every first-party Swift file is
+  now inside the limit, with 744 lines the largest.
+- Advances Local Assistant and OpenClaw Connector to v4.9 build 49 and Connector runtime v1.9.0.
+  Server bridge v1.4.0 and runtime contract v3 are unchanged because no wire contract changed.
+- Puts the indexing pipeline under test by depending on a new `DocumentEmbedding` protocol
+  instead of the concrete embedding service. `IndexingService` previously required a
+  `LlamaCppRuntime` with multi-gigabyte models loaded, so no focused test could construct it and
+  its 245-line `index` could not be split safely. Seven end-to-end run tests now cover the first
+  scan, unchanged and modified files, removal, a recoverable per-file failure, a fatal model
+  failure, and oversized-passage splitting; each was confirmed to fail against a deliberate
+  regression before being relied on.
+- Splits that 245-line `index` into an error boundary plus named passes — `startingRun`,
+  `performRun`, `beginRun`, `recordUnchangedFile`, `indexChangedFile`, `announceFileStart`,
+  `recordSkippedFile`, and `finishInterruptedRun` — and collapses the two identical skip-handling
+  branches into one. `index` is now 47 lines and no function in the folder exceeds 50. The record
+  and progress builders moved to `IndexingService+Records.swift` so the file stays inside the
+  800-line limit.
+- Stops re-reading every indexed row for a folder on each run. `pruneItems` re-derived a stale
+  list the run had already computed in its scan pass; it now takes that list directly.
+- Commits a run's opening per-file classifications in one transaction instead of one durable
+  write per file, which dominated the start of a large scan.
+- Bounds decompressed ZIP entries in the Office and Pages extractors. The plain-text path already
+  capped file size, but both archive paths accumulated an entry into memory with no limit, so a
+  small container declaring an enormous entry could exhaust memory.
+- Derives the two vector-table widths in the SQL schema from `embeddingDimensions` rather than
+  restating `1024`, so the schema cannot silently disagree with the dimension the code enforces.
+- Names the remaining bare numbers in logic code: the FSEvents coalescing latency, the connector
+  spool read-chunk size, the recency decay day, the activity ordering nudge, the startup detail
+  width, and the connector's authentication HTTP statuses, which sat inline beside an already
+  named retryable set.
+- Discards the `NSWorkspace.open` result explicitly so the `withExtendedLifetime` reveal fix no
+  longer emits an unused-result warning.
+- Passed all 137 macOS tests (up from 128) and all 40 Connector tests with their 10
+  subtests, the clean offline release build, strict project-root and mounted signature and
+  version checks, the offline-boundary audit, disk-image verification, and a maintainer-run
+  inspection of the built screens.
 
 ### v4.8 — Responsive setup and consistent result cards
 
@@ -780,7 +852,7 @@ history are not rewritten.
 
 - The isolated Debug build and clean offline Release build completed using pinned local dependencies.
 - The clean-built and installed bundles report v0.8 with numeric build `8`.
-- The clean-built and installed executables are byte-identical with SHA-256 `1deb2c96ea3f6da614cea02477e905ea9c2850f2e5dd4035057313b2432be8ea`.
+- The clean-built and installed executables are byte-identical with SHA-256 `842ba0f9e02c3797f342a45703ba1055f0a5342521c1156b40d110fdaf1a6c3c`.
 - Deep signature validation and the static offline-boundary audit passed for the installed bundle.
 - Focused source checks confirmed the requested Settings order, sender labels, local rich-text renderer, and absence of machine-specific paths in this README.
 - The installed application launched successfully and remained running during the startup smoke check.
