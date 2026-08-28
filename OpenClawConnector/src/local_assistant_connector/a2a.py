@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Mapping, NoReturn
 from urllib import parse
 
 from . import constants
@@ -13,7 +13,7 @@ def validate_agent_card(document: Mapping[str, Any]) -> None:
     """Require the private OpenClaw Agent Card and its exact JSON-RPC interface."""
     interfaces = document.get(constants.FIELD_SUPPORTED_INTERFACES)
     if (
-        document.get(constants.FIELD_NAME) != "OpenClaw"
+        document.get(constants.FIELD_NAME) != constants.A2A_AGENT_NAME
         or not isinstance(document.get(constants.FIELD_VERSION), str)
         or not isinstance(interfaces, list)
     ):
@@ -29,7 +29,7 @@ def validate_agent_card(document: Mapping[str, Any]) -> None:
             continue
         if (
             parsed is not None
-            and parsed.scheme == "http"
+            and parsed.scheme == constants.LOOPBACK_URL_SCHEME
             and parsed.hostname == constants.SSH_REMOTE_GATEWAY_HOST
             and port == constants.SSH_REMOTE_GATEWAY_PORT
             and parsed.path == constants.A2A_AGENT_ROUTE_PATH
@@ -58,7 +58,7 @@ def send_message_request(message_id: str, context_id: str, text: str) -> Mapping
                 constants.FIELD_PARTS: [
                     {
                         constants.FIELD_TEXT: text,
-                        "mediaType": "text/plain",
+                        constants.FIELD_MEDIA_TYPE: constants.CONTENT_TYPE_TEXT_PLAIN,
                     }
                 ],
             }
@@ -119,13 +119,14 @@ def _message_text(document: object, context_id: str) -> str:
         text = part.get(constants.FIELD_TEXT)
         if isinstance(text, str) and text.strip():
             texts.append(text.strip())
-    answer = "\n\n".join(texts)
+    answer = constants.AGENT_ANSWER_SEPARATOR.join(texts)
     if not answer or len(answer) > constants.MAX_AGENT_ANSWER_CHARACTERS:
         _raise_response_error()
     return answer
 
 
-def _raise_card_error() -> None:
+def _raise_card_error() -> NoReturn:
+    """Reject one OpenClaw Agent Card that is missing its exact JSON-RPC interface."""
     raise ConnectorError(
         constants.ERROR_KIND_OPERATIONAL,
         constants.ERROR_A2A_CARD_VERIFICATION,
@@ -133,7 +134,8 @@ def _raise_card_error() -> None:
     )
 
 
-def _raise_response_error() -> None:
+def _raise_response_error() -> NoReturn:
+    """Reject one A2A response that does not match the sent request exactly."""
     raise ConnectorError(
         constants.ERROR_KIND_OPERATIONAL,
         constants.ERROR_REMOTE_RESPONSE,

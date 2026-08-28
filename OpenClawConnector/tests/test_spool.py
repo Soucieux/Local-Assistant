@@ -64,6 +64,21 @@ class SpoolTests(unittest.TestCase):
             self.assertTrue(claimed.exists())
             self.assertFalse((spool.responses / f"{TASK_ID}.json").exists())
 
+    def test_recovery_requeues_a_claim_and_skips_unusable_names(self) -> None:
+        """One unreadable filename must not strand every recoverable claim."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            spool = SpoolStore(temporary_directory)
+            claimed = spool.processing / f"{TASK_ID}.json"
+            claimed.write_text("{}", encoding="utf-8")
+            stray = spool.processing / "not-a-task-id.json"
+            stray.write_text("{}", encoding="utf-8")
+
+            spool.recover_claims()
+
+            self.assertTrue((spool.requests / f"{TASK_ID}.json").is_file())
+            self.assertFalse(claimed.exists())
+            self.assertTrue(stray.exists())
+
     def test_status_read_never_follows_a_symbolic_link(self) -> None:
         """The status command cannot be redirected to an unrelated file."""
         with tempfile.TemporaryDirectory() as temporary_directory:

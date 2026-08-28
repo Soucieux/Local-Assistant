@@ -104,7 +104,7 @@ class _JsonClient:
             except ConnectorError:
                 raise
             except error.HTTPError as exc:
-                if exc.code in {401, 403}:
+                if exc.code in constants.AUTHENTICATION_HTTP_STATUS:
                     raise ConnectorError(
                         constants.ERROR_KIND_OPERATIONAL,
                         constants.ERROR_AUTHENTICATION,

@@ -154,13 +154,14 @@ class SpoolStore:
     def recover_claims(self) -> None:
         """Return unfinished claims to the request queue after a stopped process."""
         for claimed in sorted(self.processing.glob(f"*{constants.JSON_SUFFIX}")):
-            task_id = _safe_task_stem(claimed)
+            try:
+                task_id = _safe_task_stem(claimed)
+            except ConnectorError:
+                continue
             response_path = self.responses / f"{task_id}{constants.JSON_SUFFIX}"
             request_path = self.requests / f"{task_id}{constants.JSON_SUFFIX}"
-            if response_path.exists():
-                claimed.unlink()
-            elif request_path.exists():
-                claimed.unlink()
+            if response_path.exists() or request_path.exists():
+                claimed.unlink(missing_ok=True)
             else:
                 os.replace(claimed, request_path)
 

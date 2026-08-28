@@ -152,7 +152,10 @@ class OpenClawSSHTunnel(AbstractContextManager[str]):
                 constants.ERROR_UNREACHABLE,
                 True,
             )
-        return f"http://{constants.SSH_LOOPBACK_HOST}:{self._local_port}"
+        return (
+            f"{constants.LOOPBACK_URL_SCHEME}://"
+            f"{constants.SSH_LOOPBACK_HOST}:{self._local_port}"
+        )
 
     def _wait_until_ready(self) -> None:
         """Wait until OpenSSH owns the local forwarding port or exits."""
