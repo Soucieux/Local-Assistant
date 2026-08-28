@@ -9,19 +9,19 @@ struct TextChunkerTests {
     private let chunker = TextChunker()
 
     @Test("A document with no segments produces no chunks")
-    func producesNoChunksForEmptyDocument() {
+    internal func producesNoChunksForEmptyDocument() {
         let document = ExtractedDocument(segments: [])
         #expect(chunker.chunks(document: document, itemID: UUID()).isEmpty)
     }
 
     @Test("An empty segment is skipped rather than stored as a blank chunk")
-    func skipsEmptySegments() {
+    internal func skipsEmptySegments() {
         let document = TestFixtures.document(text: "")
         #expect(chunker.chunks(document: document, itemID: UUID()).isEmpty)
     }
 
     @Test("Short text becomes exactly one chunk spanning its words")
-    func keepsShortTextInOneChunk() {
+    internal func keepsShortTextInOneChunk() {
         let document = TestFixtures.document(text: "A short local note.")
         let chunks = chunker.chunks(document: document, itemID: UUID())
         #expect(chunks.count == 1)
@@ -33,13 +33,13 @@ struct TextChunkerTests {
     }
 
     @Test("Text without word characters still yields a chunk")
-    func handlesTextWithoutWords() {
+    internal func handlesTextWithoutWords() {
         let document = TestFixtures.document(text: "!!! ??? ...")
         #expect(chunker.chunks(document: document, itemID: UUID()).isEmpty == false)
     }
 
     @Test("Every chunk's offsets address its own text inside the segment")
-    func reportsOffsetsThatMatchTheSource() {
+    internal func reportsOffsetsThatMatchTheSource() {
         let words = (1...900).map { "word\($0)" }.joined(separator: " ")
         let document = TestFixtures.document(text: words)
         let chunks = chunker.chunks(document: document, itemID: UUID())
@@ -55,7 +55,7 @@ struct TextChunkerTests {
     }
 
     @Test("Chunks are ordered and cover the segment from its start to its end")
-    func coversTheWholeSegment() {
+    internal func coversTheWholeSegment() {
         let words = (1...900).map { "word\($0)" }.joined(separator: " ")
         let chunks = chunker.chunks(document: TestFixtures.document(text: words), itemID: UUID())
         #expect(chunks.map(\.ordinal) == Array(0..<chunks.count))
@@ -64,7 +64,7 @@ struct TextChunkerTests {
     }
 
     @Test("Consecutive chunks overlap so a passage is never split without context")
-    func overlapsConsecutiveChunks() {
+    internal func overlapsConsecutiveChunks() {
         let words = (1...900).map { "word\($0)" }.joined(separator: " ")
         let chunks = chunker.chunks(document: TestFixtures.document(text: words), itemID: UUID())
         for (earlier, later) in zip(chunks, chunks.dropFirst()) {
@@ -73,7 +73,7 @@ struct TextChunkerTests {
     }
 
     @Test("Offsets stay correct after multi-byte characters")
-    func handlesMultiByteCharacters() {
+    internal func handlesMultiByteCharacters() {
         // Character offsets must count Characters, not UTF-8 bytes.
         let text = "简体中文 " + (1...600).map { "word\($0)" }.joined(separator: " ")
         let chunks = chunker.chunks(document: TestFixtures.document(text: text), itemID: UUID())
@@ -84,7 +84,7 @@ struct TextChunkerTests {
     }
 
     @Test("Each chunk carries a stable identifier and the parent item")
-    func attributesChunksToTheirItem() {
+    internal func attributesChunksToTheirItem() {
         let itemID = UUID()
         let chunks = chunker.chunks(document: TestFixtures.document(text: "One two three."), itemID: itemID)
         #expect(chunks.allSatisfy { $0.itemID == itemID })

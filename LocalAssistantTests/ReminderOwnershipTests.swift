@@ -81,6 +81,12 @@ struct ReminderOwnershipTests {
     }
 
     /// Builds one normalized cached record around the ownership fields under test.
+    /// - Parameters:
+    ///   - managedBy: Stored owner marker.
+    ///   - clientRequestId: Stored create idempotency marker.
+    ///   - syncPairId: Stored calendar pairing marker.
+    ///   - sourceMessageId: Stored originating message marker.
+    /// - Returns: A cached reminder fixed apart from those ownership fields.
     private func cached(
         managedBy: String?,
         clientRequestId: String?,

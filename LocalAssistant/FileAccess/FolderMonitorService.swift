@@ -62,7 +62,7 @@ final class FolderMonitorService {
             &streamContext,
             [access.url.path] as CFArray,
             FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
-            0.5,
+            AppConstants.Indexing.monitorCoalescingSeconds,
             flags
         ) else {
             throw LocalAssistantError.indexing(root.lastKnownPath)

@@ -105,6 +105,10 @@ struct ReminderDatabaseTests {
     }
 
     /// Creates one app-owned reminder with deterministic metadata.
+    /// - Parameters:
+    ///   - text: Visible reminder text.
+    ///   - hash: Content hash deciding whether the row counts as changed.
+    /// - Returns: A reminder fixed apart from the fields under test.
     private func reminder(text: String, hash: String) -> ReminderItem {
         ReminderItem(
             id: "reminder-1",

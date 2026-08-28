@@ -205,6 +205,8 @@ struct OpenClawSetupView: View {
     }
 
     /// Formats short setup actions with visible bullets.
+    /// - Parameter bullets: Setup actions in the order the user performs them.
+    /// - Returns: A bulleted list of those actions.
     private func bulletList(_ bullets: [String]) -> some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
             ForEach(Array(bullets.enumerated()), id: \.offset) { _, bullet in

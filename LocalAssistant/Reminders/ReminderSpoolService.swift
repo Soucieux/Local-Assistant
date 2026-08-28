@@ -107,9 +107,10 @@ actor ReminderSpoolService {
             isDirectory: false
         )
         let document: [String: Any] = [
-            "schemaVersion": ReminderConstants.Connector.schemaVersion,
-            "enabled": enabled,
-            "intervalMinutes": intervalMinutes
+            ReminderConstants.ScheduleKey.schemaVersion:
+                ReminderConstants.Connector.schemaVersion,
+            ReminderConstants.ScheduleKey.enabled: enabled,
+            ReminderConstants.ScheduleKey.intervalMinutes: intervalMinutes
         ]
         let data = try JSONSerialization.data(withJSONObject: document)
         do {
@@ -161,8 +162,7 @@ actor ReminderSpoolService {
         let root = try resolvedRootURL()
         try prepare(root: root)
         let filename = request.taskId.uuidString.lowercased()
-            + "."
-            + ReminderConstants.Identity.jsonExtension
+            + ReminderConstants.Identity.jsonSuffix
         let requests = requestDirectory(root: root)
         let responses = responseDirectory(root: root)
         let target = requests.appendingPathComponent(filename, isDirectory: false)
@@ -217,6 +217,9 @@ actor ReminderSpoolService {
     }
 
     /// Decodes one bounded response without following a symbolic link.
+    /// - Parameter url: Response file published by the one-shot connector.
+    /// - Returns: The decoded typed response.
+    /// - Throws: A local connector error when the file is unsafe, oversized, or malformed.
     private func readResponse(at url: URL) throws -> ReminderConnectorResponse {
         let data = try readBoundedRegularFile(
             at: url,
@@ -230,6 +233,11 @@ actor ReminderSpoolService {
     }
 
     /// Reads one regular file after enforcing its configured size ceiling.
+    /// - Parameters:
+    ///   - url: File opened without following a symbolic link.
+    ///   - maximumByteCount: Hard ceiling applied to the file and to the bytes read.
+    /// - Returns: File contents within the ceiling.
+    /// - Throws: A local connector error when the path is not a bounded regular file.
     private func readBoundedRegularFile(at url: URL, maximumByteCount: Int) throws -> Data {
         let descriptor = Darwin.open(
             url.path,
@@ -252,7 +260,7 @@ actor ReminderSpoolService {
             while data.count <= maximumByteCount {
                 let remaining = maximumByteCount + 1 - data.count
                 guard let chunk = try handle.read(
-                    upToCount: min(65_536, remaining)
+                    upToCount: min(ReminderConstants.Connector.readChunkBytes, remaining)
                 ), chunk.isEmpty == false else {
                     break
                 }
@@ -270,6 +278,8 @@ actor ReminderSpoolService {
     }
 
     /// Creates and protects the exact spool tree shared with the connector.
+    /// - Parameter root: Resolved connector spool root.
+    /// - Throws: A local permission error when a directory cannot be created or protected.
     private func prepare(root: URL) throws {
         let directories = [
             root,
@@ -294,6 +304,8 @@ actor ReminderSpoolService {
     }
 
     /// Applies owner-only permissions to one request file before publication.
+    /// - Parameter url: Request file staged inside the spool.
+    /// - Throws: A local connector error when the path is not an ownable regular file.
     private func protectFile(_ url: URL) throws {
         let descriptor = Darwin.open(
             url.path,
@@ -315,6 +327,8 @@ actor ReminderSpoolService {
     }
 
     /// Verifies and protects one shared directory without following a symlink.
+    /// - Parameter url: Directory inside the shared spool tree.
+    /// - Throws: A local connector error when the path is not an ownable directory.
     private func protectDirectory(_ url: URL) throws {
         let descriptor = Darwin.open(
             url.path,
@@ -336,12 +350,16 @@ actor ReminderSpoolService {
     }
 
     /// Resolves the production connector root unless a test supplied one.
+    /// - Returns: Absolute connector spool root.
+    /// - Throws: A local directory-resolution error for the production path.
     private func resolvedRootURL() throws -> URL {
         if let rootOverride { return rootOverride }
         return try AppDirectories.connectorDirectory()
     }
 
     /// Builds the request queue URL beneath one resolved root.
+    /// - Parameter root: Resolved connector spool root.
+    /// - Returns: Directory the app writes task files into.
     private func requestDirectory(root: URL) -> URL {
         root.appendingPathComponent(
             ReminderConstants.Identity.requestDirectory,
@@ -350,6 +368,8 @@ actor ReminderSpoolService {
     }
 
     /// Builds the processing queue URL beneath one resolved root.
+    /// - Parameter root: Resolved connector spool root.
+    /// - Returns: Directory the connector claims task files into.
     private func processingDirectory(root: URL) -> URL {
         root.appendingPathComponent(
             ReminderConstants.Identity.processingDirectory,
@@ -358,6 +378,8 @@ actor ReminderSpoolService {
     }
 
     /// Builds the response queue URL beneath one resolved root.
+    /// - Parameter root: Resolved connector spool root.
+    /// - Returns: Directory the connector publishes responses into.
     private func responseDirectory(root: URL) -> URL {
         root.appendingPathComponent(
             ReminderConstants.Identity.responseDirectory,

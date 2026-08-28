@@ -5,7 +5,7 @@ import Testing
 /// Retrieval must never present a type constraint as evidence for a content description.
 struct RetrievalEvidenceTests {
     @Test("File type and recency alone do not satisfy a content query")
-    func rejectsTypeOnlyContentEvidence() {
+    internal func rejectsTypeOnlyContentEvidence() {
         let score = ScoreBreakdown(
             exactName: 0,
             path: 0,
@@ -20,7 +20,7 @@ struct RetrievalEvidenceTests {
     }
 
     @Test("A semantic passage satisfies the content-evidence requirement")
-    func acceptsSemanticContentEvidence() {
+    internal func acceptsSemanticContentEvidence() {
         let score = ScoreBreakdown(
             exactName: 0,
             path: 0,
@@ -35,7 +35,7 @@ struct RetrievalEvidenceTests {
     }
 
     @Test("Semantic explanations quote the passage and calibrate uncertainty")
-    func explainsSemanticEvidence() {
+    internal func explainsSemanticEvidence() {
         let explanation = RetrievalStrings.semanticEvidence(
             "A chart compares quarterly revenue across regions.",
             isUncertain: true

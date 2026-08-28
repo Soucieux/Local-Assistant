@@ -9,18 +9,24 @@ struct AssistantRouteParserTests {
     private let parser = AssistantRouteParser()
 
     /// Returns the reply text, or `nil` when the parser chose to search.
+    /// - Parameter route: Route produced by the parser.
+    /// - Returns: Conversational reply text, or `nil` for any non-reply route.
     private func reply(_ route: AssistantRoute) -> String? {
         if case let .reply(text) = route { return text }
         return nil
     }
 
     /// Returns the search plan, or `nil` when the parser chose to reply.
+    /// - Parameter route: Route produced by the parser.
+    /// - Returns: Local file search plan, or `nil` for any non-search route.
     private func plan(_ route: AssistantRoute) -> LocalSearchPlan? {
         if case let .search(plan) = route { return plan }
         return nil
     }
 
     /// Returns the reminder plan, or `nil` for every other route.
+    /// - Parameter route: Route produced by the parser.
+    /// - Returns: Reminder plan, or `nil` for any non-reminder route.
     private func reminderPlan(_ route: AssistantRoute) -> ReminderAssistantPlan? {
         if case let .reminder(plan) = route { return plan }
         return nil
@@ -37,7 +43,7 @@ struct AssistantRouteParserTests {
         #expect(
             parser.reminderConfirmationDecision(
                 reply: "perhaps",
-                modelOutput: "CONFIRM"
+                modelOutput: InferenceConstants.confirmationOutput
             ) == .confirm
         )
         #expect(
@@ -49,7 +55,7 @@ struct AssistantRouteParserTests {
         #expect(
             parser.reminderConfirmationDecision(
                 reply: "perhaps",
-                modelOutput: "UNCLEAR"
+                modelOutput: InferenceConstants.unclearOutput
             ) == .unclear
         )
     }
@@ -59,25 +65,25 @@ struct AssistantRouteParserTests {
         #expect(
             parser.reminderConfirmationDecision(
                 reply: "continue",
-                modelOutput: "UNCLEAR"
+                modelOutput: InferenceConstants.unclearOutput
             ) == .confirm
         )
         #expect(
             parser.reminderConfirmationDecision(
                 reply: "Please proceed.",
-                modelOutput: "UNCLEAR"
+                modelOutput: InferenceConstants.unclearOutput
             ) == .confirm
         )
         #expect(
             parser.reminderConfirmationDecision(
                 reply: "cancel",
-                modelOutput: "CONFIRM"
+                modelOutput: InferenceConstants.confirmationOutput
             ) == .decline
         )
         #expect(
             parser.reminderConfirmationDecision(
                 reply: "continue with a different reminder",
-                modelOutput: "UNCLEAR"
+                modelOutput: InferenceConstants.unclearOutput
             ) == .unclear
         )
     }

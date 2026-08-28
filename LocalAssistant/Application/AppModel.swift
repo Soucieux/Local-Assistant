@@ -355,7 +355,9 @@ final class AppModel {
                 error.localizedDescription
             ).localizedDescription
         }
-        if detail.localizedCaseInsensitiveContains("connector request is invalid") {
+        if detail.localizedCaseInsensitiveContains(
+            ReminderConstants.Connector.invalidRequestErrorDetail
+        ) {
             openClawConnectorHealth = .updateRequired
         }
         let text = ReminderStrings.conversationalError(detail)
@@ -471,8 +473,9 @@ final class AppModel {
     internal func reveal(_ item: IndexedItem) async {
         do {
             let resolved = try await resolveActionableItem(id: item.id)
-            NSWorkspace.shared.activateFileViewerSelecting([resolved.actionURL])
-            _ = resolved.access
+            withExtendedLifetime(resolved.access) {
+                NSWorkspace.shared.activateFileViewerSelecting([resolved.actionURL])
+            }
         } catch {
             availableFileMatchItemIDs.remove(item.id)
             handle(error)
@@ -484,8 +487,9 @@ final class AppModel {
     internal func open(_ item: IndexedItem) async {
         do {
             let resolved = try await resolveActionableItem(id: item.id)
-            NSWorkspace.shared.open(resolved.actionURL)
-            _ = resolved.access
+            withExtendedLifetime(resolved.access) {
+                _ = NSWorkspace.shared.open(resolved.actionURL)
+            }
         } catch {
             availableFileMatchItemIDs.remove(item.id)
             handle(error)

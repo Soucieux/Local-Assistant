@@ -15,7 +15,7 @@ enum TestFixtures {
     ///   - isDirectory: Whether the item represents a folder.
     ///   - kind: Stored item category.
     /// - Returns: An indexed item suitable for formatter and retrieval tests.
-    static func item(
+    internal static func item(
         name: String,
         path: String? = nil,
         relativePath: String? = nil,
@@ -48,7 +48,7 @@ enum TestFixtures {
     /// Wraps an indexed item as a neutral-scored search result.
     /// - Parameter item: Item to present as a card.
     /// - Returns: A search result carrying no ranking signal.
-    static func result(_ item: IndexedItem) -> SearchResult {
+    internal static func result(_ item: IndexedItem) -> SearchResult {
         SearchResult(
             id: item.id,
             item: item,
@@ -62,7 +62,7 @@ enum TestFixtures {
     /// Builds a single-segment extracted document.
     /// - Parameter text: Segment body.
     /// - Returns: A document with one unnamed section.
-    static func document(text: String) -> ExtractedDocument {
+    internal static func document(text: String) -> ExtractedDocument {
         ExtractedDocument(
             segments: [ExtractedSegment(text: text, pageNumber: nil, sectionName: nil)]
         )

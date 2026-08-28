@@ -8,6 +8,7 @@ enum DesignTokens {
         static let defaultWidth: CGFloat = 820
         static let defaultHeight: CGFloat = 720
         static let adaptiveColumnMinimumWidth: CGFloat = 340
+        static let startupDetailMaximumWidth: CGFloat = 440
     }
 
     enum Message {
@@ -42,22 +43,11 @@ enum DesignTokens {
         static let xxLarge: CGFloat = 14
     }
 
-    enum Shadow {
-        static let cardOpacity = 0.07
-        static let cardRadius: CGFloat = 10
-        static let cardY: CGFloat = 3
-        static let floatingOpacity = 0.12
-        static let floatingRadius: CGFloat = 16
-        static let floatingY: CGFloat = 5
-    }
-
     enum Motion {
         static let scrollDuration = 0.22
         static let controlDuration = 0.12
         static let waveformDuration = 0.1
         static let commandRelocationDuration = 0.34
-        static let acquisitionDuration = 0.48
-        static let acquisitionStagger = 0.07
         static let responseTransitionDuration = 0.24
         static let screenTransitionDuration = 0.20
         static let trianglePulseDuration = 1.40
@@ -105,12 +95,7 @@ enum DesignTokens {
         /// Newest level samples the indicator reacts to.
         static let indicatorSampleCount = 3
 
-        static let barWidth: CGFloat = 3
-        static let barSpacing: CGFloat = 3
-        static let minimumBarHeight: CGFloat = 3
-        static let maximumBarHeight: CGFloat = 24
         static let height: CGFloat = 30
-        static let restingOpacity = 0.35
     }
 
     enum Color {
@@ -128,11 +113,6 @@ enum DesignTokens {
             red: 0.84,
             green: 0.10,
             blue: 0.13
-        )
-        static let voiceFill = SwiftUI.Color(
-            red: 0.48,
-            green: 0.27,
-            blue: 0.82
         )
         static let verifiedLocal = SwiftUI.Color(nsColor: .systemTeal)
         static let voice = SwiftUI.Color(nsColor: .systemPurple)
@@ -154,8 +134,6 @@ enum DesignTokens {
         static let assistantSurface = SwiftUI.Color.white.opacity(0.68)
         static let userSurface = primaryAction
         static let subtleFill = SwiftUI.Color.primary.opacity(0.055)
-        static let focusRing = primaryAccent.opacity(0.72)
-        static let voiceSurface = voice.opacity(0.12)
         static let processingSurface = processing.opacity(0.13)
         static let destructiveSurface = destructive.opacity(0.10)
         /// Same color as `primaryAccent`; aliased so the command surface can be retinted

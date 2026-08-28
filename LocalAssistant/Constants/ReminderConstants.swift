@@ -20,8 +20,15 @@ enum ReminderConstants {
         static let statusFilename = "status.json"
         static let scheduleFilename = "schedule.json"
         static let scheduledSnapshotFilename = "scheduled-reminder-snapshot.json"
-        static let jsonExtension = "json"
+        static let jsonSuffix = ".json"
         static let temporarySuffix = ".tmp"
+    }
+
+    /// Keys of the app-owned schedule document the connector reads.
+    enum ScheduleKey {
+        static let schemaVersion = "schemaVersion"
+        static let enabled = "enabled"
+        static let intervalMinutes = "intervalMinutes"
     }
 
     enum Preferences {
@@ -42,6 +49,7 @@ enum ReminderConstants {
         static let maximumStatusErrorCharacters = 1_000
         static let maximumResponseBytes = 2_097_152
         static let maximumRequestBytes = 65_536
+        static let readChunkBytes = 65_536
         static let completedStatus = "completed"
         static let inputRequiredStatus = "input-required"
         static let maximumReminderTextCharacters = 2_000
@@ -50,6 +58,10 @@ enum ReminderConstants {
         static let authorizationExplicitOpenClaw = "explicit-openclaw"
         static let authorizationConfirmedReminderMutation =
             "confirmed-reminder-mutation"
+
+        /// Exact `ERROR_INVALID_REQUEST` text published by the connector runtime.
+        /// Source of truth: `OpenClawConnector/src/local_assistant_connector/constants.py`.
+        static let invalidRequestErrorDetail = "connector request is invalid"
     }
 
     enum Retrieval {

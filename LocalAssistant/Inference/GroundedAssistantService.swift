@@ -48,9 +48,9 @@ actor GroundedAssistantService {
         let route = routeParser.parse(modelOutput: assistantOutput, originalQuestion: question)
         if routeParser.isExplicitOpenClawRequest(question) {
             switch route {
-            case .reminder(_):
+            case .reminder:
                 break
-            case .reply(_), .search(_):
+            case .reply, .search:
                 return openClawResponse(
                     message: question,
                     authorization: .explicitInvocation
@@ -217,6 +217,9 @@ actor GroundedAssistantService {
     }
 
     /// Selects one exact or clearly top-ranked reminder without guessing.
+    /// - Parameter query: Reminder text the user referred to.
+    /// - Returns: The resolved reminder, an ambiguity, or `notFound`.
+    /// - Throws: A local database or inference error while ranking the cache.
     private func resolveReminder(query: String) async throws -> ReminderResolution {
         let matches = try await reminderRetrieval.search(text: query, limit: 3)
         guard let first = matches.first else { return .notFound }
@@ -273,6 +276,8 @@ actor GroundedAssistantService {
     }
 
     /// Builds one text-only response in the reminder domain.
+    /// - Parameter answer: Assistant text already approved for display.
+    /// - Returns: A response carrying no citations, alternatives, or file cards.
     private func plainReminderResponse(_ answer: String) -> AssistantResponse {
         AssistantResponse(
             answer: answer,

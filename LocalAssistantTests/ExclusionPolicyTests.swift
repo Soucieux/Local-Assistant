@@ -13,7 +13,9 @@ final class ExclusionPolicyTests {
         .isHiddenKey, .isReadableKey, .fileSizeKey
     ]
 
-    init() throws {
+    /// Creates the isolated temporary root every case writes its fixtures into.
+    /// - Throws: A file-system error when the temporary root cannot be created.
+    internal init() throws {
         root = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("exclusion-policy-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -24,6 +26,11 @@ final class ExclusionPolicyTests {
     }
 
     /// Creates a regular file and returns the reason the policy gives for it.
+    /// - Parameters:
+    ///   - name: File name created inside this test's temporary root.
+    ///   - contents: Body written to that file.
+    /// - Returns: The exclusion reason, or `nil` when the policy allows the file.
+    /// - Throws: A file-system error when the temporary file cannot be written or read.
     private func reason(forFileNamed name: String, contents: String = "text") throws -> ExclusionReason? {
         let url = root.appendingPathComponent(name)
         try contents.write(to: url, atomically: true, encoding: .utf8)
@@ -31,12 +38,12 @@ final class ExclusionPolicyTests {
     }
 
     @Test("An ordinary readable document is not excluded")
-    func allowsOrdinaryFile() throws {
+    internal func allowsOrdinaryFile() throws {
         #expect(try reason(forFileNamed: "Report.txt") == nil)
     }
 
     @Test("A symbolic link is excluded so a scan cannot be redirected outside its root")
-    func excludesSymbolicLink() throws {
+    internal func excludesSymbolicLink() throws {
         let target = root.appendingPathComponent("target.txt")
         try "text".write(to: target, atomically: true, encoding: .utf8)
         let link = root.appendingPathComponent("link.txt")
@@ -46,17 +53,17 @@ final class ExclusionPolicyTests {
     }
 
     @Test("A dot-prefixed file is excluded as hidden")
-    func excludesHiddenFile() throws {
+    internal func excludesHiddenFile() throws {
         #expect(try reason(forFileNamed: ".secret.txt") == .hidden)
     }
 
     @Test("Credential material is excluded by extension")
-    func excludesCredentialMaterial() throws {
+    internal func excludesCredentialMaterial() throws {
         #expect(try reason(forFileNamed: "server.pem") == .credentialMaterial)
     }
 
     @Test("Build and version-control directories are excluded by name")
-    func excludesKnownDirectoryNames() {
+    internal func excludesKnownDirectoryNames() {
         for name in ["node_modules", "DerivedData", "Pods", ".build"] {
             let url = root.appendingPathComponent(name, isDirectory: true)
             #expect(
@@ -67,7 +74,7 @@ final class ExclusionPolicyTests {
     }
 
     @Test("A user folder merely named Library is still indexed")
-    func allowsUserFolderNamedLibrary() {
+    internal func allowsUserFolderNamedLibrary() {
         // Only the real system paths are excluded, so a project folder called "Library"
         // or "Caches" inside a chosen root stays searchable.
         for name in ["Library", "Caches"] {
@@ -80,7 +87,7 @@ final class ExclusionPolicyTests {
     }
 
     @Test("Absolute system directories are excluded wherever a root reaches them")
-    func excludesAbsoluteSystemDirectories() {
+    internal func excludesAbsoluteSystemDirectories() {
         for path in ["/System", "/Library", "/usr", "/bin", "/Applications"] {
             #expect(
                 policy.reason(for: URL(fileURLWithPath: path), values: URLResourceValues()) == .systemDirectory,
@@ -90,7 +97,7 @@ final class ExclusionPolicyTests {
     }
 
     @Test("The real home Library is excluded even though a nested Library is not")
-    func excludesHomeLibrary() throws {
+    internal func excludesHomeLibrary() throws {
         // The test host is sandboxed, so HOME and NSHomeDirectory() both point at the
         // container. The policy resolves the real account home, so the test must too.
         let record = try #require(getpwuid(getuid()))

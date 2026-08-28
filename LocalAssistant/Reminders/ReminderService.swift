@@ -24,12 +24,16 @@ actor ReminderService {
         self.spool = spool
         dateFormatter = DateFormatter()
         dateFormatter.calendar = Calendar(identifier: .gregorian)
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.locale = Locale(
+            identifier: ReminderConstants.DateText.posixLocaleIdentifier
+        )
         dateFormatter.dateFormat = ReminderConstants.DateText.calendarDateFormat
         dateFormatter.isLenient = false
     }
 
     /// Returns the completion time of the latest committed complete snapshot.
+    /// - Returns: Completion time, or `nil` when no complete snapshot has been committed.
+    /// - Throws: A local database error when the cached metadata cannot be read.
     internal func lastSuccessfulSync() async throws -> Date? {
         (try await database.reminderSyncMetadata())?.date
     }
@@ -112,7 +116,7 @@ actor ReminderService {
         switch authorization {
         case .explicitInvocation:
             authorizationValue = ReminderConstants.Connector.authorizationExplicitOpenClaw
-        case .confirmedReminderMutation(_):
+        case .confirmedReminderMutation:
             authorizationValue =
                 ReminderConstants.Connector.authorizationConfirmedReminderMutation
         }
@@ -170,6 +174,9 @@ actor ReminderService {
     }
 
     /// Validates the full-list response and every remotely controlled row.
+    /// - Parameter response: Connector response expected to carry a complete snapshot.
+    /// - Returns: Normalized rows with unique identifiers.
+    /// - Throws: A local connector error when the payload is incomplete or a row repeats.
     private func validatedList(_ response: ReminderConnectorResponse) throws -> [RemoteReminderItem] {
         try validateReminderSnapshotSuccess(response)
         guard response.payload?.success == true,
@@ -187,6 +194,8 @@ actor ReminderService {
     }
 
     /// Requires proof that a successful snapshot did not change Calendar.
+    /// - Parameter response: Connector response for the read-only snapshot lane.
+    /// - Throws: A local connector error when the Calendar-unchanged proof is absent.
     private func validateReminderSnapshotSuccess(
         _ response: ReminderConnectorResponse
     ) throws {
@@ -198,6 +207,8 @@ actor ReminderService {
     }
 
     /// Validates an OpenClaw response without making a false Calendar assertion.
+    /// - Parameter response: Connector response for the authorized agent lane.
+    /// - Throws: A local connector error when the status or typed error rejects the response.
     private func validateAgentSuccess(_ response: ReminderConnectorResponse) throws {
         let successfulStatuses = [
             ReminderConstants.Connector.completedStatus,
@@ -214,6 +225,8 @@ actor ReminderService {
     }
 
     /// Requires a completed connector task with no typed error.
+    /// - Parameter response: Connector response being accepted.
+    /// - Throws: A local connector error carrying the response's safe message.
     private func requireCompleted(_ response: ReminderConnectorResponse) throws {
         guard response.status == ReminderConstants.Connector.completedStatus,
               response.error == nil else {
@@ -224,6 +237,9 @@ actor ReminderService {
     }
 
     /// Validates and normalizes one remote reminder record.
+    /// - Parameter remote: One remotely controlled reminder row.
+    /// - Returns: The same row with trimmed, length-checked, and format-checked fields.
+    /// - Throws: A local connector error when any field fails validation.
     private func validated(remote: RemoteReminderItem) throws -> RemoteReminderItem {
         let identifier = remote.id.trimmingCharacters(in: .whitespacesAndNewlines)
         let text = remote.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -257,6 +273,8 @@ actor ReminderService {
     }
 
     /// Validates an optional calendar date exactly as YYYY-MM-DD.
+    /// - Parameter value: Optional stored calendar date.
+    /// - Returns: `true` when the value is absent or a real calendar date in that exact form.
     private func validDate(_ value: String?) -> Bool {
         guard let value else { return true }
         guard value.range(
@@ -270,6 +288,8 @@ actor ReminderService {
     }
 
     /// Validates an optional 24-hour wall-clock time.
+    /// - Parameter value: Optional stored wall-clock time.
+    /// - Returns: `true` when the value is absent or a 24-hour `HH:mm` time.
     private func validTime(_ value: String?) -> Bool {
         guard let value else { return true }
         return value.range(
@@ -279,6 +299,8 @@ actor ReminderService {
     }
 
     /// Rejects blank or oversized optional reminder strings.
+    /// - Parameter value: Optional free-text reminder field.
+    /// - Returns: `true` when the value is absent or within the allowed length.
     private func validOptional(_ value: String?) -> Bool {
         guard let value else { return true }
         return value.isEmpty == false
@@ -286,6 +308,8 @@ actor ReminderService {
     }
 
     /// Builds deterministic local embedding text from user-visible reminder fields.
+    /// - Parameter reminder: Cached reminder being indexed.
+    /// - Returns: Newline-joined visible fields used only for the local embedding.
     private func embeddingText(_ reminder: ReminderItem) -> String {
         [
             reminder.text,
@@ -298,6 +322,8 @@ actor ReminderService {
     }
 
     /// Hashes every remotely controlled reminder field with unambiguous length framing.
+    /// - Parameter item: One validated remote reminder row.
+    /// - Returns: Stable hash used to detect a changed row between snapshots.
     private func contentHash(_ item: RemoteReminderItem) -> String {
         let fields = [
             item.id,
@@ -322,6 +348,8 @@ actor ReminderService {
     }
 
     /// Enforces explicit connector opt-in before writing any task file.
+    /// - Parameter connectorEnabled: Explicit user opt-in state.
+    /// - Throws: A local connector error when the user has not enabled the connector.
     private func requireEnabled(_ connectorEnabled: Bool) throws {
         guard connectorEnabled else {
             throw LocalAssistantError.connector(ReminderStrings.connectorNotEnabled)

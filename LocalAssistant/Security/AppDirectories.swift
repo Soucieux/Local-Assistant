@@ -49,6 +49,8 @@ enum AppDirectories {
     }
 
     /// Returns the queue where the app atomically publishes connector requests.
+    /// - Returns: Request queue inside the private connector spool.
+    /// - Throws: A local directory-resolution error when the container is unavailable.
     internal static func connectorRequestsDirectory() throws -> URL {
         try connectorDirectory().appendingPathComponent(
             ReminderConstants.Identity.requestDirectory,
@@ -57,6 +59,8 @@ enum AppDirectories {
     }
 
     /// Returns the connector-owned directory for claimed requests.
+    /// - Returns: Processing queue inside the private connector spool.
+    /// - Throws: A local directory-resolution error when the container is unavailable.
     internal static func connectorProcessingDirectory() throws -> URL {
         try connectorDirectory().appendingPathComponent(
             ReminderConstants.Identity.processingDirectory,
@@ -65,6 +69,8 @@ enum AppDirectories {
     }
 
     /// Returns the queue where the connector atomically publishes responses.
+    /// - Returns: Response queue inside the private connector spool.
+    /// - Throws: A local directory-resolution error when the container is unavailable.
     internal static func connectorResponsesDirectory() throws -> URL {
         try connectorDirectory().appendingPathComponent(
             ReminderConstants.Identity.responseDirectory,

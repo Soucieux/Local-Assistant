@@ -95,6 +95,7 @@ extension AppModel {
     }
 
     /// Prevents Launch Services from reactivating an already-running older copy.
+    /// - Returns: Recovery guidance when a mismatched Connector is running, otherwise `nil`.
     private func incompatibleRunningConnectorIssue() -> String? {
         guard let expected = connectorRelease(for: Bundle.main) else { return nil }
         return NSRunningApplication.runningApplications(
@@ -252,6 +253,8 @@ extension AppModel {
     }
 
     /// Requires the Connector to match this Local Assistant release exactly.
+    /// - Parameter url: Candidate Connector application bundle.
+    /// - Returns: `true` when its version and build match this release.
     private func isCompatibleOpenClawConnectorApp(_ url: URL) -> Bool {
         guard let expected = connectorRelease(for: Bundle.main),
               let candidate = connectorRelease(at: url) else {
@@ -261,12 +264,16 @@ extension AppModel {
     }
 
     /// Reads one app bundle's marketing version and build number.
+    /// - Parameter url: Location of a candidate Connector bundle.
+    /// - Returns: That bundle's release identity, or `nil` when it cannot be read.
     private func connectorRelease(at url: URL) -> ConnectorAppRelease? {
         guard let bundle = Bundle(url: url) else { return nil }
         return connectorRelease(for: bundle)
     }
 
     /// Reads release identity without relying on an app's filename.
+    /// - Parameter bundle: Loaded application bundle.
+    /// - Returns: Marketing version and build number, or `nil` when either is absent.
     private func connectorRelease(for bundle: Bundle) -> ConnectorAppRelease? {
         guard let version = bundle.object(
             forInfoDictionaryKey: AppConstants.Identity.bundleShortVersionKey

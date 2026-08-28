@@ -5,9 +5,7 @@ enum AppConstants {
     enum Text {
         static let empty = ""
         static let space = " "
-        static let spaceCharacter: Character = " "
         static let newline = "\n"
-        static let tabCharacter: Character = "\t"
         static let ellipsis = "…"
     }
 
@@ -41,10 +39,13 @@ enum AppConstants {
         static let targetChunkWordCount = 550
         static let overlapWordCount = 80
         static let maximumTextFileBytes: Int64 = 20 * 1_024 * 1_024
+        static let maximumArchiveEntryBytes = 20 * 1_024 * 1_024
         static let maximumOCRPixelCount = 30_000_000
         static let embeddingDimensions = 1_024
         static let activityRetentionDays = 30
+        static let activityOrderingNudgeSeconds = 1_000_000.0
         static let changeDebounceNanoseconds: UInt64 = 2_000_000_000
+        static let monitorCoalescingSeconds: CFTimeInterval = 0.5
     }
 
     enum Storage {

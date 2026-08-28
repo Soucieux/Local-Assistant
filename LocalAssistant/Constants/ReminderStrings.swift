@@ -153,6 +153,15 @@ enum ReminderStrings {
     static let dueTomorrow = "Tomorrow"
     static let upcoming = "Upcoming"
     static let linkIncluded = "Link included"
+    static let exactReminderMatch = "Exact reminder match"
+    static let reminderTextMatch = "Reminder text match"
+    static let reminderKeywordMatch = "Keyword and field match"
+    static let reminderSemanticMatch = "Related reminder meaning"
+    static let reminderFallbackMatch = "Local reminder match"
+    static let overdueReminderMatch = "Overdue reminder"
+    static let dueTodayReminderMatch = "Due today"
+    static let dueTomorrowReminderMatch = "Due tomorrow"
+    static let upcomingReminderMatch = "Upcoming reminder"
     static let reminderConfirmationDetail =
         "I will send only this exact request. I will not attach cached reminders, files, or conversation history."
     static let reminderConfirmationUnclear =

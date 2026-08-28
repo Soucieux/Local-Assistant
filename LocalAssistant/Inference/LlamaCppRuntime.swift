@@ -14,7 +14,7 @@ private final class LlamaResources: @unchecked Sendable {
     }
 
     /// Releases every native resource before llama.cpp's process-global Metal teardown runs.
-    func release() {
+    internal func release() {
         if let chatContext {
             llama_synchronize(chatContext)
             llama_free(chatContext)

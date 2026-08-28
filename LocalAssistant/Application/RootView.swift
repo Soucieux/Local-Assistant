@@ -115,7 +115,7 @@ struct RootView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: 440)
+                    .frame(maxWidth: DesignTokens.Window.startupDetailMaximumWidth)
             }
             .padding(DesignTokens.Spacing.xxLarge)
         }

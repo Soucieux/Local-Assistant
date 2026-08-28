@@ -173,6 +173,7 @@ extension AppModel {
     }
 
     /// Loads file-level details for one expanded activity run.
+    /// - Parameter runID: Indexing run the user expanded in Activity.
     internal func loadIndexingItems(runID: UUID) async {
         guard indexingItemsByRun[runID] == nil else { return }
         do {
@@ -397,7 +398,9 @@ extension AppModel {
                     rootID: root.id,
                     folderName: root.displayName,
                     kind: kind,
-                    occurredAt: occurredAt.addingTimeInterval(Double(offset) / 1_000_000)
+                    occurredAt: occurredAt.addingTimeInterval(
+                        Double(offset) / AppConstants.Indexing.activityOrderingNudgeSeconds
+                    )
                 )
             )
         }

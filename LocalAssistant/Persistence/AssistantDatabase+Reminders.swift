@@ -162,6 +162,8 @@ extension AssistantDatabase {
     }
 
     /// Returns the identifiers currently present in the local snapshot.
+    /// - Returns: Every reminder identifier stored by the last complete snapshot.
+    /// - Throws: A local database error when the identifiers cannot be read.
     private func reminderIDs() throws -> Set<String> {
         let statement = try preparedStatement(SQLStatements.fetchReminderIDs)
         defer { sqlite3_finalize(statement) }
@@ -173,6 +175,8 @@ extension AssistantDatabase {
     }
 
     /// Inserts or refreshes one reminder row without changing its vector row id.
+    /// - Parameter reminder: Validated reminder from the newest complete snapshot.
+    /// - Throws: A local database error when the row cannot be written.
     private func upsertReminderRecord(_ reminder: ReminderItem) throws {
         let statement = try preparedStatement(SQLStatements.upsertReminder)
         defer { sqlite3_finalize(statement) }
@@ -194,6 +198,8 @@ extension AssistantDatabase {
     }
 
     /// Replaces one reminder's full-text row inside the active transaction.
+    /// - Parameter reminder: Reminder whose searchable fields are being republished.
+    /// - Throws: A local database error when either statement fails.
     private func replaceReminderFTS(_ reminder: ReminderItem) throws {
         let deletion = try preparedStatement(SQLStatements.deleteReminderFTS)
         defer { sqlite3_finalize(deletion) }
@@ -211,6 +217,10 @@ extension AssistantDatabase {
     }
 
     /// Replaces one changed reminder vector inside the active transaction.
+    /// - Parameters:
+    ///   - identifier: Reminder identifier owning the vector row.
+    ///   - embedding: Locally computed embedding for that reminder.
+    /// - Throws: A local database error when the row id is missing or a statement fails.
     private func replaceReminderVector(identifier: String, embedding: [Float]) throws {
         let rowID = try reminderRowID(identifier)
         let deletion = try preparedStatement(SQLStatements.deleteReminderVector)
@@ -237,6 +247,8 @@ extension AssistantDatabase {
     }
 
     /// Removes one reminder and its virtual-table rows inside the active transaction.
+    /// - Parameter identifier: Reminder identifier absent from the newest snapshot.
+    /// - Throws: A local database error when any deletion fails.
     private func deleteReminderRecord(_ identifier: String) throws {
         if let rowID = try optionalReminderRowID(identifier) {
             let vector = try preparedStatement(SQLStatements.deleteReminderVector)
@@ -256,6 +268,9 @@ extension AssistantDatabase {
     }
 
     /// Returns the stable sqlite-vec row id for one stored reminder.
+    /// - Parameter identifier: Reminder identifier expected to exist.
+    /// - Returns: The reminder's vector row id.
+    /// - Throws: A local database error when the reminder has no stored row.
     private func reminderRowID(_ identifier: String) throws -> Int64 {
         guard let rowID = try optionalReminderRowID(identifier) else {
             throw LocalAssistantError.database(DatabaseConstants.missingRow)
@@ -264,6 +279,9 @@ extension AssistantDatabase {
     }
 
     /// Returns an optional sqlite-vec row id for one reminder identifier.
+    /// - Parameter identifier: Reminder identifier that may not be stored yet.
+    /// - Returns: The vector row id, or `nil` when the reminder is absent.
+    /// - Throws: A local database error when the lookup fails.
     private func optionalReminderRowID(_ identifier: String) throws -> Int64? {
         let statement = try preparedStatement(SQLStatements.fetchReminderRowID)
         defer { sqlite3_finalize(statement) }

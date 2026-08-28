@@ -70,7 +70,7 @@ enum SQLStatements {
         );
 
         CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vectors USING vec0(
-            embedding float[1024]
+            embedding float[\(AppConstants.Indexing.embeddingDimensions)]
         );
 
         CREATE TABLE IF NOT EXISTS saved_searches (
@@ -192,7 +192,7 @@ enum SQLStatements {
         );
 
         CREATE VIRTUAL TABLE IF NOT EXISTS reminder_vectors USING vec0(
-            embedding float[1024]
+            embedding float[\(AppConstants.Indexing.embeddingDimensions)]
         );
 
         CREATE TABLE IF NOT EXISTS reminder_sync_state (

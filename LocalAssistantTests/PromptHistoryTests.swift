@@ -25,31 +25,31 @@ struct PromptHistoryTests {
     }
 
     @Test("recognizes the singular card acknowledgement")
-    func recognizesSingularSummary() {
+    internal func recognizesSingularSummary() {
         #expect(RetrievalStrings.isFileCardSummary(RetrievalStrings.fileCardsReady(matchCount: 1)))
     }
 
     @Test("recognizes plural card acknowledgements for any count")
-    func recognizesPluralSummary() {
+    internal func recognizesPluralSummary() {
         for count in [0, 2, 10, 137] {
             #expect(RetrievalStrings.isFileCardSummary(RetrievalStrings.fileCardsReady(matchCount: count)))
         }
     }
 
     @Test("treats ordinary assistant prose as model output")
-    func ignoresOrdinaryProse() {
+    internal func ignoresOrdinaryProse() {
         #expect(RetrievalStrings.isFileCardSummary("I'm here and ready to help.") == false)
         #expect(RetrievalStrings.isFileCardSummary("") == false)
     }
 
     @Test("does not treat a sentence with a missing count as an acknowledgement")
-    func ignoresMalformedSummary() {
+    internal func ignoresMalformedSummary() {
         #expect(RetrievalStrings.isFileCardSummary("I found  matches. They are shown below.") == false)
         #expect(RetrievalStrings.isFileCardSummary("I found many matches. They are shown below.") == false)
     }
 
     @Test("keeps a generated acknowledgement out of the routing prompt")
-    func replacesSummaryInPrompt() {
+    internal func replacesSummaryInPrompt() {
         let summary = RetrievalStrings.fileCardsReady(matchCount: 2)
         let prompt = builder.assistantPrompt(
             question: "what else?",
@@ -61,7 +61,7 @@ struct PromptHistoryTests {
     }
 
     @Test("keeps ordinary assistant replies in the routing prompt")
-    func preservesOrdinaryReplyInPrompt() {
+    internal func preservesOrdinaryReplyInPrompt() {
         let reply = "A PDF is a portable document format file."
         let prompt = builder.assistantPrompt(
             question: "what else?",
@@ -73,7 +73,7 @@ struct PromptHistoryTests {
     }
 
     @Test("never substitutes a user message that repeats the sentence")
-    func preservesUserTextMatchingSummary() {
+    internal func preservesUserTextMatchingSummary() {
         let summary = RetrievalStrings.fileCardsReady(matchCount: 2)
         let userMessage = ChatMessage.user(summary)
         let prompt = builder.assistantPrompt(question: "what else?", history: [userMessage])
