@@ -42,7 +42,12 @@ struct PagesPreviewExtractor: Sendable {
             let path = ExtractionConstants.pagesPreviewPath(filename: filename)
             guard let entry = archive[path] else { continue }
             var data = Data()
-            _ = try archive.extract(entry) { data.append($0) }
+            _ = try archive.extract(entry) { chunk in
+                guard data.count + chunk.count <= AppConstants.Indexing.maximumArchiveEntryBytes else {
+                    throw LocalAssistantError.unsupported(path)
+                }
+                data.append(chunk)
+            }
             return document(text: try ocrService.recognize(data: data))
         }
         throw LocalAssistantError.unsupported(url.path)

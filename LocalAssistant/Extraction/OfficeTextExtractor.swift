@@ -97,15 +97,21 @@ struct OfficeTextExtractor: Sendable {
         return try data(for: entry, in: archive)
     }
 
-    /// Loads one archive entry into memory.
+    /// Loads one archive entry into memory under a fixed decompressed size limit.
+    ///
+    /// A small container can declare an enormous entry, so the copy is bounded while it is
+    /// being written rather than trusting the archive's own size fields.
     /// - Parameters:
     ///   - entry: Archive entry to extract.
     ///   - archive: Open read-only archive.
     /// - Returns: Copied entry bytes.
-    /// - Throws: An archive extraction error.
+    /// - Throws: A local unsupported error past the limit, or an archive extraction error.
     private func data(for entry: Entry, in archive: Archive) throws -> Data {
         var result = Data()
         _ = try archive.extract(entry) { chunk in
+            guard result.count + chunk.count <= AppConstants.Indexing.maximumArchiveEntryBytes else {
+                throw LocalAssistantError.unsupported(entry.path)
+            }
             result.append(chunk)
         }
         return result
