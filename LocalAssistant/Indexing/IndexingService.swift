@@ -6,7 +6,7 @@ actor IndexingService {
     private let scanner: ReadOnlyFileScanner
     private let extractor: ExtractionCoordinator
     private let chunker: TextChunker
-    let embeddings: LocalEmbeddingService
+    let embeddings: DocumentEmbedding
     private let folderContextBuilder = FolderContextBuilder()
 
     /// Creates the local indexing pipeline.
@@ -15,13 +15,13 @@ actor IndexingService {
     ///   - scanner: Read-only file traversal service.
     ///   - extractor: Local content extraction coordinator.
     ///   - chunker: Source-aligned passage splitter.
-    ///   - embeddings: Embedded Qwen embedding service.
+    ///   - embeddings: Local document embedding source.
     internal init(
         database: AssistantDatabase,
         scanner: ReadOnlyFileScanner,
         extractor: ExtractionCoordinator,
         chunker: TextChunker,
-        embeddings: LocalEmbeddingService
+        embeddings: DocumentEmbedding
     ) {
         self.database = database
         self.scanner = scanner
@@ -45,8 +45,61 @@ actor IndexingService {
         progress: @Sendable (IndexingProgress) async -> Void
     ) async throws -> IndexingOutcome {
         let runID = UUID()
-        var run = IndexingRunRecord(
-            id: runID,
+        var run = startingRun(id: runID, root: root, trigger: trigger)
+        try await database.insertIndexingRun(run)
+        var runState = RunState()
+
+        do {
+            return try await performRun(
+                root: root,
+                access: access,
+                runID: runID,
+                run: &run,
+                runState: &runState,
+                progress: progress
+            )
+        } catch is CancellationError {
+            await finishInterruptedRun(
+                root: root,
+                run: &run,
+                runState: runState,
+                failure: nil,
+                progress: progress
+            )
+            throw CancellationError()
+        } catch {
+            await finishInterruptedRun(
+                root: root,
+                run: &run,
+                runState: runState,
+                failure: error,
+                progress: progress
+            )
+            throw error
+        }
+    }
+
+    /// Mutable bookkeeping the run's passes share with its interruption handlers.
+    private struct RunState {
+        var processedCount = 0
+        var currentItem: IndexingItemRecord?
+        var currentWaitingState: IndexingItemState?
+        var currentItemWasCountedAsSkipped = false
+    }
+
+    /// Builds the run summary recorded before any scanning begins.
+    /// - Parameters:
+    ///   - id: Durable run identifier.
+    ///   - root: Persisted read-only root authorization.
+    ///   - trigger: Source that requested the indexing run.
+    /// - Returns: A running summary with empty counters.
+    private func startingRun(
+        id: UUID,
+        root: AuthorizedRoot,
+        trigger: IndexingTrigger
+    ) -> IndexingRunRecord {
+        IndexingRunRecord(
+            id: id,
             rootID: root.id,
             folderName: root.displayName,
             folderPath: root.lastKnownPath,
@@ -61,227 +114,342 @@ actor IndexingService {
             removedItems: 0,
             skippedItems: 0
         )
-        try await database.insertIndexingRun(run)
-        var processedCount = 0
-        var currentItem: IndexingItemRecord?
-        var currentWaitingState: IndexingItemState?
-        var currentItemWasCountedAsSkipped = false
+    }
 
-        do {
+    /// Runs every pass of one indexing run, leaving interruption handling to the caller.
+    /// - Parameters:
+    ///   - root: Persisted read-only root authorization.
+    ///   - access: Active security-scoped access lifetime.
+    ///   - runID: Durable parent run identifier.
+    ///   - run: Run summary updated by every pass.
+    ///   - runState: Bookkeeping the interruption handlers read.
+    ///   - progress: Main-actor-safe progress callback.
+    /// - Returns: Completed indexing statistics.
+    /// - Throws: A local indexing, extraction, database, or inference error.
+    private func performRun(
+        root: AuthorizedRoot,
+        access: SecurityScopedAccess,
+        runID: UUID,
+        run: inout IndexingRunRecord,
+        runState: inout RunState,
+        progress: @Sendable (IndexingProgress) async -> Void
+    ) async throws -> IndexingOutcome {
+        let preparation = try await beginRun(
+            root: root,
+            access: access,
+            runID: runID,
+            run: &run,
+            runState: &runState,
+            progress: progress
+        )
+
+        for scannedFile in preparation.orderedFiles {
             try Task.checkCancellation()
-            await progress(
-                makeProgress(
-                    run: run,
-                    state: .scanning,
-                    path: access.url.path,
-                    processed: 0,
-                    total: 0
+            let previous = preparation.existingByPath[scannedFile.item.url.path]
+            if IndexingDecisionPolicy.itemIsUnchanged(
+                metadataMatches: previous?.metadataHash == scannedFile.item.metadataHash,
+                requiresContentIndexing: scannedFile.requiresContentIndexing,
+                previousContentHash: previous?.contentHash
+            ) {
+                try await recordUnchangedFile(
+                    scannedFile,
+                    run: &run,
+                    runState: &runState,
+                    progress: progress
                 )
-            )
-            let preparation = try await prepareScan(root: root, access: access)
-            let snapshot = preparation.snapshot
-            let folderChunks = preparation.folderChunks
-            let existingByPath = preparation.existingByPath
-            let retainedPaths = preparation.retainedPaths
-            let staleItems = preparation.staleItems
-            let orderedFiles = preparation.orderedFiles
-            try Task.checkCancellation()
-            run.totalItems = snapshot.files.count + staleItems.count + snapshot.exclusions.count
-            processedCount = try await recordInitialActivity(
-                runID: runID,
-                accessURL: access.url,
-                snapshot: snapshot,
-                existingByPath: existingByPath,
-                staleItems: staleItems,
-                run: &run
-            )
-
-            for scannedFile in orderedFiles {
-                try Task.checkCancellation()
-                let previous = existingByPath[scannedFile.item.url.path]
-                if IndexingDecisionPolicy.itemIsUnchanged(
-                    metadataMatches: previous?.metadataHash == scannedFile.item.metadataHash,
-                    requiresContentIndexing: scannedFile.requiresContentIndexing,
-                    previousContentHash: previous?.contentHash
-                ) {
-                    run.unchangedItems += 1
-                    processedCount += 1
-                    try await database.updateIndexingRun(run)
-                    await progress(
-                        makeProgress(
-                            run: run,
-                            state: .scanning,
-                            path: visibleRelativePath(for: scannedFile.item),
-                            itemState: .unchanged,
-                            processed: processedCount,
-                            total: run.totalItems
-                        )
-                    )
-                    continue
-                }
-
-                let isNew = previous == nil
-                currentWaitingState = isNew ? .newWaiting : .modifiedWaiting
-                currentItem = activityItem(
-                    item: scannedFile.item,
-                    runID: runID,
-                    state: isNew ? .newIndexing : .modifiedUpdating
-                )
-                if let currentItem {
-                    try await database.upsertIndexingItem(currentItem)
-                }
-                await progress(
-                    makeProgress(
-                        run: run,
-                        state: .extracting,
-                        path: visibleRelativePath(for: scannedFile.item),
-                        itemState: isNew ? .newIndexing : .modifiedUpdating,
-                        processed: processedCount,
-                        total: run.totalItems
-                    )
-                )
-
-                var completedItemState: IndexingItemState = isNew
-                    ? .newIndexing
-                    : .modifiedUpdating
-                do {
-                    completedItemState = try await indexFile(
-                        scannedFile,
-                        isNew: isNew,
-                        folderChunk: folderChunks[scannedFile.item.id],
-                        runID: runID,
-                        run: &run,
-                        processedCount: processedCount,
-                        progress: progress
-                    )
-                } catch is CancellationError {
-                    throw CancellationError()
-                } catch let error as LocalAssistantError {
-                    switch error {
-                    case .modelMissing, .modelIntegrity, .inference:
-                        throw error
-                    default:
-                        run.skippedItems += 1
-                        currentItemWasCountedAsSkipped = true
-                        completedItemState = .skipped
-                        try await database.replaceItem(scannedFile.item, chunks: [])
-                        try await database.upsertIndexingItem(
-                            activityItem(
-                                item: scannedFile.item,
-                                runID: runID,
-                                state: .skipped,
-                                detail: error.localizedDescription
-                            )
-                        )
-                    }
-                } catch {
-                    run.skippedItems += 1
-                    currentItemWasCountedAsSkipped = true
-                    completedItemState = .skipped
-                    try await database.replaceItem(scannedFile.item, chunks: [])
-                    try await database.upsertIndexingItem(
-                        activityItem(
-                            item: scannedFile.item,
-                            runID: runID,
-                            state: .skipped,
-                            detail: error.localizedDescription
-                        )
-                    )
-                }
-                currentItem = nil
-                currentWaitingState = nil
-                currentItemWasCountedAsSkipped = false
-                processedCount += 1
-                try await database.updateIndexingRun(run)
-                await progress(
-                    makeProgress(
-                        run: run,
-                        state: .saving,
-                        path: visibleRelativePath(for: scannedFile.item),
-                        itemState: completedItemState,
-                        processed: processedCount,
-                        total: run.totalItems
-                    )
-                )
+                continue
             }
-
-            try Task.checkCancellation()
-            try await database.pruneItems(rootID: root.id, retaining: retainedPaths)
-            try await removeStaleItems(
-                staleItems,
+            try await indexChangedFile(
+                scannedFile,
+                isNew: previous == nil,
+                folderChunk: preparation.folderChunks[scannedFile.item.id],
                 runID: runID,
                 run: &run,
-                processedCount: &processedCount,
+                runState: &runState,
                 progress: progress
             )
+        }
 
-            return try await completeRun(
-                root: root,
+        try Task.checkCancellation()
+        try await database.pruneItems(preparation.staleItems)
+        try await removeStaleItems(
+            preparation.staleItems,
+            runID: runID,
+            run: &run,
+            processedCount: &runState.processedCount,
+            progress: progress
+        )
+        return try await completeRun(
+            root: root,
+            run: &run,
+            processedCount: runState.processedCount,
+            progress: progress
+        )
+    }
+
+    /// Announces the scan, gathers prior state, and records every item's starting state.
+    /// - Parameters:
+    ///   - root: Persisted read-only root authorization.
+    ///   - access: Active security-scoped access lifetime.
+    ///   - runID: Durable parent run identifier.
+    ///   - run: Run summary given its total and initial skipped counts.
+    ///   - runState: Bookkeeping seeded with the starting processed count.
+    ///   - progress: Main-actor-safe progress callback.
+    /// - Returns: Facts the remaining passes need.
+    /// - Throws: A local indexing or database error when the opening pass fails.
+    private func beginRun(
+        root: AuthorizedRoot,
+        access: SecurityScopedAccess,
+        runID: UUID,
+        run: inout IndexingRunRecord,
+        runState: inout RunState,
+        progress: @Sendable (IndexingProgress) async -> Void
+    ) async throws -> ScanPreparation {
+        try Task.checkCancellation()
+        await progress(
+            makeProgress(
+                run: run,
+                state: .scanning,
+                path: access.url.path,
+                processed: 0,
+                total: 0
+            )
+        )
+        let preparation = try await prepareScan(root: root, access: access)
+        try Task.checkCancellation()
+        run.totalItems = preparation.snapshot.files.count
+            + preparation.staleItems.count
+            + preparation.snapshot.exclusions.count
+        runState.processedCount = try await recordInitialActivity(
+            runID: runID,
+            accessURL: access.url,
+            snapshot: preparation.snapshot,
+            existingByPath: preparation.existingByPath,
+            staleItems: preparation.staleItems,
+            run: &run
+        )
+        return preparation
+    }
+
+    /// Counts one file whose metadata and content both match the private index.
+    /// - Parameters:
+    ///   - scannedFile: File the decision policy reported as unchanged.
+    ///   - run: Run summary updated with the unchanged count.
+    ///   - runState: Bookkeeping advanced by one completed item.
+    ///   - progress: Main-actor-safe progress callback.
+    /// - Throws: A local database error when the run summary cannot be saved.
+    private func recordUnchangedFile(
+        _ scannedFile: ScannedFile,
+        run: inout IndexingRunRecord,
+        runState: inout RunState,
+        progress: @Sendable (IndexingProgress) async -> Void
+    ) async throws {
+        run.unchangedItems += 1
+        runState.processedCount += 1
+        try await database.updateIndexingRun(run)
+        await progress(
+            makeProgress(
+                run: run,
+                state: .scanning,
+                path: visibleRelativePath(for: scannedFile.item),
+                itemState: .unchanged,
+                processed: runState.processedCount,
+                total: run.totalItems
+            )
+        )
+    }
+
+    /// Extracts, embeds, and stores one new or modified file, skipping it when that fails.
+    /// - Parameters:
+    ///   - scannedFile: File whose content must be indexed.
+    ///   - isNew: Whether the file is absent from the private index.
+    ///   - folderChunk: Synthesized folder context, for folder items only.
+    ///   - runID: Durable parent run identifier.
+    ///   - run: Run summary updated with this file's classification.
+    ///   - runState: Bookkeeping advanced by one completed item.
+    ///   - progress: Main-actor-safe progress callback.
+    /// - Throws: A cancellation, model, or database error that must end the whole run.
+    private func indexChangedFile(
+        _ scannedFile: ScannedFile,
+        isNew: Bool,
+        folderChunk: ContentChunk?,
+        runID: UUID,
+        run: inout IndexingRunRecord,
+        runState: inout RunState,
+        progress: @Sendable (IndexingProgress) async -> Void
+    ) async throws {
+        try await announceFileStart(
+            scannedFile,
+            isNew: isNew,
+            runID: runID,
+            run: run,
+            runState: &runState,
+            progress: progress
+        )
+
+        var completedItemState: IndexingItemState = isNew ? .newIndexing : .modifiedUpdating
+        do {
+            completedItemState = try await indexFile(
+                scannedFile,
+                isNew: isNew,
+                folderChunk: folderChunk,
+                runID: runID,
                 run: &run,
-                processedCount: processedCount,
+                processedCount: runState.processedCount,
                 progress: progress
             )
         } catch is CancellationError {
-            if var currentItem, let currentWaitingState {
-                currentItem.state = currentWaitingState
-                currentItem.updatedAt = Date()
-                try? await database.upsertIndexingItem(currentItem)
-            }
-            run.state = .stopped
-            run.finishedAt = Date()
-            try? await database.updateIndexingRun(run)
-            try? await database.insertIndexActivityEvent(
-                IndexActivityEventRecord(
-                    id: UUID(),
-                    rootID: root.id,
-                    folderName: root.displayName,
-                    kind: .indexingStopped,
-                    occurredAt: Date()
-                )
-            )
-            await progress(
-                makeProgress(
-                    run: run,
-                    state: .stopped,
-                    path: nil,
-                    processed: processedCount,
-                    total: run.totalItems
-                )
-            )
             throw CancellationError()
+        } catch let error as LocalAssistantError where Self.endsRun(error) {
+            throw error
         } catch {
-            if var currentItem {
-                if currentItemWasCountedAsSkipped == false {
+            completedItemState = .skipped
+            try await recordSkippedFile(
+                scannedFile,
+                runID: runID,
+                run: &run,
+                runState: &runState,
+                failure: error
+            )
+        }
+
+        runState.currentItem = nil
+        runState.currentWaitingState = nil
+        runState.currentItemWasCountedAsSkipped = false
+        runState.processedCount += 1
+        try await database.updateIndexingRun(run)
+        await progress(
+            makeProgress(
+                run: run,
+                state: .saving,
+                path: visibleRelativePath(for: scannedFile.item),
+                itemState: completedItemState,
+                processed: runState.processedCount,
+                total: run.totalItems
+            )
+        )
+    }
+
+    /// Publishes the in-flight state for one file before extraction begins.
+    /// - Parameters:
+    ///   - scannedFile: File about to be extracted and embedded.
+    ///   - isNew: Whether the file is absent from the private index.
+    ///   - runID: Durable parent run identifier.
+    ///   - run: Current run summary supplying progress identity and counts.
+    ///   - runState: Bookkeeping given the file the interruption handlers must name.
+    ///   - progress: Main-actor-safe progress callback.
+    /// - Throws: A local database error when the activity row cannot be saved.
+    private func announceFileStart(
+        _ scannedFile: ScannedFile,
+        isNew: Bool,
+        runID: UUID,
+        run: IndexingRunRecord,
+        runState: inout RunState,
+        progress: @Sendable (IndexingProgress) async -> Void
+    ) async throws {
+        let startingState: IndexingItemState = isNew ? .newIndexing : .modifiedUpdating
+        let record = activityItem(item: scannedFile.item, runID: runID, state: startingState)
+        runState.currentWaitingState = isNew ? .newWaiting : .modifiedWaiting
+        runState.currentItem = record
+        try await database.upsertIndexingItem(record)
+        await progress(
+            makeProgress(
+                run: run,
+                state: .extracting,
+                path: visibleRelativePath(for: scannedFile.item),
+                itemState: startingState,
+                processed: runState.processedCount,
+                total: run.totalItems
+            )
+        )
+    }
+
+    /// Records one file the run could not index and leaves the run running.
+    /// - Parameters:
+    ///   - scannedFile: File whose content processing failed.
+    ///   - runID: Durable parent run identifier.
+    ///   - run: Run summary updated with the skipped count.
+    ///   - runState: Bookkeeping told the skip was already counted.
+    ///   - failure: Reason shown in the activity details view.
+    /// - Throws: A local database error when the skip cannot be saved.
+    private func recordSkippedFile(
+        _ scannedFile: ScannedFile,
+        runID: UUID,
+        run: inout IndexingRunRecord,
+        runState: inout RunState,
+        failure: Error
+    ) async throws {
+        run.skippedItems += 1
+        runState.currentItemWasCountedAsSkipped = true
+        try await database.replaceItem(scannedFile.item, chunks: [])
+        try await database.upsertIndexingItem(
+            activityItem(
+                item: scannedFile.item,
+                runID: runID,
+                state: .skipped,
+                detail: failure.localizedDescription
+            )
+        )
+    }
+
+    /// Reports whether a per-file failure will repeat for every remaining file.
+    /// - Parameter error: Failure raised while indexing one file.
+    /// - Returns: `true` for model and inference failures that must end the run.
+    private static func endsRun(_ error: LocalAssistantError) -> Bool {
+        switch error {
+        case .modelMissing, .modelIntegrity, .inference: true
+        default: false
+        }
+    }
+
+    /// Records a run that ended early and reports its final state.
+    /// - Parameters:
+    ///   - root: Authorization whose run ended early.
+    ///   - run: Run summary marked stopped or failed.
+    ///   - runState: Bookkeeping naming the file that was still in flight.
+    ///   - failure: Reported failure, or `nil` when the run was cancelled.
+    ///   - progress: Main-actor-safe progress callback.
+    private func finishInterruptedRun(
+        root: AuthorizedRoot,
+        run: inout IndexingRunRecord,
+        runState: RunState,
+        failure: Error?,
+        progress: @Sendable (IndexingProgress) async -> Void
+    ) async {
+        if var currentItem = runState.currentItem {
+            if let failure {
+                if runState.currentItemWasCountedAsSkipped == false {
                     run.skippedItems += 1
                 }
                 currentItem.state = .skipped
-                currentItem.detail = error.localizedDescription
-                currentItem.updatedAt = Date()
-                try? await database.upsertIndexingItem(currentItem)
+                currentItem.detail = failure.localizedDescription
+            } else if let waitingState = runState.currentWaitingState {
+                currentItem.state = waitingState
             }
-            run.state = .failed
-            run.finishedAt = Date()
-            try? await database.updateIndexingRun(run)
-            try? await database.insertIndexActivityEvent(
-                IndexActivityEventRecord(
-                    id: UUID(),
-                    rootID: root.id,
-                    folderName: root.displayName,
-                    kind: .indexingFailed,
-                    occurredAt: Date()
-                )
-            )
-            await progress(
-                makeProgress(
-                    run: run,
-                    state: .failed,
-                    path: nil,
-                    processed: processedCount,
-                    total: run.totalItems
-                )
-            )
-            throw error
+            currentItem.updatedAt = Date()
+            try? await database.upsertIndexingItem(currentItem)
         }
+        run.state = failure == nil ? .stopped : .failed
+        run.finishedAt = Date()
+        try? await database.updateIndexingRun(run)
+        try? await database.insertIndexActivityEvent(
+            IndexActivityEventRecord(
+                id: UUID(),
+                rootID: root.id,
+                folderName: root.displayName,
+                kind: failure == nil ? .indexingStopped : .indexingFailed,
+                occurredAt: Date()
+            )
+        )
+        await progress(
+            makeProgress(
+                run: run,
+                state: failure == nil ? .stopped : .failed,
+                path: nil,
+                processed: runState.processedCount,
+                total: run.totalItems
+            )
+        )
     }
 
     /// Read-only facts gathered before any run counters or activity rows are written.
@@ -289,7 +457,6 @@ actor IndexingService {
         let snapshot: ScanSnapshot
         let folderChunks: [UUID: ContentChunk]
         let existingByPath: [String: IndexedItem]
-        let retainedPaths: Set<String>
         let staleItems: [IndexedItem]
         let orderedFiles: [ScannedFile]
     }
@@ -344,7 +511,6 @@ actor IndexingService {
             snapshot: snapshot,
             folderChunks: folderChunks,
             existingByPath: existingByPath,
-            retainedPaths: retainedPaths,
             staleItems: staleItems,
             orderedFiles: orderedFiles
         )
@@ -368,13 +534,13 @@ actor IndexingService {
         staleItems: [IndexedItem],
         run: inout IndexingRunRecord
     ) async throws -> Int {
+        var records: [IndexingItemRecord] = []
         for excluded in snapshot.exclusions {
-            let relativePath = relativePath(for: excluded.url, rootURL: accessURL)
-            try await database.upsertIndexingItem(
+            records.append(
                 activityItem(
                     runID: runID,
                     displayName: excluded.url.lastPathComponent,
-                    relativePath: relativePath,
+                    relativePath: relativePath(for: excluded.url, rootURL: accessURL),
                     state: .skipped,
                     detail: excluded.reason.rawValue
                 )
@@ -396,15 +562,14 @@ actor IndexingService {
             } else {
                 state = .modifiedWaiting
             }
-            try await database.upsertIndexingItem(
-                activityItem(item: scannedFile.item, runID: runID, state: state)
-            )
+            records.append(activityItem(item: scannedFile.item, runID: runID, state: state))
         }
-        for staleItem in staleItems {
-            try await database.upsertIndexingItem(
-                activityItem(item: staleItem, runID: runID, state: .missingPendingRemoval)
-            )
-        }
+        records.append(
+            contentsOf: staleItems.map {
+                activityItem(item: $0, runID: runID, state: .missingPendingRemoval)
+            }
+        )
+        try await database.upsertIndexingItems(records)
         try await database.updateIndexingRun(run)
         return snapshot.exclusions.count
     }
@@ -561,184 +726,5 @@ actor IndexingService {
             newItems: run.newItems,
             removedItems: run.removedItems
         )
-    }
-
-    /// Copies fresh scan metadata while retaining the last successfully indexed content hash.
-    /// - Parameters:
-    ///   - item: Metadata observed during the current read-only scan.
-    ///   - contentHash: Content hash from the previously completed extraction, when available.
-    /// - Returns: Metadata row safe to publish before expensive content processing begins.
-    private func metadataItem(
-        _ item: IndexedItem,
-        preservingContentHash contentHash: String?
-    ) -> IndexedItem {
-        IndexedItem(
-            id: item.id,
-            rootID: item.rootID,
-            parentID: item.parentID,
-            url: item.url,
-            relativePath: item.relativePath,
-            displayName: item.displayName,
-            kind: item.kind,
-            contentType: item.contentType,
-            byteCount: item.byteCount,
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-            contentHash: contentHash,
-            metadataHash: item.metadataHash,
-            isDirectory: item.isDirectory,
-            isHidden: item.isHidden
-        )
-    }
-
-    /// Computes a content hash for a changed file or synthesized folder context.
-    /// - Parameters:
-    ///   - item: Newly scanned metadata.
-    ///   - synthesizedText: Optional local-only context generated for a folder.
-    /// - Returns: Copy containing a streaming SHA-256 hash when applicable.
-    /// - Throws: A local extraction error when a readable file cannot be hashed.
-    private func itemWithContentHash(
-        _ item: IndexedItem,
-        synthesizedText: String?
-    ) throws -> IndexedItem {
-        let digest: String? = if let synthesizedText {
-            FileHasher.sha256(of: synthesizedText)
-        } else if item.isDirectory {
-            nil
-        } else {
-            try FileHasher.sha256(of: item.url)
-        }
-        return IndexedItem(
-            id: item.id,
-            rootID: item.rootID,
-            parentID: item.parentID,
-            url: item.url,
-            relativePath: item.relativePath,
-            displayName: item.displayName,
-            kind: item.kind,
-            contentType: item.contentType,
-            byteCount: item.byteCount,
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-            contentHash: digest,
-            metadataHash: item.metadataHash,
-            isDirectory: item.isDirectory,
-            isHidden: item.isHidden
-        )
-    }
-
-    /// Builds a bounded progress snapshot.
-    /// - Parameters:
-    ///   - run: Durable run summary supplying identity and counts.
-    ///   - state: Active pipeline stage.
-    ///   - path: Optional current path.
-    ///   - itemState: Optional file-level state for the current path.
-    ///   - processed: Completed item count.
-    ///   - total: Total item count.
-    /// - Returns: Progress value safe for presentation.
-    private func makeProgress(
-        run: IndexingRunRecord,
-        state: IndexingState,
-        path: String?,
-        itemState: IndexingItemState? = nil,
-        processed: Int,
-        total: Int
-    ) -> IndexingProgress {
-        let fraction = IndexingDecisionPolicy.progressFraction(
-            processed: processed,
-            total: total
-        )
-        return IndexingProgress(
-            runID: run.id,
-            rootID: run.rootID,
-            folderName: run.folderName,
-            trigger: run.trigger,
-            state: state,
-            currentPath: path,
-            currentItemState: itemState,
-            processedItems: processed,
-            totalItems: total,
-            skippedItems: run.skippedItems,
-            newItems: run.newItems,
-            updatedItems: run.updatedItems,
-            unchangedItems: run.unchangedItems,
-            removedItems: run.removedItems,
-            fractionCompleted: fraction
-        )
-    }
-
-    /// Creates a durable file-state record from one scanned or stale item.
-    /// - Parameters:
-    ///   - item: Indexed item supplying visible identity and relative path.
-    ///   - runID: Durable parent run identifier.
-    ///   - state: Current file-level indexing state.
-    ///   - detail: Optional private explanation for a skipped item.
-    /// - Returns: Deterministic activity record for the item and run.
-    private func activityItem(
-        item: IndexedItem,
-        runID: UUID,
-        state: IndexingItemState,
-        detail: String? = nil
-    ) -> IndexingItemRecord {
-        activityItem(
-            runID: runID,
-            displayName: item.displayName,
-            relativePath: visibleRelativePath(for: item),
-            state: state,
-            detail: detail
-        )
-    }
-
-    /// Creates one deterministic file-state record for an indexing run.
-    /// - Parameters:
-    ///   - runID: Durable parent run identifier.
-    ///   - displayName: Visible file or folder name.
-    ///   - relativePath: Root-relative path retained for private display.
-    ///   - state: Current file-level indexing state.
-    ///   - detail: Optional private explanation for a skipped item.
-    /// - Returns: Deterministic activity record for the path and run.
-    private func activityItem(
-        runID: UUID,
-        displayName: String,
-        relativePath: String,
-        state: IndexingItemState,
-        detail: String? = nil
-    ) -> IndexingItemRecord {
-        IndexingItemRecord(
-            id: StableIdentifier.uuid(
-                for: [runID.uuidString, relativePath].joined(
-                    separator: ExtractionConstants.indexingSeparator
-                )
-            ),
-            runID: runID,
-            displayName: displayName,
-            relativePath: relativePath,
-            state: state,
-            detail: detail,
-            updatedAt: Date()
-        )
-    }
-
-    /// Returns a root-relative path suitable for private activity presentation.
-    /// - Parameters:
-    ///   - url: Descendant URL to represent without its root prefix.
-    ///   - rootURL: Authorized root URL used as the relative base.
-    /// - Returns: Root-relative path or the final path component as a safe fallback.
-    private func relativePath(for url: URL, rootURL: URL) -> String {
-        let rootComponents = rootURL.standardizedFileURL.pathComponents
-        let itemComponents = url.standardizedFileURL.pathComponents
-        guard itemComponents.starts(with: rootComponents) else {
-            return url.lastPathComponent
-        }
-        return itemComponents.dropFirst(rootComponents.count).joined(
-            separator: FileConstants.pathSeparator
-        )
-    }
-
-    /// Returns a non-empty root-relative label for progress and activity presentation.
-    /// - Parameter item: Indexed file or folder being presented.
-    /// - Returns: Relative path, or the root folder name for the authorized root itself.
-    private func visibleRelativePath(for item: IndexedItem) -> String {
-        item.relativePath.isEmpty ? item.displayName : item.relativePath
     }
 }

@@ -90,6 +90,21 @@ extension AssistantDatabase {
         try stepDone(statement)
     }
 
+    /// Stores many run item rows in a single transaction.
+    ///
+    /// A run opens by classifying every scanned file at once. Committing each of those rows
+    /// separately costs one durable write per file, which dominates the start of a large scan.
+    /// - Parameter items: Durable per-file classifications saved together.
+    /// - Throws: A local database error when the rows cannot be saved.
+    internal func upsertIndexingItems(_ items: [IndexingItemRecord]) throws {
+        guard items.isEmpty == false else { return }
+        try inTransaction {
+            for item in items {
+                try upsertIndexingItem(item)
+            }
+        }
+    }
+
     /// Appends one monitoring or lifecycle event to the activity timeline.
     /// - Parameter event: Durable event snapshot to append.
     /// - Throws: A local database error when the event cannot be inserted.

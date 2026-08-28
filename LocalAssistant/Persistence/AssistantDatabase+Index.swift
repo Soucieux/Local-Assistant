@@ -95,13 +95,9 @@ extension AssistantDatabase {
     }
 
     /// Deletes records for files no longer present in a completed root scan.
-    /// - Parameters:
-    ///   - rootID: Root whose snapshot was completed.
-    ///   - retainedPaths: Absolute paths observed during the scan.
+    /// - Parameter staleItems: Items the completed scan already proved are gone.
     /// - Throws: A local database error when stale rows cannot be removed.
-    internal func pruneItems(rootID: UUID, retaining retainedPaths: Set<String>) throws {
-        let existingItems = try fetchItems(rootID: rootID)
-        let staleItems = existingItems.filter { retainedPaths.contains($0.url.path) == false }
+    internal func pruneItems(_ staleItems: [IndexedItem]) throws {
         try inTransaction {
             for item in staleItems {
                 try deleteVectors(itemID: item.id)
