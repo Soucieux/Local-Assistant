@@ -60,7 +60,7 @@ def _pinned_host_key() -> str:
     except (OSError, UnicodeError):
         return ""
     if (
-        len(fields) != 3
+        len(fields) != constants.SSH_HOST_KEY_FIELD_COUNT
         or fields[0] != constants.SSH_HOST_KEY_ALIAS
         or fields[1] != constants.SSH_KEY_TYPE
     ):

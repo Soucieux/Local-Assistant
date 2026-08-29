@@ -121,6 +121,14 @@ enum ReminderStrings {
     internal static func connectorRunningVersionMismatch(running: String, expected: String) -> String {
         "Connector \(running) is already running, but this app requires \(expected). Quit the older Connector, replace its Applications copy from this release, then open it again."
     }
+    /// Names one companion release the way every setup message refers to it.
+    /// - Parameters:
+    ///   - version: Marketing version read from the bundle.
+    ///   - build: Build number read from the bundle.
+    /// - Returns: The shared release label.
+    internal static func connectorReleaseDisplayName(version: String, build: String) -> String {
+        "v\(version) (\(build))"
+    }
     static let connectorAppLocateTitle = "Locate OpenClaw Connector"
     static let connectorAppLocateMessage =
         "Select OpenClaw Connector.app in Applications or an opened Local Assistant release disk image."

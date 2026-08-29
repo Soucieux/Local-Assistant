@@ -278,7 +278,7 @@ actor ReminderService {
     private func validDate(_ value: String?) -> Bool {
         guard let value else { return true }
         guard value.range(
-            of: #"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$"#,
+            of: ReminderConstants.Pattern.calendarDate,
             options: .regularExpression
         ) != nil,
         let date = dateFormatter.date(from: value) else {
@@ -293,7 +293,7 @@ actor ReminderService {
     private func validTime(_ value: String?) -> Bool {
         guard let value else { return true }
         return value.range(
-            of: #"^([01]\d|2[0-3]):[0-5]\d$"#,
+            of: ReminderConstants.Pattern.wallClockTime,
             options: .regularExpression
         ) != nil
     }
@@ -339,11 +339,13 @@ actor ReminderService {
             item.sourceMessageId
         ]
         let framed = fields.map { value in
-            guard let value else { return "-1:" }
-            return "\(value.utf8.count):\(value)"
-        }.joined(separator: "|")
+            guard let value else { return ReminderConstants.ContentHash.absentField }
+            return String(value.utf8.count)
+                + ReminderConstants.ContentHash.lengthSeparator
+                + value
+        }.joined(separator: ReminderConstants.ContentHash.fieldSeparator)
         return SHA256.hash(data: Data(framed.utf8)).map {
-            String(format: "%02x", $0)
+            String(format: FileConstants.Hash.hexFormat, $0)
         }.joined()
     }
 

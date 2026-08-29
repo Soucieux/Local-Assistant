@@ -118,6 +118,7 @@ enum InferenceConstants {
     static let verificationValiditySeconds: TimeInterval = 604_800
     static let assetManifestPrefix = "Models/"
     static let speechAssetManifestPrefix = "Models/openai_whisper-small/"
+    static let calendarDateFormat = "%04d-%02d-%02d"
     static let thinkingOpenTag = "<think>"
     static let thinkingCloseTag = "</think>"
     static let untrustedControlMarkers = [

@@ -19,8 +19,8 @@ def application_directory() -> Path:
     """Return the connector's private Application Support directory."""
     return (
         Path.home()
-        / "Library"
-        / "Application Support"
+        / constants.USER_LIBRARY_DIRECTORY_NAME
+        / constants.APPLICATION_SUPPORT_DIRECTORY_NAME
         / constants.APPLICATION_DIRECTORY_NAME
     )
 
@@ -78,7 +78,7 @@ def save_ssh_host_key(value: object) -> None:
             constants.ERROR_SSH_HOST_KEY,
             False,
         ) from exc
-    if len(decoded) < 32:
+    if len(decoded) < constants.SSH_HOST_KEY_MINIMUM_BYTES:
         raise ConnectorError(
             constants.ERROR_KIND_INVALID_REQUEST,
             constants.ERROR_SSH_HOST_KEY,
@@ -113,7 +113,7 @@ def _validated_ssh_host(value: object) -> str:
     normalized = value.strip()
     if (
         not normalized
-        or len(normalized) > 253
+        or len(normalized) > constants.SSH_HOST_MAXIMUM_LENGTH
         or normalized.startswith("-")
         or any(character.isspace() for character in normalized)
         or any(character in normalized for character in "/@?#")
@@ -130,7 +130,9 @@ def _validated_ssh_host(value: object) -> str:
 
 def _validated_ssh_port(value: object) -> int:
     """Validate one explicit TCP port without accepting booleans or strings."""
-    if type(value) is not int or not 1 <= value <= 65_535:
+    if type(value) is not int or not (
+        constants.SSH_PORT_MINIMUM <= value <= constants.SSH_PORT_MAXIMUM
+    ):
         raise ConnectorError(
             constants.ERROR_KIND_INVALID_REQUEST,
             constants.ERROR_SSH_PORT,

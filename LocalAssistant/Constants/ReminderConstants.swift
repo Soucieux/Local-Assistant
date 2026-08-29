@@ -66,6 +66,7 @@ enum ReminderConstants {
 
     enum Retrieval {
         static let defaultLimit = 12
+        static let mutationCandidateLimit = 3
         static let maximumKeywordCandidates = 40
         static let maximumVectorCandidates = 40
         static let exactIdentifierScore = 1.0
@@ -76,6 +77,18 @@ enum ReminderConstants {
         static let minimumDisplayScore = 0.05
         static let queryTokenMinimumLength = 2
         static let ambiguityScoreGap = 0.12
+    }
+
+    enum Pattern {
+        static let calendarDate = #"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$"#
+        static let wallClockTime = #"^([01]\d|2[0-3]):[0-5]\d$"#
+        static let embeddedCalendarDate = #"\b\d{4}-\d{2}-\d{2}\b"#
+    }
+
+    enum ContentHash {
+        static let absentField = "-1:"
+        static let lengthSeparator = ":"
+        static let fieldSeparator = "|"
     }
 
     enum DateText {

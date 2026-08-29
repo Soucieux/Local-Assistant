@@ -7,7 +7,9 @@ private struct ConnectorAppRelease: Equatable {
     let version: String
     let build: String
 
-    var displayName: String { "v\(version) (\(build))" }
+    var displayName: String {
+        ReminderStrings.connectorReleaseDisplayName(version: version, build: build)
+    }
 }
 
 /// Best compatible companion plus any installed-version recovery notice.
@@ -295,8 +297,10 @@ extension AppModel {
         for url: URL
     ) -> OpenClawConnectorAppAvailability {
         let path = url.standardizedFileURL.path
-        let mountedPrefix = ReminderConstants.Identity.mountedVolumesDirectory + "/"
-        let applicationsPrefix = ReminderConstants.Identity.applicationsDirectory + "/"
+        let mountedPrefix = ReminderConstants.Identity.mountedVolumesDirectory
+            + FileConstants.pathSeparator
+        let applicationsPrefix = ReminderConstants.Identity.applicationsDirectory
+            + FileConstants.pathSeparator
         if path.hasPrefix(mountedPrefix) {
             return .diskImage
         }

@@ -221,7 +221,10 @@ actor GroundedAssistantService {
     /// - Returns: The resolved reminder, an ambiguity, or `notFound`.
     /// - Throws: A local database or inference error while ranking the cache.
     private func resolveReminder(query: String) async throws -> ReminderResolution {
-        let matches = try await reminderRetrieval.search(text: query, limit: 3)
+        let matches = try await reminderRetrieval.search(
+            text: query,
+            limit: ReminderConstants.Retrieval.mutationCandidateLimit
+        )
         guard let first = matches.first else { return .notFound }
         let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines)
             .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)

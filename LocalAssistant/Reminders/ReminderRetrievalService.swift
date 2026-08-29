@@ -232,7 +232,7 @@ actor ReminderRetrievalService {
             return .overdue
         }
         if let range = text.range(
-            of: #"\b\d{4}-\d{2}-\d{2}\b"#,
+            of: ReminderConstants.Pattern.embeddedCalendarDate,
             options: .regularExpression
         ) {
             return .date(String(text[range]))

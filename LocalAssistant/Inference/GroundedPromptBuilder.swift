@@ -30,7 +30,7 @@ struct GroundedPromptBuilder: Sendable {
             from: date
         )
         return String(
-            format: "%04d-%02d-%02d",
+            format: InferenceConstants.calendarDateFormat,
             components.year ?? 0,
             components.month ?? 0,
             components.day ?? 0
