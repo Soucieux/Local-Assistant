@@ -238,11 +238,6 @@ extension AppModel {
             }
         }
         indexingWorker = nil
-        if Task.isCancelled == false, indexingQueue.isEmpty == false {
-            indexingWorker = Task { [weak self] in
-                await self?.drainIndexingQueue()
-            }
-        }
     }
 
     /// Executes one cancellable indexing run under a bounded read-only access scope.
