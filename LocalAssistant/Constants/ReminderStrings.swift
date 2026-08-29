@@ -6,6 +6,18 @@ enum ReminderStrings {
     static let ownerOpenClaw = "OpenClaw managed"
     static let ownerUnknown = "CloudBase"
     static let undated = "No date"
+    static let reminderTimingSeparator = " · "
+
+    /// Formats one reminder card's stored date and optional start time.
+    /// - Parameters:
+    ///   - date: Stored calendar date, absent when the reminder is undated.
+    ///   - startTime: Optional stored wall-clock start.
+    /// - Returns: The shared timing label used by every reminder card.
+    internal static func reminderTiming(date: String?, startTime: String?) -> String {
+        let day = date ?? undated
+        guard let startTime else { return day }
+        return day + reminderTimingSeparator + startTime
+    }
     static let openClawSettingsTitle = "OpenClaw Connection"
     static let openClawSettingsDetail =
         "Manage private OpenClaw requests and reminder refreshes."

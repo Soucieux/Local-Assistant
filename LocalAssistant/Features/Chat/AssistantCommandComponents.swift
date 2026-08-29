@@ -339,9 +339,10 @@ private struct CommandReminderSummaryCard: View {
 
     /// Formats the stored CloudBase date and optional start time.
     private var reminderTiming: String {
-        let date = result.item.date ?? ReminderStrings.undated
-        guard let start = result.item.startTime else { return date }
-        return "\(date) · \(start)"
+        ReminderStrings.reminderTiming(
+            date: result.item.date,
+            startTime: result.item.startTime
+        )
     }
 
     /// Reports whether the reminder contains a non-empty external link field.
@@ -354,8 +355,9 @@ private struct CommandReminderSummaryCard: View {
         return link.isEmpty == false
     }
 
-    /// Deadline relationship derived entirely from the cached calendar date.
-    private var urgency: ReminderUrgency {
+    /// Parses stored calendar dates once instead of on every card render pass.
+    @MainActor
+    private static let calendarFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(
@@ -363,8 +365,13 @@ private struct CommandReminderSummaryCard: View {
         )
         formatter.dateFormat = ReminderConstants.DateText.calendarDateFormat
         formatter.isLenient = false
+        return formatter
+    }()
+
+    /// Deadline relationship derived entirely from the cached calendar date.
+    private var urgency: ReminderUrgency {
         guard let value = result.item.date,
-              let date = formatter.date(from: value) else {
+              let date = Self.calendarFormatter.date(from: value) else {
             return .undated
         }
         let calendar = Calendar.current
@@ -469,9 +476,10 @@ struct CommandReminderCard: View {
 
     /// Formats the stored CloudBase date and optional start time.
     private var reminderTiming: String {
-        let date = result.item.date ?? ReminderStrings.undated
-        guard let start = result.item.startTime else { return date }
-        return "\(date) · \(start)"
+        ReminderStrings.reminderTiming(
+            date: result.item.date,
+            startTime: result.item.startTime
+        )
     }
 
     /// Maps reminder ownership to explicit card copy.
