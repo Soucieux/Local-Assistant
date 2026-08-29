@@ -404,8 +404,6 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
   Connector constants orphaned when A2A replaced the chat-completions transport.
 - Adds explicit access modifiers to 57 test declarations and one runtime method, and aligns the
   single outlier extension with the house convention.
-- Stops tracking the QWeather Ed25519 private-key path in the OpenClaw workspace and adds a
-  committed example alongside it. No key material was ever committed.
 - Names the five remaining retrieval calibration numbers. The exact-name and name-contains
   weights sat inline beside three sibling constants, and `explanation` compared against the same
   literal `addMetadata` assigned, so the two could silently diverge; one constant now drives both.
@@ -416,6 +414,10 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Holds the security-scoped read session across the Finder reveal and open calls with
   `withExtendedLifetime`, reusing the idiom already used in `FolderMonitorService`, instead of
   a trailing `_ = resolved.access` the optimizer is free to discard.
+- Removes an unreachable respawn block at the end of `drainIndexingQueue`. Its condition
+  negated both of the loop's exit conditions with no suspension point in between, so on a
+  `@MainActor` model it could never be true; the preceding `indexingWorker = nil` is what
+  lets the next request start a fresh worker.
 - Collapses two identical branches in the connector's claim recovery, removes redundant
   `case .x(_)` bindings in three switches, and clears the blank-line residue left by the
   removed `DesignTokens.Shadow` group.
@@ -852,7 +854,7 @@ history are not rewritten.
 
 - The isolated Debug build and clean offline Release build completed using pinned local dependencies.
 - The clean-built and installed bundles report v0.8 with numeric build `8`.
-- The clean-built and installed executables are byte-identical with SHA-256 `842ba0f9e02c3797f342a45703ba1055f0a5342521c1156b40d110fdaf1a6c3c`.
+- The clean-built and installed executables are byte-identical with SHA-256 `1deb2c96ea3f6da614cea02477e905ea9c2850f2e5dd4035057313b2432be8ea`.
 - Deep signature validation and the static offline-boundary audit passed for the installed bundle.
 - Focused source checks confirmed the requested Settings order, sender labels, local rich-text renderer, and absence of machine-specific paths in this README.
 - The installed application launched successfully and remained running during the startup smoke check.
