@@ -290,38 +290,31 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ### Current release status
 
-The current source release is **v4.9 (build 49)**. The application, Connector, documentation, and
-release package are complete. Live multilingual voice review, full disconnected runtime
-observation, and visual screen inspection remain manual checks.
+The current source release is **v5.0 (build 50)**. It completes the final deterministic-ordering,
+indexing, and shared reminder-card corrections found after the v4.9 review. Live multilingual
+voice review, full disconnected runtime observation, and visual screen inspection remain manual
+checks.
 
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
-| Release area | v4.9 status | Meaning |
+| Release area | v5.0 status | Meaning |
 |---|---|---|
-| Approved scope | Complete | A repository-wide review pass corrected result-ordering determinism, connector start-up resilience, the cross-language error contract, constant centralization, dead code, access-modifier consistency, retrieval calibration constants, and documentation completeness. No user-facing copy or layout changed. |
-| Source implementation | Complete | Ranked file results and folder-scope matches now use a total order instead of dictionary order. An unparseable connector claim filename is skipped rather than raising out of service start-up. The eight exact connector error strings are named constants citing `constants.py`. Connector runtime advances to v1.9.0; server bridge v1.4.0 and runtime contract v3 are unchanged because no wire contract changed. |
-| Documentation | Complete | The release status, version index, and change log record v4.9 and separate the phases that ran from those that did not. |
-| Debug compilation | Complete | Local Assistant and the standalone Connector compile at v4.9. A `private`-scope regression introduced during the pass was caught by this build and corrected to `fileprivate`. |
-| Release build | Complete | The clean offline build produced signed v4.9 build 49 copies of Local Assistant and OpenClaw Connector plus the refreshed clean-Mac disk image. |
-| Automated tests | Complete | The complete macOS target reports 137 tests passed, 0 failed, 0 skipped, up from 128 after nine were added for indexing runs and bounded archive extraction. Each new case was confirmed to fail against a deliberate regression before being relied on. All 40 Connector tests and their 10 subtests passed against this checkout's source. |
-| Voice runtime testing | Pending manual check | Automated state tests cover silence submission in both modes; live multilingual recognition still requires manual inspection. |
-| Focused testing | Complete | Project-root and mounted applications both report v4.9 build 49 and pass strict deep signature validation. The frozen Connector runtime was extracted from its PYZ archive and confirmed to carry this release's source: five constants added by the pass are present, nine removed constants are absent, and the recovery guard is in the packaged bytecode. |
-| Disconnected runtime testing | Not run | The v4.9 application has not been exercised with every network interface disabled. |
-| Static privacy audit | Complete | The project-root bundle passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. The audit reports `huggingface.co` as an unreachable compiled-in string with no reachable code path. |
-| Runtime smoke check | Complete | The built v4.9 application launched from the project root, loaded its local models, opened the live index, and ran for over ninety seconds with no crash report. `pragma quick_check` on the index returned `ok` afterwards. |
-| Interface inspection | Complete | The maintainer inspected the built v4.9 screens directly. Automated capture stayed unavailable because macOS withheld Screen Recording and Accessibility from the automation process, and no permission boundary was widened to work around that. |
-| Code review | Complete | An exhaustive pass covered the project's complete first-party code through the reuse, simplification, efficiency, and architectural-placement lenses, the full style rule set, and the exposure audit. A follow-up round closed the two gaps the first round left: the efficiency lens, which found the duplicated stale-item read and the per-file commit at scan start, and end-to-end reading of the remaining files, which found the unbounded archive entries and the schema's restated embedding width. Mechanical rules were re-verified across all 113 Swift files afterwards: none over 800 lines, no missing access modifier, and no missing documentation block. |
-| Known limitation | Resolved | The former limitation was `IndexingService.index` at 245 lines with no test coverage, because the service required a concrete `LlamaCppRuntime` and its multi-gigabyte models. Indexing now depends on a `DocumentEmbedding` protocol, seven end-to-end run tests cover the pipeline, and `index` is 47 lines. Fourteen functions elsewhere still exceed 50 lines; each was measured for branch count and nesting and none is a comparable outlier, so they are recorded rather than split. |
+| Source implementation | Complete | Remaining activity, search, and reminder sort ties now use stable identifiers. The unreachable indexing respawn branch is removed, and reminder-card formatting and remaining literals use shared constants. |
+| Documentation | Complete | The release status and version index distinguish v5.0 from the earlier v4.9 review release. The historical v0.8 evidence and disk-image record are corrected. |
+| Release build | Complete | The clean offline build produced signed v5.0 build 50 copies of Local Assistant and OpenClaw Connector plus the clean-Mac disk image. Both bundles report the same release and pass strict deep signature validation. |
+| Automated tests | Not repeated | This reconstruction changes release metadata and history records only. The offline Release build compiled the complete app source, while the automated suites remain recorded under the source releases that introduced their behavior. |
+| Static privacy audit | Complete | The signed v5.0 application passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. The audit still reports `huggingface.co` only as an unreachable compiled-in string with no reachable code path. |
+| Interface inspection | Not repeated | No copy, layout, or visual styling changed in this checkpoint. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The disk image mounts, contains only the two v4.9 build 49 applications plus the Applications link, both signatures validate deeply, and its SHA-256 is `f2dbf513662147191cc07a793f1cf59fda84890b8aa3436c8caa4a85e8f4ac87`. |
+| Release artifact integrity | Complete | The v5.0 disk image passes `hdiutil verify`. Its SHA-256 is `2fda108ff225bf591bef24641f0f265e255522b054527bf075dcc68d9e4d144f`. |
 
 </details>
 
 ### Version index
 
 <details>
-<summary>Complete version history (v4.8 to v0.1)</summary>
+<summary>Complete version history (v5.0 to v0.1)</summary>
 
 The entries below preserve the full release record. They are collapsed so current setup and
 architecture remain easy to scan.
@@ -335,6 +328,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 | Version | What changed |
 |---|---|
+| v5.0 | [Final deterministic ordering and indexing cleanup](#v50--final-deterministic-ordering-and-indexing-cleanup) |
 | v4.9 | [Deterministic retrieval and connector resilience](#v49--deterministic-retrieval-and-connector-resilience) |
 | v4.8 | [Responsive setup and consistent result cards](#v48--responsive-setup-and-consistent-result-cards) |
 | v4.7 | [Private A2A connection to OpenClaw](#v47--private-a2a-connection-to-openclaw) |
@@ -387,6 +381,16 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v5.0 — Final deterministic ordering and indexing cleanup
+
+- Breaks the remaining activity, search, and reminder sort ties with stable identifiers.
+- Removes an unreachable indexing-worker respawn branch.
+- Moves the remaining reminder, inference, and Connector literals into their existing constants.
+- Shares one reminder timing formatter between the compact and full reminder cards.
+- Corrects the historical v0.8 evidence and records the reconstructed release artifact.
+- Advances Local Assistant and OpenClaw Connector to v5.0/build 50. Connector runtime v1.9.0,
+  server bridge v1.4.0, and runtime contract v3 remain unchanged.
 
 ### v4.9 — Deterministic retrieval and connector resilience
 
