@@ -184,7 +184,9 @@ actor ReminderRetrievalService {
         let rightBucket = rightDate < today ? 1 : 0
         if leftBucket != rightBucket { return leftBucket < rightBucket }
         if leftDate != rightDate { return leftDate < rightDate }
-        return left.text.localizedCaseInsensitiveCompare(right.text) == .orderedAscending
+        let order = left.text.localizedCaseInsensitiveCompare(right.text)
+        if order != .orderedSame { return order == .orderedAscending }
+        return left.id < right.id
     }
 
     /// Parses one CloudBase calendar date.

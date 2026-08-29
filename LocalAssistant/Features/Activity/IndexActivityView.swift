@@ -409,12 +409,20 @@ struct IndexActivityView: View {
     }
 
     /// Returns every retained folder identity, including revoked folders.
+    ///
+    /// The identifier breaks ties because the names come from a dictionary, whose iteration
+    /// order varies per launch. Two authorized folders can share a display name, so sorting
+    /// on the name alone reorders the filter menu between launches.
     private var activityFolders: [(id: UUID, name: String)] {
         var names: [UUID: String] = [:]
         for run in model.indexingRuns { names[run.rootID] = run.folderName }
         for event in model.indexActivityEvents { names[event.rootID] = event.folderName }
         return names.map { (id: $0.key, name: $0.value) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { left, right in
+                let order = left.name.localizedCaseInsensitiveCompare(right.name)
+                if order != .orderedSame { return order == .orderedAscending }
+                return left.id.uuidString < right.id.uuidString
+            }
     }
 
     /// Returns a non-color-only symbol for one event kind.

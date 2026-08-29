@@ -23,7 +23,9 @@ extension AssistantDatabase {
             let leftDate = left.modifiedAt ?? .distantPast
             let rightDate = right.modifiedAt ?? .distantPast
             if leftDate != rightDate { return leftDate > rightDate }
-            return left.displayName.localizedCaseInsensitiveCompare(right.displayName) == .orderedAscending
+            let order = left.displayName.localizedCaseInsensitiveCompare(right.displayName)
+            if order != .orderedSame { return order == .orderedAscending }
+            return left.id.uuidString < right.id.uuidString
         }
         return Array(ordered.prefix(limit))
     }
