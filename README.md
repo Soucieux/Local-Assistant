@@ -1,5 +1,8 @@
 # Local Assistant
 
+<!-- project-control:section=overview -->
+## Overview
+
 > A private macOS assistant for local conversation, file search, and reminder knowledge.
 
 Local Assistant runs on one Mac and keeps its main application offline. It can:
@@ -130,6 +133,7 @@ forward. Closing the window keeps the shortcut available; quitting the app disab
 | `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 | `OpenClaw, summarize today's weather plan` | Sends the exact non-reminder request to OpenClaw through A2A. |
 
+<!-- project-control:section=workflows -->
 ## How local RAG works
 
 RAG means **Retrieval-Augmented Generation**. The app first finds relevant local evidence, then
@@ -288,33 +292,35 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 ## Release notes
 
+<!-- project-control:section=release -->
 ### Current release status
 
-The current source release is **v5.0 (build 50)**. It completes the final deterministic-ordering,
-indexing, and shared reminder-card corrections found after the v4.9 review. Live multilingual
-voice review, full disconnected runtime observation, and visual screen inspection remain manual
-checks.
+The current source release is **v5.1 (build 51)**. It makes the architecture inventory and
+Project Control section mappings explicit without changing application behavior, model storage,
+or the privacy boundary. Live multilingual voice review, full disconnected runtime observation,
+and visual screen inspection remain manual checks.
 
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
-| Release area | v5.0 status | Meaning |
+| Release area | v5.1 status | Meaning |
 |---|---|---|
-| Source implementation | Complete | Remaining activity, search, and reminder sort ties now use stable identifiers. The unreachable indexing respawn branch is removed, and reminder-card formatting and remaining literals use shared constants. |
-| Documentation | Complete | The release status and version index distinguish v5.0 from the earlier v4.9 review release. The historical v0.8 evidence and disk-image record are corrected. |
-| Release build | Complete | The clean offline build produced signed v5.0 build 50 copies of Local Assistant and OpenClaw Connector plus the clean-Mac disk image. Both bundles report the same release and pass strict deep signature validation. |
-| Automated tests | Not repeated | This reconstruction changes release metadata and history records only. The offline Release build compiled the complete app source, while the automated suites remain recorded under the source releases that introduced their behavior. |
-| Static privacy audit | Complete | The signed v5.0 application passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. The audit still reports `huggingface.co` only as an unreachable compiled-in string with no reachable code path. |
+| Source implementation | Complete | Local Assistant and OpenClaw Connector advance to v5.1/build 51. Runtime behavior, model storage, Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged. |
+| Documentation | Complete | Category-grouped architecture tables give each technology, concept, and model its own row. Stable section markers map the overview, workflows, release, history, and architecture into Project Control. |
+| Release build | Complete | The clean offline build produced signed v5.1 build 51 copies of Local Assistant and OpenClaw Connector plus the clean-Mac disk image. Both bundles report the same release and pass strict deep signature validation. |
+| Automated tests | Not repeated | This checkpoint changes documentation and release metadata only. The offline Release build compiled the complete app source; behavior tests remain recorded under the releases that introduced that behavior. |
+| Static privacy audit | Complete | The signed v5.1 application passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. The audit still reports `huggingface.co` only as an unreachable compiled-in string with no reachable code path. |
 | Interface inspection | Not repeated | No copy, layout, or visual styling changed in this checkpoint. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The v5.0 disk image passes `hdiutil verify`. Its SHA-256 is `2fda108ff225bf591bef24641f0f265e255522b054527bf075dcc68d9e4d144f`. |
+| Release artifact integrity | Complete | The v5.1 disk image passes `hdiutil verify`. Its SHA-256 is `9b6b45c917a63cdc6bd83126e8b2caa390d4d2ec13219a6b5a2709178f4a10d4`. |
 
 </details>
 
+<!-- project-control:section=history -->
 ### Version index
 
 <details>
-<summary>Complete version history (v5.0 to v0.1)</summary>
+<summary>Complete version history (v5.1 to v0.1)</summary>
 
 The entries below preserve the full release record. They are collapsed so current setup and
 architecture remain easy to scan.
@@ -328,6 +334,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 | Version | What changed |
 |---|---|
+| v5.1 | [Explicit architecture inventory and README mappings](#v51--explicit-architecture-inventory-and-readme-mappings) |
 | v5.0 | [Final deterministic ordering and indexing cleanup](#v50--final-deterministic-ordering-and-indexing-cleanup) |
 | v4.9 | [Deterministic retrieval and connector resilience](#v49--deterministic-retrieval-and-connector-resilience) |
 | v4.8 | [Responsive setup and consistent result cards](#v48--responsive-setup-and-consistent-result-cards) |
@@ -381,6 +388,16 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`. Every release increments it, so it identifies one release exactly.
+
+### v5.1 — Explicit architecture inventory and README mappings
+
+- Groups the Local Assistant architecture by responsibility while keeping each technology,
+  concept, and model on its own row.
+- Defines RAG, embeddings, the embedded models, SQLite, FTS5, sqlite-vec, A2A, and SSH in the
+  project-specific context where each is used.
+- Adds stable README section mappings for Project Control without changing runtime behavior.
+- Advances Local Assistant and OpenClaw Connector to v5.1/build 51. Connector runtime v1.9.0,
+  server bridge v1.4.0, and runtime contract v3 remain unchanged.
 
 ### v5.0 — Final deterministic ordering and indexing cleanup
 
@@ -965,47 +982,59 @@ history are not rewritten.
 
 Complex formulas, charts, comments, embedded objects, encrypted files, and proprietary Pages IWA bodies are not fully reconstructed. The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
 
+<!-- project-control:section=architecture -->
 ### Local architecture
 
 #### AI & Intelligence
 
-| Responsibility | Embedded component |
+| Technology or concept | Use in this project |
 |---|---|
-| Chat and intent | Qwen3-4B Q4_K_M GGUF classifies requests and generates local answers |
-| Embeddings | Qwen3-Embedding-0.6B Q8_0 GGUF converts queries and document passages into vectors through `LocalEmbeddingService` |
-| Inference | Statically linked llama.cpp runs the chat and embedding models inside the app |
-| Retrieval-Augmented Generation (RAG) | `HybridRetrievalService` combines keyword, vector, filename, path, and recency signals; `GroundedAssistantService` passes bounded cited evidence to the local model |
-| Speech recognition | WhisperKit with local `openai_whisper-small` Core ML assets |
-| OCR | Apple Vision and PDFKit |
+| Retrieval-Augmented Generation (RAG) | Finds local evidence before answering. HybridRetrievalService combines keyword, vector, filename, path, and recency signals; GroundedAssistantService supplies bounded, cited passages. |
+| Embeddings | Numerical vectors represent queries and document passages so similar meanings can be retrieved through LocalEmbeddingService. |
+| Qwen3-4B Q4_K_M | The local chat and intent-classification model; generates answers without a hosted service. |
+| Qwen3-Embedding-0.6B Q8_0 | The local embedding model used for document indexing and query retrieval. |
+| llama.cpp | Statically linked inference engine that runs both GGUF models inside the application. |
+| GGUF | The packaged file format for the chat and embedding model weights. |
+| Whisper Small | The local speech-recognition model, stored as openai_whisper-small Core ML assets. |
+| WhisperKit | Runs the packaged speech-recognition model and its tokenizer. |
+| Core ML | Apple's model format/runtime used by the speech assets. |
+| Optical character recognition (OCR) | Extracts readable text from images before local indexing. |
+| Apple Vision | Performs image text recognition for OCR. |
 
 #### Frontend & Presentation
 
-| Responsibility | Embedded component |
+| Technology or concept | Use in this project |
 |---|---|
-| Interface | SwiftUI |
+| SwiftUI | Builds the native conversation, History, Activity, and Settings interfaces. |
+| AppKit | Supplies macOS application/window integration and explicit open/reveal actions. |
 
 #### Backend & Application Logic
 
-| Responsibility | Embedded component |
+| Technology or concept | Use in this project |
 |---|---|
-| Request orchestration | Native Swift services and typed routes in `GroundedAssistantService`; no LangChain or LangGraph dependency |
-| Indexing and monitoring | `IndexingService` extracts, chunks, and embeds content; `FolderMonitorService` detects changes for incremental indexing |
+| Swift | Native Swift services and typed request routes orchestrate the app; no LangChain or LangGraph dependency. |
+| Foundation | Supplies file, text, date, and structured-data APIs used by native services. |
+| Indexing | IndexingService extracts content, splits it into passages, and generates embeddings; complete reminder snapshots enter the same private knowledge index. |
+| CoreServices | FolderMonitorService uses filesystem events to detect changes for incremental indexing. |
+| PDFKit | Extracts PDF text and provides PDF handling alongside image OCR. |
+| ZIPFoundation | Reads bounded Office-document archive content during extraction. |
 
 #### Data & Storage
 
-| Responsibility | Embedded component |
+| Technology or concept | Use in this project |
 |---|---|
-| Relational metadata, monitoring preferences, and history | Embedded SQLite |
-| Keyword retrieval | SQLite FTS5 |
-| Vector retrieval | Statically linked sqlite-vec |
-| Reminder knowledge | Complete local snapshots enter the private SQLite/RAG index; reads need no network access |
+| SQLite | Embedded relational storage for metadata, monitoring preferences, history, and local reminder snapshots; not a database server. |
+| SQLite FTS5 | Keyword/full-text retrieval over indexed text. |
+| sqlite-vec | Statically linked vector retrieval over stored embeddings. |
 
 #### Integrations & Security
 
-| Responsibility | Embedded component |
+| Technology or concept | Use in this project |
 |---|---|
-| Read-only file access | Security-scoped bookmarks and the scanner restrict access to authorized folders |
-| Optional OpenClaw connection | A separate one-shot Connector sends explicitly authorized requests through A2A over the documented SSH tunnel; networking never enters the main app |
+| Security-scoped bookmarks | Persist permission to authorized folders; the scanner keeps source access read-only. |
+| App Sandbox | Enforces the main app's offline and filesystem permission boundary. |
+| Agent-to-Agent (A2A) | The separate one-shot OpenClaw Connector sends explicitly authorized agent requests using A2A v1.0. |
+| SSH | The Connector's temporary encrypted tunnel; networking never moves into the main app. |
 
 SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
 
@@ -1013,12 +1042,13 @@ SQLite is an in-process library rather than a database server. See [ARCHITECTURE
 
 ## Architecture and project structure
 
-The category-grouped Local architecture tables above are the current component inventory.
-Every component is retained under its primary responsibility; Backend & Application Logic
-means on-device services here, not a network server. Model and RAG rows remain visible in
-Architecture. The 2026-08-31 documentation updates made these roles explicit and grouped
-them without changing app code, model storage, or the v4.9/build-49 application.
+The category-grouped Local architecture tables above list each technology, concept, and model
+on its own row. Backend & Application Logic means on-device services here, not a network server.
+The 2026-08-31 update also adds stable README section mappings for Project Control, keeping
+models and RAG visible in Architecture. Application behavior and model storage are unchanged;
+Local Assistant and OpenClaw Connector advance to v5.1/build 51.
 
+<!-- project-control:section=workflows -->
 ### Request flow
 
 Every request is classified locally:
