@@ -967,23 +967,57 @@ Complex formulas, charts, comments, embedded objects, encrypted files, and propr
 
 ### Local architecture
 
+#### AI & Intelligence
+
+| Responsibility | Embedded component |
+|---|---|
+| Chat and intent | Qwen3-4B Q4_K_M GGUF classifies requests and generates local answers |
+| Embeddings | Qwen3-Embedding-0.6B Q8_0 GGUF converts queries and document passages into vectors through `LocalEmbeddingService` |
+| Inference | Statically linked llama.cpp runs the chat and embedding models inside the app |
+| Retrieval-Augmented Generation (RAG) | `HybridRetrievalService` combines keyword, vector, filename, path, and recency signals; `GroundedAssistantService` passes bounded cited evidence to the local model |
+| Speech recognition | WhisperKit with local `openai_whisper-small` Core ML assets |
+| OCR | Apple Vision and PDFKit |
+
+#### Frontend & Presentation
+
 | Responsibility | Embedded component |
 |---|---|
 | Interface | SwiftUI |
-| Chat and intent | Qwen3-4B Q4_K_M GGUF |
-| Embeddings | Qwen3-Embedding-0.6B Q8_0 GGUF |
-| Inference | Statically linked llama.cpp |
+
+#### Backend & Application Logic
+
+| Responsibility | Embedded component |
+|---|---|
+| Request orchestration | Native Swift services and typed routes in `GroundedAssistantService`; no LangChain or LangGraph dependency |
+| Indexing and monitoring | `IndexingService` extracts, chunks, and embeds content; `FolderMonitorService` detects changes for incremental indexing |
+
+#### Data & Storage
+
+| Responsibility | Embedded component |
+|---|---|
 | Relational metadata, monitoring preferences, and history | Embedded SQLite |
 | Keyword retrieval | SQLite FTS5 |
 | Vector retrieval | Statically linked sqlite-vec |
-| Speech recognition | WhisperKit with local `openai_whisper-small` Core ML assets |
-| OCR | Apple Vision and PDFKit |
+| Reminder knowledge | Complete local snapshots enter the private SQLite/RAG index; reads need no network access |
+
+#### Integrations & Security
+
+| Responsibility | Embedded component |
+|---|---|
+| Read-only file access | Security-scoped bookmarks and the scanner restrict access to authorized folders |
+| Optional OpenClaw connection | A separate one-shot Connector sends explicitly authorized requests through A2A over the documented SSH tunnel; networking never enters the main app |
 
 SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
 
 </details>
 
 ## Architecture and project structure
+
+The category-grouped Local architecture tables above are the current component inventory.
+Every component is retained under its primary responsibility; Backend & Application Logic
+means on-device services here, not a network server. Model and RAG rows remain visible in
+Architecture. The 2026-08-31 documentation updates made these roles explicit and grouped
+them without changing app code, model storage, or the v4.9/build-49 application.
 
 ### Request flow
 
