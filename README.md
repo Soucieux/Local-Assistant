@@ -300,6 +300,9 @@ unnumbered Local Assistant change batches and reconciles the complete version in
 changing application behavior, model storage, or the privacy boundary. Live multilingual voice
 review, full disconnected runtime observation, and visual screen inspection remain manual checks.
 
+**Change-history numbering:** Local Assistant uses marketing versions and integer build numbers.
+Follow the repository-wide [version and build-number policy](../README.md#version-and-build-number-policy).
+
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
@@ -321,6 +324,7 @@ review, full disconnected runtime observation, and visual screen inspection rema
 
 | Date | Updates | Git evidence |
 |---|---|---|
+| 2026-09-02 | Linked Local Assistant's version-and-build declaration to the centralized repository policy and removed duplicated generic numbering rules. Application behavior, metadata, artifacts, and release numbers are unchanged. | This documentation commit |
 | 2026-08-31 | Released v5.2/build 52 while reconciling the complete v0.1–v5.2 release index with retained Git records and preserving the historical v3.10/build-40 alias. Prepared the root-only development-guardrail consolidation separately and retained upstream llama.cpp guidance as CONTRIBUTOR_GUIDANCE.md. Application behavior, shared models, and deployed setup are unchanged. | This v5.2/build 52 documentation commit |
 | 2026-08-31 | Released v5.1/build 51 with category-grouped architecture coverage, one technology or concept per row, and stable README section mappings. | `6ed828e`, `68f9787` |
 | 2026-08-29 | Released v5.0/build 50 after closing the remaining sort-order and indexing issues, naming remaining literals, sharing reminder-card formatting, correcting the historical v0.8 record, and rebuilding the disk image. | `7835160`, `8c1c2a7`, `e9d0dac`, `c6fb6e9`, `c12833b`, `c3f8154` |
@@ -348,9 +352,6 @@ This is a historical alias, not a newly discovered extra release or a renumbered
 The table and notes below are the durable record of what each release contained. Only the
 current project-root release set is retained; rebuilding never leaves a previous copy. Each
 entry names what that release changed and links to its full notes.
-
-Marketing-version minor numbers run from `0` through `9`. After `vN.9`, the next
-release is `v(N+1).0`; the separate integer build number continues increasing by one.
 
 | Version | What changed | Git index evidence |
 |---|---|---|
@@ -408,7 +409,7 @@ release is `v(N+1).0`; the separate integer build number continues increasing by
 | v0.1 | [First sandboxed assistant with local indexing, retrieval, and voice](#v01--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice) | `db1f803` (2026-08-20) |
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
-`Info.plist`. Every release increments it, so it identifies one release exactly.
+`Info.plist`.
 
 ### v5.2 — Release-history reconciliation
 
