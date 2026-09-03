@@ -15,7 +15,10 @@ struct SearchResultsView: View {
                         .font(.caption.weight(.bold))
                         .foregroundStyle(DesignTokens.Color.primaryAccent)
                 }
-                .frame(width: 28, height: 28)
+                .frame(
+                    width: DesignTokens.Control.compactIconTileSize,
+                    height: DesignTokens.Control.compactIconTileSize
+                )
 
                 Text(UIStrings.searchResults)
                     .font(.headline)

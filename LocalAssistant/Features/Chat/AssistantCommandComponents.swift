@@ -262,7 +262,10 @@ private struct CommandReminderSummaryCard: View {
                         .font(.caption.weight(.bold))
                         .foregroundStyle(tint)
                 }
-                .frame(width: 30, height: 30)
+                .frame(
+                    width: DesignTokens.Control.compactIconTileSize,
+                    height: DesignTokens.Control.compactIconTileSize
+                )
 
                 Spacer(minLength: DesignTokens.Spacing.small)
 
