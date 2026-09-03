@@ -186,7 +186,10 @@ extension SettingsView {
                     Image(systemName: SystemImages.folderFilled)
                         .foregroundStyle(DesignTokens.Color.primaryAccent)
                 }
-                .frame(width: 34, height: 34)
+                .frame(
+                    width: DesignTokens.Control.iconTileSize,
+                    height: DesignTokens.Control.iconTileSize
+                )
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
                     Text(root.displayName)
@@ -385,7 +388,10 @@ extension SettingsView {
             Image(systemName: SystemImages.modelCapability(capability.kind))
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(modelCapabilityColor(capability.state))
-                .frame(width: 28, height: 28)
+                .frame(
+                    width: DesignTokens.Control.glyphSlotSize,
+                    height: DesignTokens.Control.glyphSlotSize
+                )
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxSmall) {
                 Text(UIStrings.modelCapabilityTitle(capability.kind))
@@ -428,7 +434,10 @@ extension SettingsView {
             Image(systemName: systemImage)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(DesignTokens.Color.destructive)
-                .frame(width: 28, height: 28)
+                .frame(
+                    width: DesignTokens.Control.glyphSlotSize,
+                    height: DesignTokens.Control.glyphSlotSize
+                )
 
             Text(title)
                 .font(.callout.weight(.semibold))

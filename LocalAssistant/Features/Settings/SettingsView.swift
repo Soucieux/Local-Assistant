@@ -532,7 +532,10 @@ struct SettingsView: View {
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(tint)
                 }
-                .frame(width: 34, height: 34)
+                .frame(
+                    width: DesignTokens.Control.iconTileSize,
+                    height: DesignTokens.Control.iconTileSize
+                )
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxSmall) {
                     Text(title)

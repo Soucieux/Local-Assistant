@@ -60,7 +60,10 @@ struct IndexingSummaryBadges: View {
             Image(systemName: systemImage)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(tint)
-                .frame(width: 28, height: 28)
+                .frame(
+                    width: DesignTokens.Control.glyphSlotSize,
+                    height: DesignTokens.Control.glyphSlotSize
+                )
                 .background(
                     RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
                         .fill(tint.opacity(0.12))
