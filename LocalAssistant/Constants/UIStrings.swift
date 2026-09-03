@@ -19,7 +19,6 @@ enum UIStrings {
     static let commandListening = "LISTENING"
     static let commandProcessing = "PROCESSING REQUEST"
     static let commandResponse = "RESPONSE / COMPLETE"
-    static let commandFindings = "ITEMS IDENTIFIED"
     static let commandClickInputHelp = "CLICK TO SPEAK OR TYPE A REQUEST"
     static let commandHoldInputHelp = "HOLD SPACE TO SPEAK OR CLICK TO TYPE"
     static let commandIndexingCompact = "INDEXING IN BACKGROUND"
@@ -279,13 +278,6 @@ enum UIStrings {
     /// - Returns: Two-character numeric label for the finding.
     internal static func commandFindingNumber(_ index: Int) -> String {
         String(format: "%02d", index)
-    }
-
-    /// Formats the command surface's acquired-file section label.
-    /// - Parameter count: Number of file findings in the current response.
-    /// - Returns: Uppercase section label with a fixed-width count.
-    internal static func commandFindingsLabel(count: Int) -> String {
-        "\(commandFindings) / \(String(format: "%02d", count))"
     }
 
     /// Returns the user-facing name of one assistant capability.
