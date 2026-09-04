@@ -59,6 +59,21 @@ struct ReminderItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Creates a cache item directly for tests and local presentation.
+    /// - Parameters:
+    ///   - id: CloudBase record identifier.
+    ///   - text: Reminder title text.
+    ///   - date: Stored calendar date, absent when undated.
+    ///   - startTime: Optional stored wall-clock start.
+    ///   - endTime: Optional stored wall-clock end.
+    ///   - tag: Optional grouping tag.
+    ///   - link: Optional external link field.
+    ///   - managedBy: Owner marker written by the creating client.
+    ///   - clientRequestId: Idempotency identifier for a Local Assistant creation.
+    ///   - syncPairId: Pair marker set when OpenClaw manages the reminder.
+    ///   - sourceMessageId: Originating message marker set by OpenClaw.
+    ///   - ownership: Resolved ownership domain for this record.
+    ///   - contentHash: Stable hash of every remotely controlled field.
+    ///   - lastSyncedAt: Completion time of the snapshot that produced it.
     internal init(
         id: String,
         text: String,

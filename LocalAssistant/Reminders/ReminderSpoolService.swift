@@ -90,6 +90,7 @@ actor ReminderSpoolService {
     /// - Parameters:
     ///   - enabled: Whether scheduled snapshots are allowed.
     ///   - intervalMinutes: One allowlisted multi-hour interval.
+    /// - Throws: `LocalAssistantError.connector` for a disallowed interval, or a local file error.
     internal func updateSchedule(enabled: Bool, intervalMinutes: Int) throws {
         guard ReminderConstants.Preferences.allowedSyncIntervalMinutes
             .contains(intervalMinutes) else {
@@ -132,6 +133,7 @@ actor ReminderSpoolService {
 
     /// Takes the latest timer-originated snapshot response, if one is waiting.
     /// - Returns: A response published atomically by the one-shot connector.
+    /// - Throws: A local file or decoding error when the waiting response cannot be read.
     internal func takeScheduledSnapshot() throws -> ReminderConnectorResponse? {
         let root = try resolvedRootURL()
         try prepare(root: root)

@@ -45,6 +45,7 @@ actor ModelStore {
 
     /// Recomputes model readiness using pinned filenames and SHA-256 values.
     /// - Returns: Current local model status.
+    /// - Throws: A local error when the models directory or an installed asset cannot be read.
     internal func refreshStatus() throws -> LocalModelStatus {
         let modelsDirectory = try AppDirectories.modelsDirectory()
         let chatURL = modelsDirectory.appendingPathComponent(ModelConstants.Chat.filename)

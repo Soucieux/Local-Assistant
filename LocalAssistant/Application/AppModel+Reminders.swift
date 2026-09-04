@@ -312,6 +312,7 @@ extension AppModel {
 
     /// Adds one assistant answer to visible and private conversation history.
     /// - Parameter text: Safe assistant or Connector text.
+    /// - Throws: A local database error when the message cannot be saved.
     internal func appendAssistantMessage(_ text: String) async throws {
         let message = ChatMessage(
             id: UUID(),
@@ -329,11 +330,13 @@ extension AppModel {
 
     /// Adds one connector-originated answer through the shared assistant-message path.
     /// - Parameter text: OpenClaw's answer to the authorized user request.
+    /// - Throws: A local database error when the message cannot be saved.
     internal func appendConnectorMessage(_ text: String) async throws {
         try await appendAssistantMessage(text)
     }
 
     /// Replaces hidden reminder knowledge only after a successful complete snapshot.
+    /// - Throws: A connector or local database error when the snapshot cannot be replaced.
     internal func performReminderSync() async throws {
         reminderSyncState = .syncing
         do {

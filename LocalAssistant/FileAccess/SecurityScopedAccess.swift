@@ -7,6 +7,7 @@ final class SecurityScopedAccess: @unchecked Sendable {
 
     /// Starts access to a resolved read-only security-scoped URL.
     /// - Parameter url: URL resolved from an app-scoped bookmark.
+    /// - Throws: `LocalAssistantError.permission` when the scoped resource cannot be opened.
     internal init(url: URL) throws {
         self.url = url
         didStart = url.startAccessingSecurityScopedResource()

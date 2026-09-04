@@ -492,6 +492,14 @@ struct ConnectorSetupView: View {
     }
 
     /// Builds one equal-width numbered stage with a semantic leading rail.
+    /// - Parameters:
+    ///   - number: One-based stage number shown on the rail.
+    ///   - title: Short stage heading.
+    ///   - bullets: Ordered plain-language actions for this stage.
+    ///   - theme: Semantic color role for the stage rail.
+    ///   - content: Fields and controls belonging to the stage.
+    ///   - footer: Trailing completion cue or action.
+    /// - Returns: An adaptive numbered stage card.
     private func stepCard<Content: View, Footer: View>(
         number: Int,
         title: String,

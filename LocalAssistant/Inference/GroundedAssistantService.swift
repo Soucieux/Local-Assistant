@@ -122,6 +122,7 @@ actor GroundedAssistantService {
     ///   - reply: User's newest yes, no, or ambiguous response.
     ///   - request: Exact pending reminder mutation intent.
     /// - Returns: A strict confirmation decision; unexpected output remains unclear.
+    /// - Throws: A local inference error while interpreting the reply.
     internal func reminderConfirmationDecision(
         reply: String,
         request: OpenClawRequestIntent
@@ -149,6 +150,7 @@ actor GroundedAssistantService {
     ///   - originalQuestion: User wording answered locally or retained for confirmation.
     ///   - history: Recent private conversation context.
     /// - Returns: Grounded local answer or exact outbound intent awaiting confirmation.
+    /// - Throws: A local retrieval, database, or inference error.
     private func handleReminder(
         _ plan: ReminderAssistantPlan,
         originalQuestion: String,
@@ -253,6 +255,7 @@ actor GroundedAssistantService {
     ///   - question: Current user question.
     ///   - history: Recent local conversation context.
     /// - Returns: A local answer and the reminder cards that support it.
+    /// - Throws: A local inference error while composing the grounded answer.
     private func reminderResponse(
         matches: [ReminderSearchResult],
         question: String,

@@ -279,6 +279,14 @@ struct AssistantResponse: Hashable, Sendable {
     let openClawRequest: OpenClawRequestIntent?
 
     /// Creates a conversational, file, or reminder response.
+    /// - Parameters:
+    ///   - answer: Visible assistant text for this turn.
+    ///   - citations: Bounded local evidence supporting the answer.
+    ///   - alternatives: Ranked file matches offered alongside the answer.
+    ///   - confidence: Calibrated confidence for the grounded result.
+    ///   - reminderMatches: Ranked reminders from the hidden local snapshot.
+    ///   - reminderPresentation: Focused or tag-grouped reminder-card treatment.
+    ///   - openClawRequest: Outbound intent awaiting confirmation, when one applies.
     internal init(
         answer: String,
         citations: [EvidenceCitation],

@@ -47,6 +47,8 @@ extension ConnectorSetupModel {
     }
 
     /// Accepts only known credential-free runtime errors and discards all other output.
+    /// - Parameter data: Raw bounded runtime output captured during verification.
+    /// - Returns: A known credential-free message, or the generic unreachable text.
     nonisolated internal static func verificationSSHMessage(from data: Data) -> String {
         guard data.count <= ConnectorSetupConstants.Configuration.maximumVerificationErrorBytes,
               let raw = String(data: data, encoding: .utf8)?

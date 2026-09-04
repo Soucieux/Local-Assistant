@@ -137,6 +137,7 @@ private struct DatabaseFixture {
     let databaseURL: URL
 
     /// Creates an isolated writable directory outside production storage.
+    /// - Throws: A file error when the temporary directory cannot be created.
     internal init() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent(
             UUID().uuidString,

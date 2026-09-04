@@ -56,6 +56,7 @@ actor ReminderService {
 
     /// Commits the newest launchd-originated snapshot when one is waiting locally.
     /// - Returns: Whether a scheduled response was consumed.
+    /// - Throws: A local spool or database error while committing the waiting snapshot.
     internal func consumeScheduledSnapshot() async throws -> Bool {
         guard let response = try await spool.takeScheduledSnapshot() else { return false }
         try await reconcile(response)
@@ -64,6 +65,7 @@ actor ReminderService {
 
     /// Validates, embeds, and atomically replaces the complete local snapshot.
     /// - Parameter response: One connector response from either sync trigger.
+    /// - Throws: A validation, embedding, or database error; the previous snapshot is kept.
     private func reconcile(_ response: ReminderConnectorResponse) async throws {
         let remoteItems = try validatedList(response)
         let syncedAt = Date()

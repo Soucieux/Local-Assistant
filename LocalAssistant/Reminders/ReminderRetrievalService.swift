@@ -127,6 +127,7 @@ actor ReminderRetrievalService {
     /// Returns every row from the latest committed complete snapshot with no retrieval cap.
     /// - Parameter now: Current time used for visible deadline explanations.
     /// - Returns: One result for every cached reminder in database display order.
+    /// - Throws: A local database error when the cached snapshot cannot be read.
     internal func completeList(now: Date = Date()) async throws -> [ReminderSearchResult] {
         try await database.fetchReminders().map {
             ReminderSearchResult(

@@ -33,6 +33,7 @@ actor StubDocumentEmbedding: DocumentEmbedding {
     /// Reports the scripted batch verdict for a passage.
     /// - Parameter text: Local passage without the model instruction prefix.
     /// - Returns: `false` only for passages the test declared oversized.
+    /// - Throws: Never; the stub satisfies the protocol's throwing signature.
     internal func canEmbedDocument(_ text: String) async throws -> Bool {
         oversizedTexts.contains(text) == false
     }

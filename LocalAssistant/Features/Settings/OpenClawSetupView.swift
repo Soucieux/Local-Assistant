@@ -156,6 +156,11 @@ struct OpenClawSetupView: View {
     }
 
     /// Builds one equal-width, scannable completion card.
+    /// - Parameters:
+    ///   - title: Short card heading.
+    ///   - bullets: Ordered plain-language steps shown in the card.
+    ///   - action: Trailing control belonging to this card.
+    /// - Returns: An adaptive setup card matching its siblings' width.
     private func setupCard<Action: View>(
         title: String,
         bullets: [String],
