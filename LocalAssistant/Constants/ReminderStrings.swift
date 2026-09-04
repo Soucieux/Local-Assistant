@@ -287,7 +287,9 @@ enum ReminderStrings {
     /// - Parameter detail: Localized error text already approved for presentation.
     /// - Returns: Recovery-oriented wording without a modal alert.
     internal static func conversationalError(_ detail: String) -> String {
-        if detail.localizedCaseInsensitiveContains("connector request is invalid") {
+        if detail.localizedCaseInsensitiveContains(
+            ReminderConstants.Connector.invalidRequestErrorDetail
+        ) {
             return connectorRuntimeUpdateConversation
         }
         return "I could not complete that request. Nothing was changed. \(detail)"
