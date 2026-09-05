@@ -105,6 +105,21 @@ extension AssistantDatabase {
         }
     }
 
+    /// Advances one file's durable state and its parent run summary in a single commit.
+    ///
+    /// The two rows describe the same completed item, so committing them together keeps a run
+    /// that stops mid-scan internally consistent and halves the durable writes that step costs.
+    /// - Parameters:
+    ///   - item: Durable per-file classification reached by this step.
+    ///   - run: Run summary carrying the counts that step produced.
+    /// - Throws: A local database error when either row cannot be saved.
+    internal func recordIndexingProgress(item: IndexingItemRecord, run: IndexingRunRecord) throws {
+        try inTransaction {
+            try upsertIndexingItem(item)
+            try updateIndexingRun(run)
+        }
+    }
+
     /// Appends one monitoring or lifecycle event to the activity timeline.
     /// - Parameter event: Durable event snapshot to append.
     /// - Throws: A local database error when the event cannot be inserted.
@@ -117,6 +132,21 @@ extension AssistantDatabase {
         try bind(event.kind.rawValue, at: 4, in: statement)
         try bind(event.occurredAt, at: 5, in: statement)
         try stepDone(statement)
+    }
+
+    /// Appends related monitoring events in a single commit.
+    ///
+    /// One filesystem change publishes a short ordered burst of events. Committing them together
+    /// keeps the burst atomic, so history never shows a scheduled update with no detected change.
+    /// - Parameter events: Durable event snapshots appended in order.
+    /// - Throws: A local database error when the events cannot be inserted.
+    internal func insertIndexActivityEvents(_ events: [IndexActivityEventRecord]) throws {
+        guard events.isEmpty == false else { return }
+        try inTransaction {
+            for event in events {
+                try insertIndexActivityEvent(event)
+            }
+        }
     }
 
     /// Returns every retained indexing run, newest first.

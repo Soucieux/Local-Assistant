@@ -672,12 +672,12 @@ actor IndexingService {
         progress: @Sendable (IndexingProgress) async -> Void
     ) async throws {
         for staleItem in staleItems {
-            try await database.upsertIndexingItem(
-                activityItem(item: staleItem, runID: runID, state: .removedFromIndex)
-            )
             run.removedItems += 1
             processedCount += 1
-            try await database.updateIndexingRun(run)
+            try await database.recordIndexingProgress(
+                item: activityItem(item: staleItem, runID: runID, state: .removedFromIndex),
+                run: run
+            )
             await progress(
                 makeProgress(
                     run: run,

@@ -386,19 +386,18 @@ extension AppModel {
         kinds: [IndexActivityEventKind]
     ) async throws {
         let occurredAt = Date()
-        for (offset, kind) in kinds.enumerated() {
-            try await services.database.insertIndexActivityEvent(
-                IndexActivityEventRecord(
-                    id: UUID(),
-                    rootID: root.id,
-                    folderName: root.displayName,
-                    kind: kind,
-                    occurredAt: occurredAt.addingTimeInterval(
-                        Double(offset) / AppConstants.Indexing.activityOrderingNudgesPerSecond
-                    )
+        let events = kinds.enumerated().map { offset, kind in
+            IndexActivityEventRecord(
+                id: UUID(),
+                rootID: root.id,
+                folderName: root.displayName,
+                kind: kind,
+                occurredAt: occurredAt.addingTimeInterval(
+                    Double(offset) / AppConstants.Indexing.activityOrderingNudgesPerSecond
                 )
             )
         }
+        try await services.database.insertIndexActivityEvents(events)
         try await services.database.purgeIndexActivity(before: activityRetentionCutoff)
         indexActivityEvents = try await services.database.fetchIndexActivityEvents()
     }
