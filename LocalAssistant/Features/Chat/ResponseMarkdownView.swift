@@ -155,19 +155,7 @@ private struct ResponseInlineMarkdownText: View {
 
     /// Parses inline emphasis and code while removing active link destinations.
     private var renderedText: AttributedString {
-        let options = AttributedString.MarkdownParsingOptions(
-            interpretedSyntax: .inlineOnlyPreservingWhitespace
-        )
-        var attributedText =
-            (try? AttributedString(markdown: text, options: options))
-            ?? AttributedString(text)
-        let linkedRanges = attributedText.runs.compactMap { run in
-            run.link == nil ? nil : run.range
-        }
-        for linkedRange in linkedRanges {
-            attributedText[linkedRange].link = nil
-        }
-        return attributedText
+        .inertInlineMarkdown(text)
     }
 }
 
@@ -365,5 +353,30 @@ private struct ResponseMarkdownTableView: View {
     /// Returns the minimum readable table width derived from its column count.
     private var minimumTableWidth: CGFloat {
         CGFloat(table.header.count) * DesignTokens.Command.responseTableMinimumColumnWidth
+    }
+}
+
+extension AttributedString {
+    /// Parses inline Markdown while removing every active link destination.
+    ///
+    /// Response text is untrusted and the interface must never present a followable link.
+    /// Both the assistant document and the user bubble render through this one path so the
+    /// link-stripping cannot drift between them.
+    /// - Parameter text: Local or OpenClaw text that may contain inline Markdown.
+    /// - Returns: Inline-styled text whose links cannot be followed.
+    internal static func inertInlineMarkdown(_ text: String) -> AttributedString {
+        let options = AttributedString.MarkdownParsingOptions(
+            interpretedSyntax: .inlineOnlyPreservingWhitespace
+        )
+        var attributedText =
+            (try? AttributedString(markdown: text, options: options))
+            ?? AttributedString(text)
+        let linkedRanges = attributedText.runs.compactMap { run in
+            run.link == nil ? nil : run.range
+        }
+        for linkedRange in linkedRanges {
+            attributedText[linkedRange].link = nil
+        }
+        return attributedText
     }
 }

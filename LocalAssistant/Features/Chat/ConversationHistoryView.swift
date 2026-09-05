@@ -279,19 +279,7 @@ private struct StyledMessageText: View {
 
     /// Parses user-message inline Markdown while removing active link destinations.
     private var renderedUserText: AttributedString {
-        let options = AttributedString.MarkdownParsingOptions(
-            interpretedSyntax: .inlineOnlyPreservingWhitespace
-        )
-        var attributedText =
-            (try? AttributedString(markdown: text, options: options))
-            ?? AttributedString(text)
-        let linkedRanges = attributedText.runs.compactMap { run in
-            run.link == nil ? nil : run.range
-        }
-        for linkedRange in linkedRanges {
-            attributedText[linkedRange].link = nil
-        }
-        return attributedText
+        .inertInlineMarkdown(text)
     }
 
     /// Builds user inline text or the shared native assistant document renderer.
