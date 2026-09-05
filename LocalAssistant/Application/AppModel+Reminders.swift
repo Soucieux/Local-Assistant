@@ -222,7 +222,7 @@ extension AppModel {
                         installed: installed.displayName,
                         expected: expected.displayName
                     )
-            } ?? nil
+            }
             return ConnectorAppResolution(
                 url: match.url,
                 availability: match.availability,
