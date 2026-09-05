@@ -116,15 +116,26 @@ extension ConnectorSetupModel {
     }
 
     /// Stops an existing connector service before replacing its runtime or credentials.
+    ///
+    /// The service target unloads the job by label, so a plist bootstrapped from the
+    /// superseded home-folder path stops as well as one inside `Library`.
     internal func stopExistingLaunchAgent() {
-        let domain = ConnectorSetupConstants.LaunchAgent.domainPrefix + String(getuid())
         _ = Self.runLaunchctl(
             arguments: [
                 ConnectorSetupConstants.LaunchAgent.bootout,
-                domain,
-                Self.launchAgentPlistURL().path
+                Self.launchAgentServiceTarget()
             ]
         )
+        try? FileManager.default.removeItem(at: Self.legacyLaunchAgentPlistURL())
+    }
+
+    /// Returns the launchd service target naming this user's connector job.
+    /// - Returns: A `gui/<uid>/<label>` target that resolves whatever plist path loaded it.
+    internal static func launchAgentServiceTarget() -> String {
+        ConnectorSetupConstants.LaunchAgent.domainPrefix
+            + String(getuid())
+            + ConnectorSetupConstants.LaunchAgent.serviceTargetSeparator
+            + ConnectorSetupConstants.Identity.launchAgentIdentifier
     }
 
     /// Runs one bounded launchctl operation without a shell.
@@ -245,6 +256,20 @@ extension ConnectorSetupModel {
             ConnectorSetupConstants.Identity.launchAgentFilename,
             isDirectory: false
         )
+    }
+
+    /// Returns the LaunchAgent path written before the Library-relative correction.
+    /// - Returns: Superseded launchd configuration URL retained only for cleanup.
+    internal static func legacyLaunchAgentPlistURL() -> URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(
+                ConnectorSetupConstants.Identity.legacyLaunchAgentsDirectory,
+                isDirectory: true
+            )
+            .appendingPathComponent(
+                ConnectorSetupConstants.Identity.launchAgentFilename,
+                isDirectory: false
+            )
     }
 
     /// Returns the installed Local Assistant sandbox spool location.

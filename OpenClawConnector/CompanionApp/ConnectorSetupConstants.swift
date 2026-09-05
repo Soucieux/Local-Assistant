@@ -11,7 +11,8 @@ enum ConnectorSetupConstants {
         static let runtimeDirectory = "Runtime"
         static let temporaryRuntimeDirectory = "Runtime.installing"
         static let previousRuntimeDirectory = "Runtime.previous"
-        static let launchAgentsDirectory = "LaunchAgents"
+        static let launchAgentsDirectory = "Library/LaunchAgents"
+        static let legacyLaunchAgentsDirectory = "LaunchAgents"
         static let launchAgentFilename = "com.soucieux.LocalAssistant.OpenClawConnector.plist"
         static let embeddedRuntimeDirectory = "ConnectorRuntime"
         static let embeddedServerSetupDirectory = "OpenClaw Server Setup"
@@ -94,6 +95,7 @@ enum ConnectorSetupConstants {
         static let nullDevice = "/dev/null"
         static let executable = "/bin/launchctl"
         static let domainPrefix = "gui/"
+        static let serviceTargetSeparator = "/"
         static let bootstrap = "bootstrap"
         static let bootout = "bootout"
     }

@@ -231,6 +231,18 @@ final class ConnectorSetupModel: ObservableObject {
         }
     }
 
+    /// Restarts the installed connector job after a failed update or re-verification.
+    ///
+    /// Both flows boot the job out before replacing the runtime, so returning early on a
+    /// transient failure would otherwise stop every scheduled refresh until setup was
+    /// opened again. The job is restored only when an installed runtime is present.
+    private func restoreLaunchAgentIfInstalled() {
+        guard FileManager.default.isExecutableFile(
+            atPath: Self.runtimeExecutableURL().path
+        ) else { return }
+        try? installAndStartLaunchAgent()
+    }
+
     /// Installs, verifies, and restarts without requesting credentials again.
     private func performExistingUpdate() async {
         do {
@@ -246,6 +258,7 @@ final class ConnectorSetupModel: ObservableObject {
             statusTone = .success
             isBusy = false
         } catch {
+            restoreLaunchAgentIfInstalled()
             showFailure(error)
             isBusy = false
         }
@@ -279,6 +292,7 @@ final class ConnectorSetupModel: ObservableObject {
             statusTone = .success
             isBusy = false
         } catch {
+            restoreLaunchAgentIfInstalled()
             showFailure(error)
             isBusy = false
         }
@@ -341,6 +355,7 @@ final class ConnectorSetupModel: ObservableObject {
     private func removeLaunchAgentAndPendingSpool() {
         let fileManager = FileManager.default
         try? fileManager.removeItem(at: Self.launchAgentPlistURL())
+        try? fileManager.removeItem(at: Self.legacyLaunchAgentPlistURL())
         let spool = URL(fileURLWithPath: spoolPath, isDirectory: true)
         for directory in ConnectorSetupConstants.Identity.pendingSpoolDirectories {
             try? fileManager.removeItem(
@@ -647,7 +662,10 @@ final class ConnectorSetupModel: ObservableObject {
         )
         let domain = ConnectorSetupConstants.LaunchAgent.domainPrefix + String(getuid())
         _ = Self.runLaunchctl(
-            arguments: [ConnectorSetupConstants.LaunchAgent.bootout, domain, plistURL.path]
+            arguments: [
+                ConnectorSetupConstants.LaunchAgent.bootout,
+                Self.launchAgentServiceTarget()
+            ]
         )
         guard Self.runLaunchctl(
             arguments: [ConnectorSetupConstants.LaunchAgent.bootstrap, domain, plistURL.path]
