@@ -44,7 +44,7 @@ enum AppConstants {
         static let maximumOCRPixelCount = 30_000_000
         static let embeddingDimensions = 1_024
         static let activityRetentionDays = 30
-        static let activityOrderingNudgeSeconds = 1_000_000.0
+        static let activityOrderingNudgesPerSecond = 1_000_000.0
         static let changeDebounceNanoseconds: UInt64 = 2_000_000_000
         static let monitorCoalescingSeconds: CFTimeInterval = 0.5
     }

@@ -394,7 +394,7 @@ extension AppModel {
                     folderName: root.displayName,
                     kind: kind,
                     occurredAt: occurredAt.addingTimeInterval(
-                        Double(offset) / AppConstants.Indexing.activityOrderingNudgeSeconds
+                        Double(offset) / AppConstants.Indexing.activityOrderingNudgesPerSecond
                     )
                 )
             )
