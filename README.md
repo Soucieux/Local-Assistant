@@ -323,31 +323,27 @@ Follow the repository-wide [version and build-number policy](../README.md#versio
 </details>
 
 <!-- project-control:section=history -->
-### Documentation and maintenance history
-
-| Date | Updates | Git evidence |
-|---|---|---|
-| 2026-09-04 | Released v5.3/build 53 after a byte-to-byte review of all 184 project files. Corrected the Connector launchd registration path and its failed-update restart, shared the inert Markdown parser and the temporary test database fixture, and named the remaining inline literals. No signed build was produced, so the project root retains the v5.2 artifacts. | This v5.3/build 53 commit |
-| 2026-09-02 | Linked Local Assistant's version-and-build declaration to the centralized repository policy and removed duplicated generic numbering rules. Application behavior, metadata, artifacts, and release numbers are unchanged. | This documentation commit |
-| 2026-08-31 | Released v5.2/build 52 while reconciling the complete v0.1–v5.2 release index with retained Git records and preserving the historical v3.10/build-40 alias. Prepared the root-only development-guardrail consolidation separately and retained upstream llama.cpp guidance as CONTRIBUTOR_GUIDANCE.md. Application behavior, shared models, and deployed setup are unchanged. | This v5.2/build 52 documentation commit |
-| 2026-08-31 | Released v5.1/build 51 with category-grouped architecture coverage, one technology or concept per row, and stable README section mappings. | `6ed828e`, `68f9787` |
-| 2026-08-29 | Released v5.0/build 50 after closing the remaining sort-order and indexing issues, naming remaining literals, sharing reminder-card formatting, correcting the historical v0.8 record, and rebuilding the disk image. | `7835160`, `8c1c2a7`, `e9d0dac`, `c6fb6e9`, `c12833b`, `c3f8154` |
+### Change history
 
 Development rules now live in the repository's [Local Assistant guardrails](../AGENTS.md#local-assistant-product-guardrails).
 The older release notes below retain their original validation claims; the documentation audit
 does not rerun or upgrade those claims. Pre-existing uncommitted shared-storage documentation
 is retained as local work, not represented as a new committed model setup.
 
-<!-- project-control:section=history -->
-### Version index
-
 <details>
-<summary>Complete version history (v5.3 to v0.1)</summary>
+<summary>Complete change history (v5.3 to v0.1)</summary>
 
-The entries below preserve all 53 documented releases. They are collapsed so current setup
-and architecture remain easy to scan. Git index evidence names a commit that retains the row,
-not an independently verified release date: several intermediate releases were committed together.
+The entries below preserve all 53 documented releases together with the documentation and
+maintenance work that changed no release number. They are collapsed so current setup and
+architecture remain easy to scan. Git evidence names a commit that retains the row, not an
+independently verified release date: several intermediate releases were committed together.
 Project Control displays the first 30 mapped history entries; this README retains the full record.
+
+A row that changed the product numbers carries the exact version and build. A row that changed
+neither is labelled `Maintenance` or `Documentation`, following the repository
+[version and build-number policy](../README.md#version-and-build-number-policy). A build number
+appears only where that release's own notes record one; the remaining 33 rows keep the version
+alone rather than a number derived from the numbering formula.
 
 The current v4.0 entry corresponds to the older **v3.10/build 40** record in `7a67a78` and
 `e687377`. Commit `95d6873` normalized that history to the single-digit-minor convention.
@@ -357,61 +353,63 @@ The table and notes below are the durable record of what each release contained.
 current project-root release set is retained; rebuilding never leaves a previous copy. Each
 entry names what that release changed and links to its full notes.
 
-| Version | What changed | Git index evidence |
-|---|---|---|
-| v5.3 | [Connector launchd reliability and shared code](#v53--connector-launchd-reliability-and-shared-code) | This v5.3/build 53 commit |
-| v5.2 | [Release-history reconciliation](#v52--release-history-reconciliation) | This v5.2/build 52 documentation commit |
-| v5.1 | [Explicit architecture inventory and README mappings](#v51--explicit-architecture-inventory-and-readme-mappings) | `68f9787` (2026-08-31) |
-| v5.0 | [Final deterministic ordering and indexing cleanup](#v50--final-deterministic-ordering-and-indexing-cleanup) | `c3f8154` (2026-08-29) |
-| v4.9 | [Deterministic retrieval and connector resilience](#v49--deterministic-retrieval-and-connector-resilience) | `552d60a` (2026-08-28) |
-| v4.8 | [Responsive setup and consistent result cards](#v48--responsive-setup-and-consistent-result-cards) | `34ed7c5` (2026-08-26) |
-| v4.7 | [Private A2A connection to OpenClaw](#v47--private-a2a-connection-to-openclaw) | `069d075` (2026-08-26) |
-| v4.6 | [Responsive native Markdown responses](#v46--responsive-native-markdown-responses) | `8db0dcb` (2026-08-26) |
-| v4.5 | [Natural confirmation, centered processing, and dependency security](#v45--natural-confirmation-centered-processing-and-dependency-security) | `95d6873` (2026-08-26) |
-| v4.4 | [Conversational reminder confirmation and runtime compatibility](#v44--conversational-reminder-confirmation-and-runtime-compatibility) | `95d6873` (2026-08-26) |
-| v4.3 | [Natural reminder routing and responsive result cards](#v43--natural-reminder-routing-and-responsive-result-cards) | `95d6873` (2026-08-26) |
-| v4.2 | [Content-height Local Assistant setup cards](#v42--content-height-local-assistant-setup-cards) | `95d6873` (2026-08-26) |
-| v4.1 | [Unified connection review and content-height setup cards](#v41--unified-connection-review-and-content-height-setup-cards) | `95d6873` (2026-08-26) |
-| v4.0 | [Credential-safe Connector updates and cleanup](#v40--credential-safe-connector-updates-and-cleanup) | `95d6873` (2026-08-26) |
-| v3.9 | [Reliable connector setup, refresh, and lifecycle](#v39--reliable-connector-setup-refresh-and-lifecycle) | `7a67a78` (2026-08-26) |
-| v3.8 | [On-demand restricted SSH transport](#v38--on-demand-restricted-ssh-transport) | `7a67a78` (2026-08-26) |
-| v3.7 | [Complete private Tailscale connection setup](#v37--complete-private-tailscale-connection-setup) | `7a67a78` (2026-08-26) |
-| v3.6 | [User-created server ZIP and corrected setup packaging](#v36--user-created-server-zip-and-corrected-setup-packaging) | `7a67a78` (2026-08-26) |
-| v3.5 | [Unambiguous clean-device OpenClaw setup](#v35--unambiguous-clean-device-openclaw-setup) | `7a67a78` (2026-08-26) |
-| v3.4 | [Live OpenClaw status and in-app setup](#v34--live-openclaw-status-and-in-app-setup) | `7a67a78` (2026-08-26) |
-| v3.3 | [Hidden reminder knowledge and explicit OpenClaw actions](#v33--hidden-reminder-knowledge-and-explicit-openclaw-actions) | `7a67a78` (2026-08-26) |
-| v3.2 | [Private reminder RAG and an opt-in OpenClaw connector](#v32--private-reminder-rag-and-an-opt-in-openclaw-connector) | `7a67a78` (2026-08-26) |
-| v3.1 | [Storage figures moved beside each button](#v31--storage-figures-moved-beside-each-button) | `20faad1` (2026-08-22) |
-| v3.0 | [Storage figures next to each reset action](#v30--storage-figures-next-to-each-reset-action) | `20faad1` (2026-08-22) |
-| v2.9 | [Bordered reset rows matching the folder-card style](#v29--bordered-reset-rows-matching-the-folder-card-style) | `20faad1` (2026-08-22) |
-| v2.8 | [Simplified reset rows and corrected model-removal placement](#v28--simplified-reset-rows-and-corrected-model-removal-placement) | `20faad1` (2026-08-22) |
-| v2.7 | [Reset controls integrated into their owning sections](#v27--reset-controls-integrated-into-their-owning-sections) | `20faad1` (2026-08-22) |
-| v2.6 | [On-demand model removal, search-index reset, and status check](#v26--on-demand-model-removal-search-index-reset-and-status-check) | `20faad1` (2026-08-22) |
-| v2.5 | [Complete folder hierarchy and precise folder-scoped results](#v25--complete-folder-hierarchy-and-precise-folder-scoped-results) | `4893e05` (2026-08-21) |
-| v2.4 | [Reliable type-only listings and idle command pulse](#v24--reliable-type-only-listings-and-idle-command-pulse) | `4893e05` (2026-08-21) |
-| v2.3 | [Folder-aware retrieval and coordinated interface motion](#v23--folder-aware-retrieval-and-coordinated-interface-motion) | `4893e05` (2026-08-21) |
-| v2.2 | [Evidence-backed result cards and honest visual-search limits](#v22--evidence-backed-result-cards-and-honest-visual-search-limits) | `4893e05` (2026-08-21) |
-| v2.1 | [Bounded vector search, visible button hover states, and clarified semantic-image limits](#v21--bounded-vector-search-visible-button-hover-states-and-clarified-semantic-image-limits) | `4893e05` (2026-08-21) |
-| v2.0 | [Selectable voice interactions, finalized speech, and conversational follow-ups](#v20--selectable-voice-interactions-finalized-speech-and-conversational-follow-ups) | `4893e05` (2026-08-21) |
-| v1.9 | [One light visual family across every screen](#v19--one-light-visual-family-across-every-screen) | `4893e05` (2026-08-21) |
-| v1.8 | [Light command interface with acquired-file modules](#v18--light-command-interface-with-acquired-file-modules) | `4893e05` (2026-08-21) |
-| v1.7 | [Current command presentation with complete conversation History](#v17--current-command-presentation-with-complete-conversation-history) | `4893e05` (2026-08-21) |
-| v1.6 | [Spoken words appear and send, and the routing marker stays hidden](#v16--spoken-words-appear-and-send-and-the-routing-marker-stays-hidden) | `aacd101` (2026-08-20) |
-| v1.5 | [Recordings end on a pause and send what was said](#v15--recordings-end-on-a-pause-and-send-what-was-said) | `c436b1f` (2026-08-20) |
-| v1.4 | [Live waveform and on-screen speech, with no audio written to disk](#v14--live-waveform-and-on-screen-speech-with-no-audio-written-to-disk) | `bf0c74d` (2026-08-20) |
-| v1.3 | [The assistant stopped repeating its own result sentence](#v13--the-assistant-stopped-repeating-its-own-result-sentence) | `bf0c74d` (2026-08-20) |
-| v1.2 | [Vendored network code removed, with correctness fixes and automated tests](#v12--vendored-network-code-removed-with-correctness-fixes-and-automated-tests) | `bf0c74d` (2026-08-20) |
-| v1.1 | [Simpler indexing controls and a clean shutdown on quit](#v11--simpler-indexing-controls-and-a-clean-shutdown-on-quit) | `bf0c74d` (2026-08-20) |
-| v1.0 | [Continuous folder monitoring, pausable indexing, and 30-day activity](#v10--continuous-folder-monitoring-pausable-indexing-and-30-day-activity) | `bf0c74d` (2026-08-20) |
-| v0.9 | [Hard file-type filters, prompt safety, and tightened entitlements](#v09--hard-file-type-filters-prompt-safety-and-tightened-entitlements) | `bf0c74d` (2026-08-20) |
-| v0.8 | [Settings reordered, conversation text styled, and the README rewritten](#v08--settings-reordered-conversation-text-styled-and-the-readme-rewritten) | `bf0c74d` (2026-08-20) |
-| v0.7 | [Answers stopped repeating details already shown in the cards](#v07--answers-stopped-repeating-details-already-shown-in-the-cards) | `bf0c74d` (2026-08-20) |
-| v0.6 | [Plain-language model readiness and result cards that survive relaunch](#v06--plain-language-model-readiness-and-result-cards-that-survive-relaunch) | `bf0c74d` (2026-08-20) |
-| v0.5 | [Message timestamps, Clear Conversation, and shorter result cards](#v05--message-timestamps-clear-conversation-and-shorter-result-cards) | `bf0c74d` (2026-08-20) |
-| v0.4 | [Settings reorganized around status, folder access, and privacy](#v04--settings-reorganized-around-status-folder-access-and-privacy) | `bf0c74d` (2026-08-20) |
-| v0.3 | [Local routing between chat, clarification, and file search](#v03--local-routing-between-chat-clarification-and-file-search) | `bf0c74d` (2026-08-20) |
-| v0.2 | [Focused interface with crash-safe indexing and folder revocation](#v02--focused-interface-with-crash-safe-indexing-and-folder-revocation) | `db1f803` (2026-08-20) |
-| v0.1 | [First sandboxed assistant with local indexing, retrieval, and voice](#v01--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice) | `db1f803` (2026-08-20) |
+| Version | Date | Updates | Git evidence |
+|---|---|---|---|
+| Documentation | 2026-09-04 | Merged the version index and the dated maintenance history into one change-history table using the repository's required first-column labels: the exact version and build for an operation that changed them, `Maintenance` or `Documentation` otherwise. Build numbers were taken only from each release's own notes, so 20 rows carry one and 33 keep the version alone rather than a number derived from the numbering formula. No source, version, build, or artifact changed. | This documentation commit |
+| v5.3 / build 53 | 2026-09-04 | [Connector launchd reliability and shared code](#v53--connector-launchd-reliability-and-shared-code). Released v5.3/build 53 after a byte-to-byte review of all 184 project files. Corrected the Connector launchd registration path and its failed-update restart, shared the inert Markdown parser and the temporary test database fixture, and named the remaining inline literals. No signed build was produced, so the project root retains the v5.2 artifacts. | This v5.3/build 53 commit |
+| Documentation | 2026-09-02 | Linked Local Assistant's version-and-build declaration to the centralized repository policy and removed duplicated generic numbering rules. Application behavior, metadata, artifacts, and release numbers are unchanged. | This documentation commit |
+| v5.2 / build 52 | 2026-08-31 | [Release-history reconciliation](#v52--release-history-reconciliation). Released v5.2/build 52 while reconciling the complete v0.1–v5.2 release index with retained Git records and preserving the historical v3.10/build-40 alias. Prepared the root-only development-guardrail consolidation separately and retained upstream llama.cpp guidance as CONTRIBUTOR_GUIDANCE.md. Application behavior, shared models, and deployed setup are unchanged. | This v5.2/build 52 documentation commit |
+| v5.1 / build 51 | 2026-08-31 | [Explicit architecture inventory and README mappings](#v51--explicit-architecture-inventory-and-readme-mappings). Released v5.1/build 51 with category-grouped architecture coverage, one technology or concept per row, and stable README section mappings. | `6ed828e`, `68f9787` |
+| v5.0 / build 50 | 2026-08-29 | [Final deterministic ordering and indexing cleanup](#v50--final-deterministic-ordering-and-indexing-cleanup). Released v5.0/build 50 after closing the remaining sort-order and indexing issues, naming remaining literals, sharing reminder-card formatting, correcting the historical v0.8 record, and rebuilding the disk image. | `7835160`, `8c1c2a7`, `e9d0dac`, `c6fb6e9`, `c12833b`, `c3f8154` |
+| v4.9 / build 49 | 2026-08-28 | [Deterministic retrieval and connector resilience](#v49--deterministic-retrieval-and-connector-resilience) | `552d60a` (2026-08-28) |
+| v4.8 / build 48 | 2026-08-26 | [Responsive setup and consistent result cards](#v48--responsive-setup-and-consistent-result-cards) | `34ed7c5` (2026-08-26) |
+| v4.7 / build 47 | 2026-08-26 | [Private A2A connection to OpenClaw](#v47--private-a2a-connection-to-openclaw) | `069d075` (2026-08-26) |
+| v4.6 / build 46 | 2026-08-26 | [Responsive native Markdown responses](#v46--responsive-native-markdown-responses) | `8db0dcb` (2026-08-26) |
+| v4.5 / build 45 | 2026-08-26 | [Natural confirmation, centered processing, and dependency security](#v45--natural-confirmation-centered-processing-and-dependency-security) | `95d6873` (2026-08-26) |
+| v4.4 / build 44 | 2026-08-26 | [Conversational reminder confirmation and runtime compatibility](#v44--conversational-reminder-confirmation-and-runtime-compatibility) | `95d6873` (2026-08-26) |
+| v4.3 / build 43 | 2026-08-26 | [Natural reminder routing and responsive result cards](#v43--natural-reminder-routing-and-responsive-result-cards) | `95d6873` (2026-08-26) |
+| v4.2 / build 42 | 2026-08-26 | [Content-height Local Assistant setup cards](#v42--content-height-local-assistant-setup-cards) | `95d6873` (2026-08-26) |
+| v4.1 / build 41 | 2026-08-26 | [Unified connection review and content-height setup cards](#v41--unified-connection-review-and-content-height-setup-cards) | `95d6873` (2026-08-26) |
+| v4.0 / build 40 | 2026-08-26 | [Credential-safe Connector updates and cleanup](#v40--credential-safe-connector-updates-and-cleanup) | `95d6873` (2026-08-26) |
+| v3.9 / build 39 | 2026-08-26 | [Reliable connector setup, refresh, and lifecycle](#v39--reliable-connector-setup-refresh-and-lifecycle) | `7a67a78` (2026-08-26) |
+| v3.8 / build 38 | 2026-08-26 | [On-demand restricted SSH transport](#v38--on-demand-restricted-ssh-transport) | `7a67a78` (2026-08-26) |
+| v3.7 / build 37 | 2026-08-26 | [Complete private Tailscale connection setup](#v37--complete-private-tailscale-connection-setup) | `7a67a78` (2026-08-26) |
+| v3.6 / build 36 | 2026-08-26 | [User-created server ZIP and corrected setup packaging](#v36--user-created-server-zip-and-corrected-setup-packaging) | `7a67a78` (2026-08-26) |
+| v3.5 / build 35 | 2026-08-26 | [Unambiguous clean-device OpenClaw setup](#v35--unambiguous-clean-device-openclaw-setup) | `7a67a78` (2026-08-26) |
+| v3.4 / build 34 | 2026-08-26 | [Live OpenClaw status and in-app setup](#v34--live-openclaw-status-and-in-app-setup) | `7a67a78` (2026-08-26) |
+| v3.3 | 2026-08-26 | [Hidden reminder knowledge and explicit OpenClaw actions](#v33--hidden-reminder-knowledge-and-explicit-openclaw-actions) | `7a67a78` (2026-08-26) |
+| v3.2 | 2026-08-26 | [Private reminder RAG and an opt-in OpenClaw connector](#v32--private-reminder-rag-and-an-opt-in-openclaw-connector) | `7a67a78` (2026-08-26) |
+| v3.1 | 2026-08-22 | [Storage figures moved beside each button](#v31--storage-figures-moved-beside-each-button) | `20faad1` (2026-08-22) |
+| v3.0 | 2026-08-22 | [Storage figures next to each reset action](#v30--storage-figures-next-to-each-reset-action) | `20faad1` (2026-08-22) |
+| v2.9 | 2026-08-22 | [Bordered reset rows matching the folder-card style](#v29--bordered-reset-rows-matching-the-folder-card-style) | `20faad1` (2026-08-22) |
+| v2.8 | 2026-08-22 | [Simplified reset rows and corrected model-removal placement](#v28--simplified-reset-rows-and-corrected-model-removal-placement) | `20faad1` (2026-08-22) |
+| v2.7 | 2026-08-22 | [Reset controls integrated into their owning sections](#v27--reset-controls-integrated-into-their-owning-sections) | `20faad1` (2026-08-22) |
+| v2.6 | 2026-08-22 | [On-demand model removal, search-index reset, and status check](#v26--on-demand-model-removal-search-index-reset-and-status-check) | `20faad1` (2026-08-22) |
+| v2.5 | 2026-08-21 | [Complete folder hierarchy and precise folder-scoped results](#v25--complete-folder-hierarchy-and-precise-folder-scoped-results) | `4893e05` (2026-08-21) |
+| v2.4 | 2026-08-21 | [Reliable type-only listings and idle command pulse](#v24--reliable-type-only-listings-and-idle-command-pulse) | `4893e05` (2026-08-21) |
+| v2.3 | 2026-08-21 | [Folder-aware retrieval and coordinated interface motion](#v23--folder-aware-retrieval-and-coordinated-interface-motion) | `4893e05` (2026-08-21) |
+| v2.2 | 2026-08-21 | [Evidence-backed result cards and honest visual-search limits](#v22--evidence-backed-result-cards-and-honest-visual-search-limits) | `4893e05` (2026-08-21) |
+| v2.1 | 2026-08-21 | [Bounded vector search, visible button hover states, and clarified semantic-image limits](#v21--bounded-vector-search-visible-button-hover-states-and-clarified-semantic-image-limits) | `4893e05` (2026-08-21) |
+| v2.0 | 2026-08-21 | [Selectable voice interactions, finalized speech, and conversational follow-ups](#v20--selectable-voice-interactions-finalized-speech-and-conversational-follow-ups) | `4893e05` (2026-08-21) |
+| v1.9 | 2026-08-21 | [One light visual family across every screen](#v19--one-light-visual-family-across-every-screen) | `4893e05` (2026-08-21) |
+| v1.8 | 2026-08-21 | [Light command interface with acquired-file modules](#v18--light-command-interface-with-acquired-file-modules) | `4893e05` (2026-08-21) |
+| v1.7 | 2026-08-21 | [Current command presentation with complete conversation History](#v17--current-command-presentation-with-complete-conversation-history) | `4893e05` (2026-08-21) |
+| v1.6 | 2026-08-20 | [Spoken words appear and send, and the routing marker stays hidden](#v16--spoken-words-appear-and-send-and-the-routing-marker-stays-hidden) | `aacd101` (2026-08-20) |
+| v1.5 | 2026-08-20 | [Recordings end on a pause and send what was said](#v15--recordings-end-on-a-pause-and-send-what-was-said) | `c436b1f` (2026-08-20) |
+| v1.4 | 2026-08-20 | [Live waveform and on-screen speech, with no audio written to disk](#v14--live-waveform-and-on-screen-speech-with-no-audio-written-to-disk) | `bf0c74d` (2026-08-20) |
+| v1.3 | 2026-08-20 | [The assistant stopped repeating its own result sentence](#v13--the-assistant-stopped-repeating-its-own-result-sentence) | `bf0c74d` (2026-08-20) |
+| v1.2 | 2026-08-20 | [Vendored network code removed, with correctness fixes and automated tests](#v12--vendored-network-code-removed-with-correctness-fixes-and-automated-tests) | `bf0c74d` (2026-08-20) |
+| v1.1 | 2026-08-20 | [Simpler indexing controls and a clean shutdown on quit](#v11--simpler-indexing-controls-and-a-clean-shutdown-on-quit) | `bf0c74d` (2026-08-20) |
+| v1.0 | 2026-08-20 | [Continuous folder monitoring, pausable indexing, and 30-day activity](#v10--continuous-folder-monitoring-pausable-indexing-and-30-day-activity) | `bf0c74d` (2026-08-20) |
+| v0.9 | 2026-08-20 | [Hard file-type filters, prompt safety, and tightened entitlements](#v09--hard-file-type-filters-prompt-safety-and-tightened-entitlements) | `bf0c74d` (2026-08-20) |
+| v0.8 | 2026-08-20 | [Settings reordered, conversation text styled, and the README rewritten](#v08--settings-reordered-conversation-text-styled-and-the-readme-rewritten) | `bf0c74d` (2026-08-20) |
+| v0.7 | 2026-08-20 | [Answers stopped repeating details already shown in the cards](#v07--answers-stopped-repeating-details-already-shown-in-the-cards) | `bf0c74d` (2026-08-20) |
+| v0.6 | 2026-08-20 | [Plain-language model readiness and result cards that survive relaunch](#v06--plain-language-model-readiness-and-result-cards-that-survive-relaunch) | `bf0c74d` (2026-08-20) |
+| v0.5 | 2026-08-20 | [Message timestamps, Clear Conversation, and shorter result cards](#v05--message-timestamps-clear-conversation-and-shorter-result-cards) | `bf0c74d` (2026-08-20) |
+| v0.4 | 2026-08-20 | [Settings reorganized around status, folder access, and privacy](#v04--settings-reorganized-around-status-folder-access-and-privacy) | `bf0c74d` (2026-08-20) |
+| v0.3 | 2026-08-20 | [Local routing between chat, clarification, and file search](#v03--local-routing-between-chat-clarification-and-file-search) | `bf0c74d` (2026-08-20) |
+| v0.2 | 2026-08-20 | [Focused interface with crash-safe indexing and folder revocation](#v02--focused-interface-with-crash-safe-indexing-and-folder-revocation) | `db1f803` (2026-08-20) |
+| v0.1 | 2026-08-20 | [First sandboxed assistant with local indexing, retrieval, and voice](#v01--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice) | `db1f803` (2026-08-20) |
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`.
