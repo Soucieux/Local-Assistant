@@ -18,6 +18,5 @@ enum FolderIndexTestConstants {
     static let noteName = "Notes.txt"
     static let noteText = "School notes"
     static let folderHash = "folder-hash"
-    static let databaseExtension = "sqlite3"
     static let bookmarkByte: UInt8 = 1
 }

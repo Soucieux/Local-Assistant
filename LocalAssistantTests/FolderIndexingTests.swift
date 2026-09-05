@@ -81,10 +81,9 @@ struct FolderIndexingTests {
 
     @Test("Descendant lookup keeps a hard PDF constraint inside the matched folder")
     internal func filtersFolderDescendantsByKind() async throws {
-        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
-        let database = AssistantDatabase(databaseURL: databaseURL)
+        let fixture = try DatabaseFixture()
+        defer { fixture.remove() }
+        let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
         let root = AuthorizedRoot(
             id: FolderIndexTestConstants.rootID,
@@ -107,17 +106,15 @@ struct FolderIndexingTests {
             limit: AppConstants.Chat.retrievalCandidateLimit
         )
         await database.close()
-        removeDatabaseFiles(at: databaseURL)
 
         #expect(results.map(\.id) == [FolderIndexTestConstants.childFileID])
     }
 
     @Test("Metadata publication makes the complete folder hierarchy searchable immediately")
     internal func publishesFolderHierarchyBeforeContent() async throws {
-        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
-        let database = AssistantDatabase(databaseURL: databaseURL)
+        let fixture = try DatabaseFixture()
+        defer { fixture.remove() }
+        let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
         let root = AuthorizedRoot(
             id: FolderIndexTestConstants.rootID,
@@ -143,7 +140,6 @@ struct FolderIndexingTests {
             limit: AppConstants.Chat.retrievalCandidateLimit
         )
         await database.close()
-        removeDatabaseFiles(at: databaseURL)
 
         #expect(folderMatches.first?.id == FolderIndexTestConstants.rootItemID)
         #expect(descendants.map(\.id).contains(FolderIndexTestConstants.childFolderID))
@@ -152,10 +148,9 @@ struct FolderIndexingTests {
 
     @Test("Metadata publication preserves previously extracted searchable passages")
     internal func preservesContentDuringMetadataPublication() async throws {
-        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
-        let database = AssistantDatabase(databaseURL: databaseURL)
+        let fixture = try DatabaseFixture()
+        defer { fixture.remove() }
+        let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
         let root = AuthorizedRoot(
             id: FolderIndexTestConstants.rootID,
@@ -188,17 +183,15 @@ struct FolderIndexingTests {
             limit: AppConstants.Chat.retrievalCandidateLimit
         )
         await database.close()
-        removeDatabaseFiles(at: databaseURL)
 
         #expect(keywordHits.first?.itemID == transcript.id)
     }
 
     @Test("Clearing the search index removes indexed content but keeps folders and conversations")
     internal func clearsSearchIndexWithoutTouchingRootsOrConversations() async throws {
-        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
-        let database = AssistantDatabase(databaseURL: databaseURL)
+        let fixture = try DatabaseFixture()
+        defer { fixture.remove() }
+        let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
         let root = AuthorizedRoot(
             id: FolderIndexTestConstants.rootID,
@@ -233,7 +226,6 @@ struct FolderIndexingTests {
             limit: AppConstants.Chat.historyLimit
         )
         await database.close()
-        removeDatabaseFiles(at: databaseURL)
 
         #expect(countBeforeClear == 1)
         #expect(countAfterClear == 0)
@@ -243,10 +235,9 @@ struct FolderIndexingTests {
 
     @Test("Database storage size reflects the file actually written to disk")
     internal func reportsDatabaseByteCountFromDisk() async throws {
-        let databaseURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(FolderIndexTestConstants.databaseExtension)
-        let database = AssistantDatabase(databaseURL: databaseURL)
+        let fixture = try DatabaseFixture()
+        defer { fixture.remove() }
+        let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
         let root = AuthorizedRoot(
             id: FolderIndexTestConstants.rootID,
@@ -262,8 +253,7 @@ struct FolderIndexingTests {
         let byteCount = try await database.databaseByteCount()
         await database.close()
         let onDiskSize = try FileManager.default
-            .attributesOfItem(atPath: databaseURL.path)[.size] as? Int64
-        removeDatabaseFiles(at: databaseURL)
+            .attributesOfItem(atPath: fixture.databaseURL.path)[.size] as? Int64
 
         #expect(byteCount > 0)
         #expect(byteCount >= onDiskSize ?? 0)
@@ -299,18 +289,5 @@ struct FolderIndexingTests {
             kind: .pdf
         )
         return [root, biology, transcript]
-    }
-
-    /// Removes the isolated SQLite database and its transient sidecars.
-    /// - Parameter url: Main temporary database URL.
-    private func removeDatabaseFiles(at url: URL) {
-        let fileManager = FileManager.default
-        try? fileManager.removeItem(at: url)
-        try? fileManager.removeItem(
-            at: URL(fileURLWithPath: url.path + DatabaseConstants.writeAheadLogSuffix)
-        )
-        try? fileManager.removeItem(
-            at: URL(fileURLWithPath: url.path + DatabaseConstants.sharedMemorySuffix)
-        )
     }
 }

@@ -130,28 +130,3 @@ struct ReminderDatabaseTests {
         )
     }
 }
-
-/// Owner of one isolated temporary SQLite database and its directory.
-private struct DatabaseFixture {
-    let directory: URL
-    let databaseURL: URL
-
-    /// Creates an isolated writable directory outside production storage.
-    /// - Throws: A file error when the temporary directory cannot be created.
-    internal init() throws {
-        directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
-        try FileManager.default.createDirectory(
-            at: directory,
-            withIntermediateDirectories: true
-        )
-        databaseURL = directory.appendingPathComponent("assistant.sqlite3")
-    }
-
-    /// Removes only this test's UUID-named temporary directory.
-    internal func remove() {
-        try? FileManager.default.removeItem(at: directory)
-    }
-}
