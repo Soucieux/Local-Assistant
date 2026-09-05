@@ -59,9 +59,11 @@ class FakeTunnel:
     """Provides one deterministic tunnel-local origin."""
 
     def __enter__(self):
+        """Return the fixed tunnel-local origin."""
         return "http://127.0.0.1:49000"
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Close the fake tunnel without suppressing an error."""
         return False
 
 

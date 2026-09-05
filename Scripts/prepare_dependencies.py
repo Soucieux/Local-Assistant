@@ -16,6 +16,7 @@ import urllib.request
 
 ARCHIVE_SOCKET_TIMEOUT_SECONDS = 120
 
+
 def checkout(repository: str, revision: str, destination: pathlib.Path) -> None:
     """Create or reuse one immutable dependency source archive."""
     revision_file = destination / ".local-assistant-revision"

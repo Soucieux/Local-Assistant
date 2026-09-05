@@ -445,7 +445,9 @@ enum SQLStatements {
         """
 
     /// Builds metadata retrieval with hard item kinds applied before the row limit.
-    /// - Parameter kindCount: Number of kind values that will be bound first.
+    /// - Parameters:
+    ///   - kindCount: Number of kind values that will be bound first.
+    ///   - tokenCount: Number of search tokens bound after the kinds.
     /// - Returns: Parameterized metadata search SQL.
     internal static func metadataSearch(kindCount: Int, tokenCount: Int) -> String {
         """

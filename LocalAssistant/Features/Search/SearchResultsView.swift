@@ -67,19 +67,23 @@ private struct ResultRow: View {
     let result: SearchResult
     let isTopResult: Bool
 
+    /// Semantic accent identifying this match's indexed item category.
     private var typeTint: Color {
         DesignTokens.Color.fileType(result.item.kind)
     }
 
+    /// Whether the saved match still resolves to a currently indexed item.
     private var isAvailable: Bool {
         model.isFileMatchAvailable(result.item.id)
     }
 
+    /// Confidence or unavailability wording shown in the status pill.
     private var statusText: String {
         guard isAvailable else { return UIStrings.unavailableMatch }
         return result.confidence >= .medium ? UIStrings.topMatch : UIStrings.possibleMatch
     }
 
+    /// Status-pill color reflecting availability and calibrated confidence.
     private var statusTint: Color {
         guard isAvailable else { return DesignTokens.Color.destructive }
         return result.confidence >= .medium

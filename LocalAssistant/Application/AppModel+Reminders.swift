@@ -7,6 +7,7 @@ private struct ConnectorAppRelease: Equatable {
     let version: String
     let build: String
 
+    /// Names this release the way every setup message refers to it.
     var displayName: String {
         ReminderStrings.connectorReleaseDisplayName(version: version, build: build)
     }

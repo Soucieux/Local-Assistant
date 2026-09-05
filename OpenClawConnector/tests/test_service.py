@@ -21,6 +21,7 @@ class FakeWorkflow:
         self.documents = []
 
     def invoke(self, document):
+        """Record the request and return one complete snapshot response."""
         self.documents.append(document)
         return {
             constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
@@ -35,6 +36,7 @@ class LowercaseTransport:
     """Echo one response only after Swift-style UUIDs are canonicalized."""
 
     def send_reminder(self, document):
+        """Return one response only after both UUIDs arrive canonicalized."""
         task_id = document[constants.FIELD_TASK_ID]
         idempotency_key = document[constants.FIELD_IDEMPOTENCY_KEY]
         if task_id != task_id.lower() or idempotency_key != idempotency_key.lower():
@@ -52,6 +54,7 @@ class ServiceTests(unittest.TestCase):
     """Verify launchd runs create only a due complete snapshot."""
 
     def test_due_schedule_publishes_one_complete_snapshot_and_stops(self) -> None:
+        """A due launchd run publishes one snapshot and reports itself stopped."""
         with tempfile.TemporaryDirectory() as temporary_directory:
             spool_directory = Path(temporary_directory) / "spool"
             spool_directory.mkdir()

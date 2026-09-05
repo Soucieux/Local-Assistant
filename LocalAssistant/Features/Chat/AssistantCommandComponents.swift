@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Presentational subviews, button styles, and shapes used by the command surface.
-///
-/// Each type manages its own environment and state; none reads AssistantCommandView's
-/// private members, so they live apart from its input-handling logic.
+// Presentational subviews, button styles, and shapes used by the command surface.
+//
+// Each type manages its own environment and state; none reads AssistantCommandView's
+// private members, so they live apart from its input-handling logic.
+
 /// Compact live-indexing strip that preserves pause and activity controls.
 struct CommandIndexingStrip: View {
     @Environment(AppModel.self) private var model

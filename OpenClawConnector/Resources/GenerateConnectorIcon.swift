@@ -58,13 +58,15 @@ enum GenerateConnectorIcon {
     }
 }
 
+/// Failure raised while drawing or encoding the connector icon.
 private enum IconGenerationError: LocalizedError {
     case missingOutputPath
     case gradientUnavailable
     case symbolUnavailable
     case encodingFailed
 
-    var errorDescription: String? {
+    /// Returns the exact release-preparation failure.
+    internal var errorDescription: String? {
         switch self {
         case .missingOutputPath: "An output PNG path is required."
         case .gradientUnavailable: "The connector icon gradient could not be created."

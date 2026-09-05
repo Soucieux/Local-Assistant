@@ -166,6 +166,7 @@ extension ConnectorSetupView {
             .foregroundStyle(ConnectorDesignSystem.successGreen)
             .fixedSize(horizontal: false, vertical: true)
     }
+
     /// Shows one credential-free readiness fact with text and symbol.
     /// - Parameters:
     ///   - title: Name of the readiness fact being reported.

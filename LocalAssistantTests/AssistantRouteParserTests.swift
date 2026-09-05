@@ -343,7 +343,7 @@ struct AssistantRouteParserTests {
     }
 
     @Test("The fallback plan recovers file types from the user's question")
-    internal func inferssKindsInFallbackPlan() {
+    internal func infersKindsInFallbackPlan() {
         let output = "[[SEARCH_LOCAL_FILES]]{broken"
         let parsed = plan(parser.parse(modelOutput: output, originalQuestion: "find the roof invoice pdf"))
         #expect(parsed?.filter.kinds.contains(.pdf) == true)

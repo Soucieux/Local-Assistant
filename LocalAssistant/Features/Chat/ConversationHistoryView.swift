@@ -161,14 +161,17 @@ struct ConversationHistoryView: View {
 private struct MessageBubble: View {
     let message: ChatMessage
 
+    /// Whether the message was authored by the person using the app.
     private var isUser: Bool {
         message.role == .user
     }
 
+    /// Visible author name shown above the message text.
     private var senderLabel: String {
         isUser ? UIStrings.userMessageSender : UIStrings.assistantMessageSender
     }
 
+    /// Author-label color that stays readable on each role's surface.
     private var senderLabelColor: Color {
         isUser ? Color.white.opacity(0.78) : DesignTokens.Color.commandAccent
     }

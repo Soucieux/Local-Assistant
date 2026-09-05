@@ -286,6 +286,7 @@ struct ReminderSpoolTests {
     ///   - lastSuccessAt: Optional successful request timestamp.
     ///   - lastError: Optional connector failure detail.
     ///   - running: Whether the connector reports an active run loop.
+    ///   - runtimeContractVersion: Contract version the status document declares.
     /// - Throws: A local encoding or filesystem error.
     private func writeStatus(
         to root: URL,

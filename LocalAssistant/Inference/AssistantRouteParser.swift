@@ -200,7 +200,9 @@ struct AssistantRouteParser: Sendable {
     /// The model is asked for a doubled bracket marker but does not reliably reproduce the
     /// brackets, so the marker is matched by its token instead of by literal text. Treating a
     /// near miss as conversation showed the reader the raw marker and payload as the answer.
-    /// - Parameter output: Cleaned model output.
+    /// - Parameters:
+    ///   - output: Cleaned model output.
+    ///   - token: Routing marker token the payload must follow.
     /// - Returns: The JSON payload, or `nil` when the output is ordinary conversation.
     private func routingPayload(in output: String, token: String) -> String? {
         let afterBrackets = output.drop {

@@ -7,6 +7,7 @@ struct IndexActivityView: View {
     @State private var selectedRootID: UUID?
     @State private var selectedRunState: IndexingRunState?
 
+    /// Builds the activity header, live banner, summary metrics, filters, and history.
     var body: some View {
         ZStack {
             CompanionCanvasBackground()
@@ -458,6 +459,7 @@ private struct IndexingRunRow: View {
     let run: IndexingRunRecord
     @State private var isExpanded = false
 
+    /// Builds one retained run summary that expands into its file-level results.
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
             LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
