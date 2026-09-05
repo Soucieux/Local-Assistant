@@ -232,6 +232,9 @@ extension AssistantDatabase {
     }
 
     /// Deletes vector rows before their parent passage rows disappear.
+    ///
+    /// A re-indexed document deletes one vector per extracted passage, so a single checked-out
+    /// statement is rebound for each row rather than checked out again for every one of them.
     /// - Parameter itemID: Parent item identifier.
     /// - Throws: A local database error when deletion fails.
     internal func deleteVectors(itemID: UUID) throws {
@@ -242,9 +245,12 @@ extension AssistantDatabase {
         while try step(rowsStatement) {
             rowIDs.append(sqlite3_column_int64(rowsStatement, 0))
         }
+        guard rowIDs.isEmpty == false else { return }
+
+        let deleteStatement = try preparedStatement(SQLStatements.deleteVector)
+        defer { recycle(deleteStatement) }
         for rowID in rowIDs {
-            let deleteStatement = try preparedStatement(SQLStatements.deleteVector)
-            defer { recycle(deleteStatement) }
+            sqlite3_reset(deleteStatement)
             try bind(rowID, at: 1, in: deleteStatement)
             try stepDone(deleteStatement)
         }
