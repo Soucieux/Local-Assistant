@@ -24,8 +24,4 @@ enum ResponseMarkdownConstants {
         static let minimumDividerLength = 3
         static let maximumHeadingLevel = 6
     }
-
-    enum Presentation {
-        static let bullet = "•"
-    }
 }

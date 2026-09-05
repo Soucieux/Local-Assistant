@@ -7,6 +7,7 @@ enum AppConstants {
         static let space = " "
         static let newline = "\n"
         static let ellipsis = "…"
+        static let bullet = "•"
     }
 
     enum Identity {

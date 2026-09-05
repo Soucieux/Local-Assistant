@@ -193,7 +193,7 @@ private struct ResponseMarkdownListView: View {
         if ordered {
             return String(index + 1) + ResponseMarkdownConstants.Syntax.orderedMarkerSuffix
         }
-        return ResponseMarkdownConstants.Presentation.bullet
+        return AppConstants.Text.bullet
     }
 }
 
