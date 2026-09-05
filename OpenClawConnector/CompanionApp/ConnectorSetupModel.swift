@@ -69,12 +69,14 @@ final class ConnectorSetupModel: ObservableObject {
     internal var transferCommand: String {
         let host = sshHost.trimmingCharacters(in: .whitespacesAndNewlines)
         let port = sshPort.trimmingCharacters(in: .whitespacesAndNewlines)
+        let addressToken = ConnectorSetupConstants.Text.transferAddressToken
+        let portToken = ConnectorSetupConstants.Text.transferPortToken
         return ConnectorSetupConstants.Text.transferCommandTemplate
             .replacingOccurrences(
-                of: "SERVER_ADDRESS",
-                with: host.isEmpty ? "SERVER_ADDRESS" : host
+                of: addressToken,
+                with: host.isEmpty ? addressToken : host
             )
-            .replacingOccurrences(of: "SSH_PORT", with: port.isEmpty ? "SSH_PORT" : port)
+            .replacingOccurrences(of: portToken, with: port.isEmpty ? portToken : port)
     }
 
     /// Loads reusable public values and Keychain-presence flags from the bundled runtime.
@@ -405,14 +407,16 @@ final class ConnectorSetupModel: ObservableObject {
         }
         let hostKey = sshHostKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let fields = hostKey.split(whereSeparator: \.isWhitespace)
-        let decodedHostKey = fields.count == 2
+        let fieldCount = ConnectorSetupConstants.Configuration.sshHostKeyFieldCount
+        let decodedHostKey = fields.count == fieldCount
             ? Data(base64Encoded: String(fields[1]))
             : nil
-        guard fields.count == 2,
+        guard fields.count == fieldCount,
               String(fields[0]) == ConnectorSetupConstants.Configuration.publicKeyPrefix
                 .trimmingCharacters(in: .whitespaces),
               let decodedHostKey,
-              decodedHostKey.count >= 32 else {
+              decodedHostKey.count
+                >= ConnectorSetupConstants.Configuration.sshHostKeyMinimumBytes else {
             throw ConnectorSetupError.message(ConnectorSetupConstants.Text.sshHostKeyInvalid)
         }
         return (host, port, hostKey)
@@ -480,7 +484,8 @@ final class ConnectorSetupModel: ObservableObject {
               fileManager.fileExists(atPath: publicKey.path),
               let attributes = try? fileManager.attributesOfItem(atPath: privateKey.path),
               let permissions = attributes[.posixPermissions] as? NSNumber,
-              permissions.intValue & 0o077 == 0 else {
+              permissions.intValue
+                & ConnectorSetupConstants.Configuration.groupAndOtherPermissionMask == 0 else {
             throw ConnectorSetupError.message(
                 ConnectorSetupConstants.Text.sshIdentityMissing
             )
@@ -636,7 +641,11 @@ final class ConnectorSetupModel: ObservableObject {
                     ).path
             ],
             ConnectorSetupConstants.LaunchAgent.startCalendarIntervalKey:
-                stride(from: 0, to: 24, by: 2).map {
+                stride(
+                    from: ConnectorSetupConstants.LaunchAgent.scheduleFirstHour,
+                    to: ConnectorSetupConstants.LaunchAgent.scheduleHourLimit,
+                    by: ConnectorSetupConstants.LaunchAgent.scheduleHourInterval
+                ).map {
                     [ConnectorSetupConstants.LaunchAgent.hourKey: $0]
                 },
             ConnectorSetupConstants.LaunchAgent.processTypeKey:

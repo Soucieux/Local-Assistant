@@ -145,6 +145,7 @@ enum ReminderConstants {
         static let needToDoSequence = ["need", "to", "do"]
         static let infinitiveToken = "to"
         static let reminderDefinitionPrefix = ["what", "is"]
+        static let reminderDefinitionMaximumTokenCount = 5
         static let confirmationAffirmativePhrases: Set<String> = [
             "yes", "yes please", "confirm", "continue", "please continue", "proceed",
             "please proceed", "go ahead", "send it", "do it", "ok", "okay", "sure"

@@ -79,6 +79,9 @@ enum ConnectorSetupConstants {
         static let sshKeyType = "ed25519"
         static let sshKeyComment = "local-assistant-connector"
         static let publicKeyPrefix = "ssh-ed25519 "
+        static let sshHostKeyFieldCount = 2
+        static let sshHostKeyMinimumBytes = 32
+        static let groupAndOtherPermissionMask = 0o077
     }
 
     enum LaunchAgent {
@@ -98,6 +101,9 @@ enum ConnectorSetupConstants {
         static let serviceTargetSeparator = "/"
         static let bootstrap = "bootstrap"
         static let bootout = "bootout"
+        static let scheduleFirstHour = 0
+        static let scheduleHourLimit = 24
+        static let scheduleHourInterval = 2
     }
 
     enum Symbol {
@@ -217,6 +223,8 @@ enum ConnectorSetupConstants {
         ]
         static let transferCommandTemplate =
             "scp -P SSH_PORT \"OpenClaw Server Setup.zip\" \"local-assistant-connector.pub\" SERVER_USER@SERVER_ADDRESS:~/"
+        static let transferAddressToken = "SERVER_ADDRESS"
+        static let transferPortToken = "SSH_PORT"
         static let copyTransferCommand = "Copy File Transfer Command"
         static let serverSetupQuestion = "The server setup stops before completion."
         static let serverSetupAnswers = [

@@ -362,7 +362,7 @@ struct AssistantRouteParser: Sendable {
     /// - Parameter tokens: Normalized request tokens.
     /// - Returns: `true` for a short "what is a reminder" definition form.
     private func isReminderDefinition(_ tokens: [String]) -> Bool {
-        guard tokens.count <= 5,
+        guard tokens.count <= ReminderConstants.Routing.reminderDefinitionMaximumTokenCount,
               tokens.starts(with: ReminderConstants.Routing.reminderDefinitionPrefix),
               let last = tokens.last else {
             return false

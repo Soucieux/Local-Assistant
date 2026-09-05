@@ -216,7 +216,7 @@ struct OpenClawSetupView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
             ForEach(Array(bullets.enumerated()), id: \.offset) { _, bullet in
                 HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.small) {
-                    Text("•")
+                    Text(ResponseMarkdownConstants.Presentation.bullet)
                         .font(.callout.weight(.bold))
                         .foregroundStyle(DesignTokens.Color.commandAccent)
                     Text(bullet)
