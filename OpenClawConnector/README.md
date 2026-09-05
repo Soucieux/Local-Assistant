@@ -24,7 +24,7 @@ macOS Keychain, and the private SSH key stays in Connector Application Support.
 
 Current release components:
 
-- Local Assistant and Connector: **v5.2 (build 52)**
+- Local Assistant and Connector: **v5.3 (build 53)**
 - Connector runtime: **v1.9.0**
 - OpenClaw server bridge: **v1.4.0**
 
@@ -161,8 +161,11 @@ source CLI deliberately has no persistent run command.
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-The v4.8 release passed all 39 Connector tests, standalone Swift type checking, the clean packaged
-runtime build, strict project-root, installed, and mounted signature checks, and responsive
+The suite currently contains 40 tests.
+
+Release evidence stays attached to the release that produced it. The v4.8 release passed all 39
+Connector tests it then contained, standalone Swift type checking, the clean packaged runtime
+build, strict project-root, installed, and mounted signature checks, and responsive
 installed-screen inspection at normal and full-screen widths. Its disk image contains no saved
 server values or credentials; those remain outside the application bundle in Connector Application
 Support and macOS Keychain.

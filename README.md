@@ -295,10 +295,13 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 <!-- project-control:section=release -->
 ### Current release status
 
-The current source release is **v5.2 (build 52)**. It assigns release numbers to three previously
-unnumbered Local Assistant change batches and reconciles the complete version index without
-changing application behavior, model storage, or the privacy boundary. Live multilingual voice
-review, full disconnected runtime observation, and visual screen inspection remain manual checks.
+The current source release is **v5.3 (build 53)**. A byte-to-byte review of every project file
+found two Connector reliability defects and corrected both: the launchd job was registered outside
+`~/Library/LaunchAgents`, so macOS stopped loading it after a logout, and a failed update left a
+previously working job unloaded. The release also shares duplicated link-inerting and test-database
+code and names the remaining inline literals. No signed build has been produced for this release:
+the project root still holds the v5.2 build 52 applications and disk image, so the corrected
+launchd registration reaches an installation only after a rebuild and a Connector setup run.
 
 **Change-history numbering:** Local Assistant uses marketing versions and integer build numbers.
 Follow the repository-wide [version and build-number policy](../README.md#version-and-build-number-policy).
@@ -306,16 +309,16 @@ Follow the repository-wide [version and build-number policy](../README.md#versio
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
-| Release area | v5.2 status | Meaning |
+| Release area | v5.3 status | Meaning |
 |---|---|---|
-| Source implementation | Complete | Local Assistant and OpenClaw Connector advance to v5.2/build 52. Runtime behavior, model storage, Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged. |
-| Documentation | Complete | The 52-release index now records the August 29 work as v5.0/build 50, the architecture work as v5.1/build 51, and this reconciliation as v5.2/build 52. |
-| Release build | Complete | The clean offline build produced signed v5.2 build 52 copies of Local Assistant and OpenClaw Connector plus the clean-Mac disk image. Both bundles report the same release and pass strict deep signature validation. |
-| Automated tests | Not repeated | This checkpoint changes documentation and release metadata only. The offline Release build compiled the complete app source; behavior tests remain recorded under the releases that introduced that behavior. |
-| Static privacy audit | Complete | The signed v5.2 application passed the offline-boundary audit: the sandbox retains no network entitlement and the executable links no forbidden networking library. The audit still reports `huggingface.co` only as an unreachable compiled-in string with no reachable code path. |
-| Interface inspection | Not repeated | No copy, layout, or visual styling changed in this checkpoint. |
+| Source implementation | Complete | Local Assistant and OpenClaw Connector advance to v5.3/build 53. Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged because no wire contract changed. |
+| Documentation | Complete | Records v5.3/build 53 here and in the repository README, and separates the current Connector test count from the v4.8 release evidence it was still quoting. |
+| Release build | Not run | No signed build was produced. The project root retains the v5.2 build 52 applications and disk image, so the corrected launchd registration takes effect only after a rebuild and a Connector setup run. |
+| Automated tests | Complete | 143 macOS test cases and all 40 Connector tests pass on this source, unchanged after the shared test-fixture refactor. The Connector companion also type-checks standalone. |
+| Static privacy audit | Not repeated | No entitlement, linkage, or network-facing code changed, and the audit runs against a signed build that this checkpoint does not produce. |
+| Interface inspection | Not repeated | No copy, layout, or visual styling changed. |
 | Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Complete | The v5.2 disk image passes `hdiutil verify`. Its SHA-256 is `1665f92b8bc45855d70a9bed585f3c76f166ebed7e19ccbeb396008c32c6fa63`. |
+| Release artifact integrity | Not applicable | No new disk image was produced; the retained v5.2 image is unchanged. |
 
 </details>
 
@@ -324,6 +327,7 @@ Follow the repository-wide [version and build-number policy](../README.md#versio
 
 | Date | Updates | Git evidence |
 |---|---|---|
+| 2026-09-04 | Released v5.3/build 53 after a byte-to-byte review of all 184 project files. Corrected the Connector launchd registration path and its failed-update restart, shared the inert Markdown parser and the temporary test database fixture, and named the remaining inline literals. No signed build was produced, so the project root retains the v5.2 artifacts. | This v5.3/build 53 commit |
 | 2026-09-02 | Linked Local Assistant's version-and-build declaration to the centralized repository policy and removed duplicated generic numbering rules. Application behavior, metadata, artifacts, and release numbers are unchanged. | This documentation commit |
 | 2026-08-31 | Released v5.2/build 52 while reconciling the complete v0.1–v5.2 release index with retained Git records and preserving the historical v3.10/build-40 alias. Prepared the root-only development-guardrail consolidation separately and retained upstream llama.cpp guidance as CONTRIBUTOR_GUIDANCE.md. Application behavior, shared models, and deployed setup are unchanged. | This v5.2/build 52 documentation commit |
 | 2026-08-31 | Released v5.1/build 51 with category-grouped architecture coverage, one technology or concept per row, and stable README section mappings. | `6ed828e`, `68f9787` |
@@ -338,9 +342,9 @@ is retained as local work, not represented as a new committed model setup.
 ### Version index
 
 <details>
-<summary>Complete version history (v5.2 to v0.1)</summary>
+<summary>Complete version history (v5.3 to v0.1)</summary>
 
-The entries below preserve all 52 documented releases. They are collapsed so current setup
+The entries below preserve all 53 documented releases. They are collapsed so current setup
 and architecture remain easy to scan. Git index evidence names a commit that retains the row,
 not an independently verified release date: several intermediate releases were committed together.
 Project Control displays the first 30 mapped history entries; this README retains the full record.
@@ -355,6 +359,7 @@ entry names what that release changed and links to its full notes.
 
 | Version | What changed | Git index evidence |
 |---|---|---|
+| v5.3 | [Connector launchd reliability and shared code](#v53--connector-launchd-reliability-and-shared-code) | This v5.3/build 53 commit |
 | v5.2 | [Release-history reconciliation](#v52--release-history-reconciliation) | This v5.2/build 52 documentation commit |
 | v5.1 | [Explicit architecture inventory and README mappings](#v51--explicit-architecture-inventory-and-readme-mappings) | `68f9787` (2026-08-31) |
 | v5.0 | [Final deterministic ordering and indexing cleanup](#v50--final-deterministic-ordering-and-indexing-cleanup) | `c3f8154` (2026-08-29) |
@@ -410,6 +415,32 @@ entry names what that release changed and links to its full notes.
 
 To confirm which release an application is, read `CFBundleShortVersionString` from its
 `Info.plist`.
+
+### v5.3 — Connector launchd reliability and shared code
+
+- Registers the Connector's one-shot launchd job in `~/Library/LaunchAgents` instead of a
+  `LaunchAgents` folder directly inside the home folder. Only the former is loaded automatically
+  at login, so the job stopped running after a logout and its scheduled reminder refresh went
+  silent until setup was opened again.
+- Unloads that job by launchd service target rather than by property-list path, so an existing
+  installation registered at the superseded location is stopped and its stale file removed before
+  the corrected one is registered. Without this an update would fail to bootstrap a duplicate label.
+- Restarts the installed job when an update or re-verification fails. Both flows stop the job
+  before replacing the runtime, so a transient server failure previously left a working Connector
+  unloaded. The job is restored only when an installed runtime is actually present.
+- Shares one inert inline-Markdown parser between the assistant document and the user bubble. The
+  two copies were byte-identical, and both must strip link destinations from untrusted text.
+- Shares one temporary database fixture across the reminder and folder-indexing tests, replacing
+  five duplicated set-up blocks and removing the helper and constant they needed.
+- Names the remaining inline literals: the Connector host-key field count and minimum length, the
+  owner-only permission mask, the launchd schedule hours, the file-transfer template tokens, the
+  reminder-definition token count, and one bullet glyph.
+- Completes the missing documentation blocks and access modifiers, corrects one misspelled test
+  name, and restores the separations that made a file overview read as a type's own documentation.
+- Advances Local Assistant and OpenClaw Connector to v5.3 build 53. Connector runtime v1.9.0,
+  server bridge v1.4.0, and runtime contract v3 are unchanged because no wire contract changed.
+- Passed all 143 macOS test cases and all 40 Connector tests, plus a standalone Connector type
+  check. No signed release build was produced for this checkpoint.
 
 ### v5.2 — Release-history reconciliation
 
