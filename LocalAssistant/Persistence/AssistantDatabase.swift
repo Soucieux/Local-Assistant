@@ -6,6 +6,8 @@ actor AssistantDatabase {
     internal let encoder = JSONEncoder()
     internal let decoder = JSONDecoder()
     private let databaseURLOverride: URL?
+    private var idleStatements: [String: OpaquePointer] = [:]
+    private var activeStatements: [OpaquePointer: String] = [:]
 
     /// Creates private storage with the production path or a focused-test override.
     /// - Parameter databaseURL: Optional explicit database URL for an isolated native harness.
@@ -51,6 +53,7 @@ actor AssistantDatabase {
     /// Closes the private SQLite connection.
     internal func close() {
         guard let connection else { return }
+        finalizeStatements()
         sqlite3_close(connection)
         self.connection = nil
     }
@@ -60,7 +63,7 @@ actor AssistantDatabase {
     /// - Throws: A local database error when the record cannot be saved.
     internal func upsertRoot(_ root: AuthorizedRoot) throws {
         let statement = try preparedStatement(SQLStatements.upsertRoot)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(root.id.uuidString, at: 1, in: statement)
         try bind(root.displayName, at: 2, in: statement)
         try bind(root.lastKnownPath, at: 3, in: statement)
@@ -76,7 +79,7 @@ actor AssistantDatabase {
     /// - Throws: A local database error when records cannot be read.
     internal func fetchRoots() throws -> [AuthorizedRoot] {
         let statement = try preparedStatement(SQLStatements.fetchRoots)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var roots: [AuthorizedRoot] = []
 
         while try step(statement) {
@@ -108,7 +111,7 @@ actor AssistantDatabase {
                 try deleteVectors(itemID: item.id)
             }
             let statement = try preparedStatement(SQLStatements.deleteRoot)
-            defer { sqlite3_finalize(statement) }
+            defer { recycle(statement) }
             try bind(id.uuidString, at: 1, in: statement)
             try stepDone(statement)
         }
@@ -128,11 +131,45 @@ actor AssistantDatabase {
         }
     }
 
-    /// Creates a prepared statement on the active connection.
-    /// - Parameter sql: Centralized SQL text.
-    /// - Returns: A prepared SQLite statement.
+    /// Checks out a prepared statement for one operation, reusing a cached plan when possible.
+    ///
+    /// Every caller pairs this with `recycle(_:)`, so a statement is either idle in the cache or
+    /// checked out by exactly one operation. Reusing the plan removes a parse and code generation
+    /// from each call, which dominates the per-file writes of a large scan or reminder sync.
+    /// Only fixed SQL belongs here, because the cache never evicts: SQL built per call goes to
+    /// `singleUseStatement(_:)`.
+    /// - Parameter sql: Fixed SQL text, which also keys the cache.
+    /// - Returns: A prepared SQLite statement with no bindings applied.
     /// - Throws: A local database error when preparation fails.
     internal func preparedStatement(_ sql: String) throws -> OpaquePointer {
+        if let idle = idleStatements.removeValue(forKey: sql) {
+            activeStatements[idle] = sql
+            return idle
+        }
+        let statement = try prepare(sql)
+        activeStatements[statement] = sql
+        return statement
+    }
+
+    /// Prepares SQL that is assembled per call, without ever caching it.
+    ///
+    /// The cache is keyed by SQL text, so a statement whose placeholder count follows the query —
+    /// a token list, a batch of identifiers, a set of item kinds — would leave a permanent entry
+    /// for every distinct width the app ever sees. Those statements run once per user query rather
+    /// than once per file, so preparing each one costs nothing measurable. Pass any SQL built by a
+    /// `SQLStatements` function here; `recycle(_:)` finalizes it instead of caching it.
+    /// - Parameter sql: SQL assembled by one of the `SQLStatements` builders.
+    /// - Returns: A prepared SQLite statement owned by this call alone.
+    /// - Throws: A local database error when preparation fails.
+    internal func singleUseStatement(_ sql: String) throws -> OpaquePointer {
+        try prepare(sql)
+    }
+
+    /// Compiles one SQL string against the open connection.
+    /// - Parameter sql: SQL text to compile.
+    /// - Returns: A newly prepared SQLite statement.
+    /// - Throws: A local database error when no connection is open or compilation fails.
+    private func prepare(_ sql: String) throws -> OpaquePointer {
         guard let connection else {
             throw LocalAssistantError.database(DatabaseConstants.missingDatabase)
         }
@@ -147,6 +184,43 @@ actor AssistantDatabase {
             )
         }
         return statement
+    }
+
+    /// Returns a checked-out statement to the cache once its operation is finished.
+    ///
+    /// Clearing the bindings releases values the statement still references, so a cached insert
+    /// does not keep the last embedding blob alive. A statement is finalized instead of cached
+    /// when the same SQL is already idle, which keeps one plan per statement even if a future
+    /// caller checks the same SQL out twice at once.
+    /// - Parameter statement: Statement previously returned by `preparedStatement(_:)`.
+    internal func recycle(_ statement: OpaquePointer) {
+        guard let sql = activeStatements.removeValue(forKey: statement) else {
+            sqlite3_finalize(statement)
+            return
+        }
+        sqlite3_reset(statement)
+        sqlite3_clear_bindings(statement)
+        guard idleStatements[sql] == nil else {
+            sqlite3_finalize(statement)
+            return
+        }
+        idleStatements[sql] = statement
+    }
+
+    /// Finalizes every statement this connection prepared.
+    ///
+    /// Each database operation runs to completion without suspending the actor, so nothing is
+    /// checked out when the connection closes. Both maps are drained regardless, because a
+    /// surviving statement would make `sqlite3_close` fail and leak the connection.
+    private func finalizeStatements() {
+        for statement in idleStatements.values {
+            sqlite3_finalize(statement)
+        }
+        idleStatements.removeAll()
+        for statement in activeStatements.keys {
+            sqlite3_finalize(statement)
+        }
+        activeStatements.removeAll()
     }
 
     /// Runs one or more SQL statements without returned rows.

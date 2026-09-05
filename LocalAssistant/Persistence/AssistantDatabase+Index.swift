@@ -41,7 +41,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the lookup fails.
     internal func fetchItem(id: UUID) throws -> IndexedItem? {
         let statement = try preparedStatement(SQLStatements.fetchItem)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(id.uuidString, at: 1, in: statement)
         guard try step(statement) else { return nil }
         return try readIndexedItem(statement)
@@ -65,8 +65,8 @@ extension AssistantDatabase {
                 identifiers.count
             )
             let batch = identifiers[lowerBound..<upperBound]
-            let statement = try preparedStatement(SQLStatements.fetchItems(idCount: batch.count))
-            defer { sqlite3_finalize(statement) }
+            let statement = try singleUseStatement(SQLStatements.fetchItems(idCount: batch.count))
+            defer { recycle(statement) }
             for (offset, id) in batch.enumerated() {
                 try bind(id.uuidString, at: Int32(offset + 1), in: statement)
             }
@@ -85,7 +85,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when rows cannot be read.
     internal func fetchItems(rootID: UUID) throws -> [IndexedItem] {
         let statement = try preparedStatement(SQLStatements.fetchItemsForRoot)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(rootID.uuidString, at: 1, in: statement)
         var items: [IndexedItem] = []
         while try step(statement) {
@@ -102,7 +102,7 @@ extension AssistantDatabase {
             for item in staleItems {
                 try deleteVectors(itemID: item.id)
                 let statement = try preparedStatement(SQLStatements.deleteItem)
-                defer { sqlite3_finalize(statement) }
+                defer { recycle(statement) }
                 try bind(item.id.uuidString, at: 1, in: statement)
                 try stepDone(statement)
             }
@@ -114,7 +114,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the row cannot be saved.
     private func upsertItem(_ item: IndexedItem) throws {
         let statement = try preparedStatement(SQLStatements.upsertItem)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(item.id.uuidString, at: 1, in: statement)
         try bind(item.rootID.uuidString, at: 2, in: statement)
         try bind(item.parentID?.uuidString, at: 3, in: statement)
@@ -139,7 +139,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when insertion fails.
     private func insertChunk(_ chunk: ContentChunk) throws -> Int64 {
         let statement = try preparedStatement(SQLStatements.insertChunk)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(chunk.id.uuidString, at: 1, in: statement)
         try bind(chunk.itemID.uuidString, at: 2, in: statement)
         try bind(chunk.ordinal, at: 3, in: statement)
@@ -160,7 +160,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when insertion fails.
     private func insertFTS(chunk: ContentChunk, item: IndexedItem) throws {
         let statement = try preparedStatement(SQLStatements.insertFTS)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(chunk.id.uuidString, at: 1, in: statement)
         try bind(item.id.uuidString, at: 2, in: statement)
         try bind(item.displayName, at: 3, in: statement)
@@ -179,7 +179,7 @@ extension AssistantDatabase {
             throw LocalAssistantError.database(DatabaseConstants.vectorRegistrationFailure)
         }
         let statement = try preparedStatement(SQLStatements.insertVector)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(rowID, at: 1, in: statement)
         let result = embedding.withUnsafeBytes { bytes in
             sqlite3_bind_blob(statement, 2, bytes.baseAddress, Int32(bytes.count), DatabaseConstants.transientDestructor)
@@ -193,7 +193,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when deletion fails.
     private func deleteFTS(itemID: UUID) throws {
         let statement = try preparedStatement(SQLStatements.deleteFTSForItem)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(itemID.uuidString, at: 1, in: statement)
         try stepDone(statement)
     }
@@ -203,7 +203,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when deletion fails.
     private func deleteChunks(itemID: UUID) throws {
         let statement = try preparedStatement(SQLStatements.deleteChunksForItem)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(itemID.uuidString, at: 1, in: statement)
         try stepDone(statement)
     }
@@ -226,7 +226,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the count cannot be read.
     internal func indexedFileCount() throws -> Int {
         let statement = try preparedStatement(SQLStatements.countIndexedFiles)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         guard try step(statement) else { return 0 }
         return Int(sqlite3_column_int64(statement, 0))
     }
@@ -236,7 +236,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when deletion fails.
     internal func deleteVectors(itemID: UUID) throws {
         let rowsStatement = try preparedStatement(SQLStatements.fetchChunkRowsForItem)
-        defer { sqlite3_finalize(rowsStatement) }
+        defer { recycle(rowsStatement) }
         try bind(itemID.uuidString, at: 1, in: rowsStatement)
         var rowIDs: [Int64] = []
         while try step(rowsStatement) {
@@ -244,7 +244,7 @@ extension AssistantDatabase {
         }
         for rowID in rowIDs {
             let deleteStatement = try preparedStatement(SQLStatements.deleteVector)
-            defer { sqlite3_finalize(deleteStatement) }
+            defer { recycle(deleteStatement) }
             try bind(rowID, at: 1, in: deleteStatement)
             try stepDone(deleteStatement)
         }

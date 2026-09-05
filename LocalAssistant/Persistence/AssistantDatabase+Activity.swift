@@ -8,7 +8,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the preference cannot be saved.
     internal func setMonitoringEnabled(_ isEnabled: Bool, rootID: UUID) throws {
         let statement = try preparedStatement(SQLStatements.upsertMonitoringState)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(rootID.uuidString, at: 1, in: statement)
         try bind(isEnabled, at: 2, in: statement)
         try bind(Date(), at: 3, in: statement)
@@ -20,7 +20,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when preferences cannot be read.
     internal func fetchPausedMonitoringRootIDs() throws -> Set<UUID> {
         let statement = try preparedStatement(SQLStatements.fetchMonitoringStates)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var paused: Set<UUID> = []
         while try step(statement) {
             guard let rootID = UUID(uuidString: requiredText(statement, column: 0)) else {
@@ -38,7 +38,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the run cannot be inserted.
     internal func insertIndexingRun(_ run: IndexingRunRecord) throws {
         let statement = try preparedStatement(SQLStatements.insertIndexingRun)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(run.id.uuidString, at: 1, in: statement)
         try bind(run.rootID.uuidString, at: 2, in: statement)
         try bind(run.folderName, at: 3, in: statement)
@@ -61,7 +61,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the row cannot be updated.
     internal func updateIndexingRun(_ run: IndexingRunRecord) throws {
         let statement = try preparedStatement(SQLStatements.updateIndexingRun)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(run.state.rawValue, at: 1, in: statement)
         try bind(run.finishedAt, at: 2, in: statement)
         try bind(run.totalItems, at: 3, in: statement)
@@ -79,7 +79,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the item cannot be saved.
     internal func upsertIndexingItem(_ item: IndexingItemRecord) throws {
         let statement = try preparedStatement(SQLStatements.upsertIndexingRunItem)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(item.id.uuidString, at: 1, in: statement)
         try bind(item.runID.uuidString, at: 2, in: statement)
         try bind(item.displayName, at: 3, in: statement)
@@ -110,7 +110,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the event cannot be inserted.
     internal func insertIndexActivityEvent(_ event: IndexActivityEventRecord) throws {
         let statement = try preparedStatement(SQLStatements.insertIndexActivityEvent)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(event.id.uuidString, at: 1, in: statement)
         try bind(event.rootID.uuidString, at: 2, in: statement)
         try bind(event.folderName, at: 3, in: statement)
@@ -124,7 +124,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when rows are malformed or unreadable.
     internal func fetchIndexingRuns() throws -> [IndexingRunRecord] {
         let statement = try preparedStatement(SQLStatements.fetchIndexingRuns)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var runs: [IndexingRunRecord] = []
         while try step(statement) {
             guard let id = UUID(uuidString: requiredText(statement, column: 0)),
@@ -161,7 +161,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when rows are malformed or unreadable.
     internal func fetchIndexingItems(runID: UUID) throws -> [IndexingItemRecord] {
         let statement = try preparedStatement(SQLStatements.fetchIndexingRunItems)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(runID.uuidString, at: 1, in: statement)
         var items: [IndexingItemRecord] = []
         while try step(statement) {
@@ -190,7 +190,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when rows are malformed or unreadable.
     internal func fetchIndexActivityEvents() throws -> [IndexActivityEventRecord] {
         let statement = try preparedStatement(SQLStatements.fetchIndexActivityEvents)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var events: [IndexActivityEventRecord] = []
         while try step(statement) {
             guard let id = UUID(uuidString: requiredText(statement, column: 0)),
@@ -217,12 +217,12 @@ extension AssistantDatabase {
     internal func purgeIndexActivity(before cutoff: Date) throws {
         try inTransaction {
             let runs = try preparedStatement(SQLStatements.deleteExpiredIndexingRuns)
-            defer { sqlite3_finalize(runs) }
+            defer { recycle(runs) }
             try bind(cutoff, at: 1, in: runs)
             try stepDone(runs)
 
             let events = try preparedStatement(SQLStatements.deleteExpiredIndexActivityEvents)
-            defer { sqlite3_finalize(events) }
+            defer { recycle(events) }
             try bind(cutoff, at: 1, in: events)
             try stepDone(events)
         }
@@ -234,7 +234,7 @@ extension AssistantDatabase {
     internal func stopInterruptedIndexingRuns(at date: Date) throws {
         try inTransaction {
             let items = try preparedStatement(SQLStatements.resetInterruptedIndexingItems)
-            defer { sqlite3_finalize(items) }
+            defer { recycle(items) }
             try bind(IndexingItemState.newIndexing.rawValue, at: 1, in: items)
             try bind(IndexingItemState.newWaiting.rawValue, at: 2, in: items)
             try bind(IndexingItemState.modifiedUpdating.rawValue, at: 3, in: items)
@@ -246,7 +246,7 @@ extension AssistantDatabase {
             try stepDone(items)
 
             let runs = try preparedStatement(SQLStatements.stopInterruptedIndexingRuns)
-            defer { sqlite3_finalize(runs) }
+            defer { recycle(runs) }
             try bind(IndexingRunState.stopped.rawValue, at: 1, in: runs)
             try bind(date, at: 2, in: runs)
             try bind(IndexingRunState.running.rawValue, at: 3, in: runs)

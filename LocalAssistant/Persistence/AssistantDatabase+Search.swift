@@ -12,7 +12,7 @@ extension AssistantDatabase {
         var items: [IndexedItem] = []
         for kind in kinds.sorted(by: { $0.rawValue < $1.rawValue }) {
             let statement = try preparedStatement(SQLStatements.fetchItemsByKind)
-            defer { sqlite3_finalize(statement) }
+            defer { recycle(statement) }
             try bind(kind.rawValue, at: 1, in: statement)
             try bind(limit, at: 2, in: statement)
             while try step(statement) {
@@ -46,10 +46,10 @@ extension AssistantDatabase {
         let tokens = SearchTextEscaping.tokens(text)
         let prefixPattern = RetrievalConstants.prefixPattern(SearchTextEscaping.escapedLike(text))
         let orderedKinds = orderedKinds(kinds)
-        let statement = try preparedStatement(
+        let statement = try singleUseStatement(
             SQLStatements.metadataSearch(kindCount: orderedKinds.count, tokenCount: tokens.count)
         )
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var bindingIndex = try bindKinds(orderedKinds, in: statement)
         for token in tokens {
             let containsPattern = RetrievalConstants.containsPattern(SearchTextEscaping.escapedLike(token))
@@ -84,10 +84,10 @@ extension AssistantDatabase {
     ) throws -> [IndexedItem] {
         guard folder.kind == .folder, limit > 0 else { return [] }
         let orderedKinds = orderedKinds(kinds)
-        let statement = try preparedStatement(
+        let statement = try singleUseStatement(
             SQLStatements.descendantItems(kindCount: orderedKinds.count)
         )
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(folder.rootID.uuidString, at: 1, in: statement)
         try bind(folder.id.uuidString, at: 2, in: statement)
         let prefix = SearchTextEscaping.escapedLike(
@@ -120,10 +120,10 @@ extension AssistantDatabase {
         let query = SearchTextEscaping.ftsQuery(text)
         guard query.isEmpty == false, limit > 0 else { return [] }
         let orderedKinds = orderedKinds(kinds)
-        let statement = try preparedStatement(
+        let statement = try singleUseStatement(
             SQLStatements.keywordSearch(kindCount: orderedKinds.count)
         )
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var bindingIndex = try bindKinds(orderedKinds, in: statement)
         try bind(query, at: bindingIndex, in: statement)
         bindingIndex += 1
@@ -206,10 +206,10 @@ extension AssistantDatabase {
     ) throws -> [SemanticHit] {
         let boundedNeighborLimit = DatabaseConstants.boundedVectorNeighborCount(neighborLimit)
         guard boundedNeighborLimit > 0 else { return [] }
-        let statement = try preparedStatement(
+        let statement = try singleUseStatement(
             SQLStatements.semanticSearch(kindCount: orderedKinds.count)
         )
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var bindingIndex = try bindKinds(orderedKinds, in: statement)
         let result = embedding.withUnsafeBytes { bytes in
             sqlite3_bind_blob(
@@ -246,7 +246,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the count cannot be read.
     private func vectorRowCount() throws -> Int {
         let statement = try preparedStatement(SQLStatements.vectorCount)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         guard try step(statement) else { return 0 }
         return Int(sqlite3_column_int64(statement, 0))
     }
@@ -259,8 +259,8 @@ extension AssistantDatabase {
     /// - Returns: Number of vectors belonging to those kinds.
     /// - Throws: A local database error when the count cannot be read.
     private func eligibleVectorRowCount(_ kinds: [IndexedItemKind]) throws -> Int {
-        let statement = try preparedStatement(SQLStatements.eligibleVectorCount(kindCount: kinds.count))
-        defer { sqlite3_finalize(statement) }
+        let statement = try singleUseStatement(SQLStatements.eligibleVectorCount(kindCount: kinds.count))
+        defer { recycle(statement) }
         _ = try bindKinds(kinds, in: statement)
         guard try step(statement) else { return 0 }
         return Int(sqlite3_column_int64(statement, 0))

@@ -6,7 +6,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the query cannot complete.
     internal func fetchReminders() throws -> [ReminderItem] {
         let statement = try preparedStatement(SQLStatements.fetchReminders)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var reminders: [ReminderItem] = []
         while try step(statement) {
             guard let ownership = ReminderOwnership(
@@ -41,7 +41,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the query cannot complete.
     internal func reminderContentHashes() throws -> [String: String] {
         let statement = try preparedStatement(SQLStatements.fetchReminderContentHashes)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var hashes: [String: String] = [:]
         while try step(statement) {
             hashes[requiredText(statement, column: 0)] = requiredText(statement, column: 1)
@@ -85,7 +85,7 @@ extension AssistantDatabase {
                 }
             }
             let state = try preparedStatement(SQLStatements.upsertReminderSyncState)
-            defer { sqlite3_finalize(state) }
+            defer { recycle(state) }
             try bind(syncedAt, at: 1, in: state)
             try bind(reminders.count, at: 2, in: state)
             try stepDone(state)
@@ -97,7 +97,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when state cannot be read.
     internal func reminderSyncMetadata() throws -> (date: Date, count: Int)? {
         let statement = try preparedStatement(SQLStatements.fetchReminderSyncState)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         guard try step(statement) else { return nil }
         return (
             date: requiredDate(statement, column: 0),
@@ -115,7 +115,7 @@ extension AssistantDatabase {
         let query = SearchTextEscaping.ftsQuery(text)
         guard query.isEmpty == false, limit > 0 else { return [] }
         let statement = try preparedStatement(SQLStatements.reminderKeywordSearch)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(query, at: 1, in: statement)
         try bind(limit, at: 2, in: statement)
         var identifiers: [String] = []
@@ -140,7 +140,7 @@ extension AssistantDatabase {
             return []
         }
         let statement = try preparedStatement(SQLStatements.reminderSemanticSearch)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         let result = embedding.withUnsafeBytes { bytes in
             sqlite3_bind_blob(
                 statement,
@@ -166,7 +166,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the identifiers cannot be read.
     private func reminderIDs() throws -> Set<String> {
         let statement = try preparedStatement(SQLStatements.fetchReminderIDs)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         var identifiers: Set<String> = []
         while try step(statement) {
             identifiers.insert(requiredText(statement, column: 0))
@@ -179,7 +179,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the row cannot be written.
     private func upsertReminderRecord(_ reminder: ReminderItem) throws {
         let statement = try preparedStatement(SQLStatements.upsertReminder)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(reminder.id, at: 1, in: statement)
         try bind(reminder.text, at: 2, in: statement)
         try bind(reminder.date, at: 3, in: statement)
@@ -202,12 +202,12 @@ extension AssistantDatabase {
     /// - Throws: A local database error when either statement fails.
     private func replaceReminderFTS(_ reminder: ReminderItem) throws {
         let deletion = try preparedStatement(SQLStatements.deleteReminderFTS)
-        defer { sqlite3_finalize(deletion) }
+        defer { recycle(deletion) }
         try bind(reminder.id, at: 1, in: deletion)
         try stepDone(deletion)
 
         let insertion = try preparedStatement(SQLStatements.insertReminderFTS)
-        defer { sqlite3_finalize(insertion) }
+        defer { recycle(insertion) }
         try bind(reminder.id, at: 1, in: insertion)
         try bind(reminder.text, at: 2, in: insertion)
         try bind(reminder.date, at: 3, in: insertion)
@@ -224,12 +224,12 @@ extension AssistantDatabase {
     private func replaceReminderVector(identifier: String, embedding: [Float]) throws {
         let rowID = try reminderRowID(identifier)
         let deletion = try preparedStatement(SQLStatements.deleteReminderVector)
-        defer { sqlite3_finalize(deletion) }
+        defer { recycle(deletion) }
         try bind(rowID, at: 1, in: deletion)
         try stepDone(deletion)
 
         let insertion = try preparedStatement(SQLStatements.insertReminderVector)
-        defer { sqlite3_finalize(insertion) }
+        defer { recycle(insertion) }
         try bind(rowID, at: 1, in: insertion)
         let result = embedding.withUnsafeBytes { bytes in
             sqlite3_bind_blob(
@@ -252,17 +252,17 @@ extension AssistantDatabase {
     private func deleteReminderRecord(_ identifier: String) throws {
         if let rowID = try optionalReminderRowID(identifier) {
             let vector = try preparedStatement(SQLStatements.deleteReminderVector)
-            defer { sqlite3_finalize(vector) }
+            defer { recycle(vector) }
             try bind(rowID, at: 1, in: vector)
             try stepDone(vector)
         }
         let fullText = try preparedStatement(SQLStatements.deleteReminderFTS)
-        defer { sqlite3_finalize(fullText) }
+        defer { recycle(fullText) }
         try bind(identifier, at: 1, in: fullText)
         try stepDone(fullText)
 
         let item = try preparedStatement(SQLStatements.deleteReminder)
-        defer { sqlite3_finalize(item) }
+        defer { recycle(item) }
         try bind(identifier, at: 1, in: item)
         try stepDone(item)
     }
@@ -284,7 +284,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when the lookup fails.
     private func optionalReminderRowID(_ identifier: String) throws -> Int64? {
         let statement = try preparedStatement(SQLStatements.fetchReminderRowID)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(identifier, at: 1, in: statement)
         guard try step(statement) else { return nil }
         return sqlite3_column_int64(statement, 0)

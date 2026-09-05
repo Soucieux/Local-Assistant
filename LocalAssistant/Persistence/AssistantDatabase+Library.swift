@@ -7,7 +7,7 @@ extension AssistantDatabase {
     internal func insertChatMessage(_ message: ChatMessage) throws {
         let payload = try encoder.encode(message)
         let statement = try preparedStatement(SQLStatements.insertChatMessage)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(message.id.uuidString, at: 1, in: statement)
         try bind(message.role.rawValue, at: 2, in: statement)
         try bind(payload, at: 3, in: statement)
@@ -21,7 +21,7 @@ extension AssistantDatabase {
     /// - Throws: A local database error when rows cannot be decoded.
     internal func fetchChatMessages(limit: Int) throws -> [ChatMessage] {
         let statement = try preparedStatement(SQLStatements.fetchChatMessages)
-        defer { sqlite3_finalize(statement) }
+        defer { recycle(statement) }
         try bind(limit, at: 1, in: statement)
         var messages: [ChatMessage] = []
         while try step(statement) {
