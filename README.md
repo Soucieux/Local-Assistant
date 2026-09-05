@@ -295,14 +295,14 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 <!-- project-control:section=release -->
 ### Current release status
 
-The current source release is **v5.4 (build 54)**. The private index now reuses its prepared SQL
+The current release is **v5.4 (build 54)**. The private index now reuses its prepared SQL
 statements instead of preparing and discarding one for every operation, so a scan or a reminder
 sync stops re-parsing the same statement once per file. The release also commits a removed file's
 activity row together with its parent run summary, and a monitoring burst's events together, so a
-run interrupted mid-scan cannot leave those records disagreeing. No signed build has been produced
-for this release or for v5.3: the project root still holds the v5.2 build 52 applications and disk
-image, so the v5.3 launchd correction and this release both reach an installation only after a
-rebuild and a Connector setup run.
+run interrupted mid-scan cannot leave those records disagreeing. The project root now holds the
+signed v5.4 build 54 applications and disk image, which replace the v5.2 artifacts and are the
+first build to carry the v5.3 launchd correction. That correction reaches this Mac only once the
+new application is installed and Connector setup is run again.
 
 **Change-history numbering:** Local Assistant uses marketing versions and integer build numbers.
 Follow the repository-wide [version and build-number policy](../README.md#version-and-build-number-policy).
@@ -314,12 +314,12 @@ Follow the repository-wide [version and build-number policy](../README.md#versio
 |---|---|---|
 | Source implementation | Complete | Local Assistant and OpenClaw Connector advance to v5.4/build 54. Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged because no wire contract changed, and no Connector source changed in this release. |
 | Documentation | Complete | Records v5.4/build 54 here and in the repository README, and states that neither v5.3 nor v5.4 has a signed build. |
-| Release build | Not run | No signed build was produced. The project root retains the v5.2 build 52 applications and disk image, so this release and the v5.3 launchd correction both take effect only after a rebuild and a Connector setup run. |
+| Release build | Complete | The clean offline Release build produced `Local Assistant.app` and `OpenClaw Connector.app` at v5.4/build 54 with a rebuilt disk image, replacing the v5.2 artifacts at the project root. Both bundles pass a strict deep signature check, and the `DerivedData` cache was removed so the project root is the only place the build exists. |
 | Automated tests | Complete | 146 macOS test cases and all 40 Connector tests pass on this source. The three added cases cover statement reuse and were each confirmed to fail when the reuse code is deliberately broken. |
-| Static privacy audit | Not repeated | No entitlement, linkage, or network-facing code changed, and the audit runs against a signed build that this checkpoint does not produce. |
-| Interface inspection | Not repeated | No copy, layout, or visual styling changed. |
-| Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate. |
-| Release artifact integrity | Not applicable | No new disk image was produced; the retained v5.2 image is unchanged. |
+| Static privacy audit | Complete | The offline-boundary audit passes against the signed v5.4 application. It carries exactly four entitlements — sandbox, audio input, app-scope bookmarks, and user-selected read-only — with no network entitlement and no reachable network code path. |
+| Interface inspection | Not repeated | No copy, layout, or visual styling changed in this release. |
+| Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate, and the corrected launchd registration is still unverified on an installed Mac. |
+| Release artifact integrity | Complete | `Local Assistant Release.dmg` verifies its checksum, mounts, and carries both applications at v5.4/build 54 beside the `Applications` link. |
 
 </details>
 
@@ -356,7 +356,7 @@ entry names what that release changed and links to its full notes.
 
 | Version | Date | Updates | Git evidence |
 |---|---|---|---|
-| v5.4 / build 54 | 2026-09-05 | [Reused statements and atomic activity writes](#v54--reused-statements-and-atomic-activity-writes). Released v5.4/build 54 after closing the efficiency and naming items the v5.3 review left open. The private index reuses its prepared SQL statements, a re-indexed file rebinds one delete statement for all of its vectors, and each removed file's activity row now commits with its parent run summary. No signed build was produced, so the project root retains the v5.2 artifacts. | This v5.4/build 54 commit |
+| v5.4 / build 54 | 2026-09-05 | [Reused statements and atomic activity writes](#v54--reused-statements-and-atomic-activity-writes). Released v5.4/build 54 after closing the efficiency and naming items the v5.3 review left open. The private index reuses its prepared SQL statements, a re-indexed file rebinds one delete statement for all of its vectors, and each removed file's activity row now commits with its parent run summary. The signed v5.4/build 54 applications and disk image replace the v5.2 artifacts at the project root. | This v5.4/build 54 commit |
 | Documentation | 2026-09-04 | Merged the version index and the dated maintenance history into one change-history table using the repository's required first-column labels: the exact version and build for an operation that changed them, `Maintenance` or `Documentation` otherwise. Build numbers were taken only from each release's own notes, so 20 rows carry one and 33 keep the version alone rather than a number derived from the numbering formula. No source, version, build, or artifact changed. | This documentation commit |
 | v5.3 / build 53 | 2026-09-04 | [Connector launchd reliability and shared code](#v53--connector-launchd-reliability-and-shared-code). Released v5.3/build 53 after a byte-to-byte review of all 184 project files. Corrected the Connector launchd registration path and its failed-update restart, shared the inert Markdown parser and the temporary test database fixture, and named the remaining inline literals. No signed build was produced, so the project root retains the v5.2 artifacts. | This v5.3/build 53 commit |
 | Documentation | 2026-09-02 | Linked Local Assistant's version-and-build declaration to the centralized repository policy and removed duplicated generic numbering rules. Application behavior, metadata, artifacts, and release numbers are unchanged. | This documentation commit |
@@ -445,8 +445,11 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
 - Advances Local Assistant and OpenClaw Connector to v5.4 build 54. No Connector source changed;
   its bundle version tracks the project release.
 - Passed all 146 macOS test cases and all 40 Connector tests. The three added statement-reuse cases
-  were each confirmed to fail when the reuse code is deliberately broken. No signed release build
-  was produced for this checkpoint.
+  were each confirmed to fail when the reuse code is deliberately broken.
+- Passed the clean offline Release build, strict deep signature checks on both bundles, the
+  signed-app offline-boundary audit, and disk-image checksum and mount validation. This is the
+  first build to carry the v5.3 launchd correction, which still needs an install and a Connector
+  setup run before it takes effect on a Mac.
 
 ### v5.3 — Connector launchd reliability and shared code
 
