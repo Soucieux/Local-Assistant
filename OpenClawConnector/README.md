@@ -24,7 +24,7 @@ macOS Keychain, and the private SSH key stays in Connector Application Support.
 
 Current release components:
 
-- Local Assistant and Connector: **v5.3 (build 53)**
+- Local Assistant and Connector: **v5.4 (build 54)**
 - Connector runtime: **v1.9.0**
 - OpenClaw server bridge: **v1.4.0**
 
