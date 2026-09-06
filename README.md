@@ -301,8 +301,9 @@ sync stops re-parsing the same statement once per file. The release also commits
 activity row together with its parent run summary, and a monitoring burst's events together, so a
 run interrupted mid-scan cannot leave those records disagreeing. The project root now holds the
 signed v5.4 build 54 applications and disk image, which replace the v5.2 artifacts and are the
-first build to carry the v5.3 launchd correction. That correction reaches this Mac only once the
-new application is installed and Connector setup is run again.
+first build to carry the v5.3 launchd correction. Both applications are installed on this Mac and
+the Connector's existing-setup update has re-registered the background job, so that correction is
+now in effect here.
 
 **Change-history numbering:** Local Assistant uses marketing versions and integer build numbers.
 Follow the repository-wide [version and build-number policy](../README.md#version-and-build-number-policy).
@@ -313,12 +314,12 @@ Follow the repository-wide [version and build-number policy](../README.md#versio
 | Release area | v5.4 status | Meaning |
 |---|---|---|
 | Source implementation | Complete | Local Assistant and OpenClaw Connector advance to v5.4/build 54. Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged because no wire contract changed, and no Connector source changed in this release. |
-| Documentation | Complete | Records v5.4/build 54 here and in the repository README, and states that neither v5.3 nor v5.4 has a signed build. |
+| Documentation | Complete | Records v5.4/build 54 here and in the repository README, including the signed build, the installed-Mac launch-agent verification, and the checks that were not repeated. |
 | Release build | Complete | The clean offline Release build produced `Local Assistant.app` and `OpenClaw Connector.app` at v5.4/build 54 with a rebuilt disk image, replacing the v5.2 artifacts at the project root. Both bundles pass a strict deep signature check, and the `DerivedData` cache was removed so the project root is the only place the build exists. |
 | Automated tests | Complete | 146 macOS test cases and all 40 Connector tests pass on this source. The three added cases cover statement reuse and were each confirmed to fail when the reuse code is deliberately broken. |
 | Static privacy audit | Complete | The offline-boundary audit passes against the signed v5.4 application. It carries exactly four entitlements — sandbox, audio input, app-scope bookmarks, and user-selected read-only — with no network entitlement and no reachable network code path. |
-| Interface inspection | Not repeated | No copy, layout, or visual styling changed in this release. |
-| Formal verification | Not run | Runtime socket inspection and full disconnected acceptance remain separate, and the corrected launchd registration is still unverified on an installed Mac. |
+| Interface inspection | Complete | No copy, layout, or visual styling changed in this release, and the installed v5.4 application's screens were inspected after the upgrade. |
+| Formal verification | Partial | The corrected launchd registration is verified on this Mac. The installed v5.4/build 54 Connector wrote `com.soucieux.LocalAssistant.OpenClawConnector.plist` to `~/Library/LaunchAgents` with owner-only permissions, removed the superseded `~/LaunchAgents` copy, and launchd reports the job loaded from that path with its scheduled spawn armed and a zero exit code. The disconnected acceptance run over the signed application was carried out separately; runtime socket inspection is still not part of this record. |
 | Release artifact integrity | Complete | `Local Assistant Release.dmg` verifies its checksum, mounts, and carries both applications at v5.4/build 54 beside the `Applications` link. |
 
 </details>
@@ -448,8 +449,9 @@ To confirm which release an application is, read `CFBundleShortVersionString` fr
   were each confirmed to fail when the reuse code is deliberately broken.
 - Passed the clean offline Release build, strict deep signature checks on both bundles, the
   signed-app offline-boundary audit, and disk-image checksum and mount validation. This is the
-  first build to carry the v5.3 launchd correction, which still needs an install and a Connector
-  setup run before it takes effect on a Mac.
+  first build to carry the v5.3 launchd correction. Both applications are now installed on this
+  Mac, and the Connector's existing-setup update re-registered the background job at the corrected
+  path, so that correction is in effect here.
 
 ### v5.3 — Connector launchd reliability and shared code
 
