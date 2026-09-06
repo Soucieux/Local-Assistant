@@ -281,7 +281,9 @@ LocalAssistant/
 │   └── Responses/
 │       └── scheduled-reminder-snapshot.json
 ├── Index/assistant.sqlite3
-└── Models/
+├── Models/
+├── model-assets.sha256
+└── model-verification.json
 ```
 
 Microphone audio is never written to disk. Speech is recognized from memory while it is spoken, then the complete in-memory utterance receives one final multilingual transcription pass before it is sent. No recording file exists to retain or clean up.
@@ -1208,6 +1210,7 @@ Local Assistant/
 │   ├── Indexing/                 # Incremental extraction and embeddings
 │   ├── Persistence/              # SQLite, FTS5, sqlite-vec, and conversation history
 │   ├── Retrieval/                # Hard filters, hybrid ranking, and explanations
+│   ├── Reminders/                # Reminder cache, retrieval, and spool handoff
 │   ├── Inference/                # Routing, prompts, llama.cpp, and grounding
 │   ├── Voice/                    # Recording and local transcription
 │   ├── Features/                 # Assistant, activity history, result cards, and Settings
@@ -1215,6 +1218,7 @@ Local Assistant/
 │   ├── Resources/                # Icon, property list, and sandbox entitlements
 │   └── VendorBridge/             # Static native-library bridges
 ├── LocalAssistantTests/          # Automated tests for routing, retrieval, and exclusions
+├── OpenClawConnector/            # Connector companion app, runtime, and its tests
 ├── Patches/                      # Offline modifications applied to pinned dependencies
 ├── Scripts/                      # Preparation, installation, build, audit, and patch tools
 ├── Vendor/                       # Recreated pinned dependencies; excluded from Git
