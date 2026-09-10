@@ -131,9 +131,9 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 | `Find my school files` | Finds the School folder and shows relevant items inside it. |
 | `What reminders are due tomorrow?` | Uses the latest local reminder snapshot, including deadline and meaning matches. |
 | `Create a reminder to renew the permit tomorrow at 09:00` | Asks for confirmation, then sends only that exact submitted request to OpenClaw. |
-| `Delete the permit reminder` | <ul><li><strong>Use:</strong> Asks for confirmation before sending the exact request</li><li><strong>Behavior:</strong> saying OpenClaw is not required for a clear reminder change.</li></ul> |
+| `Delete the permit reminder` | Asks for confirmation before sending the exact request; saying OpenClaw is not required for a clear reminder change. |
 | `OpenClaw, delete the permit reminder` | Still asks for confirmation because every reminder change is confirmation-gated. |
-| `OpenClaw, add this to CloudBase only` | <ul><li><strong>Use:</strong> Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior.</li></ul> |
+| `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 | `OpenClaw, summarize today's weather plan` | Sends the exact non-reminder request to OpenClaw through A2A. |
 
 <a id="product-reference"></a>
@@ -144,27 +144,27 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 | Capability | Availability | Notes |
 |---|---|---|
 | Local conversation | Available | Runs through an embedded model in the application process. |
-| Current command presentation | Available in v1.7 | <ul><li><strong>Use:</strong> Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen.</li></ul> |
-| Retained conversation History | Available in v1.7 | <ul><li><strong>Use:</strong> Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch.</li></ul> |
+| Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
+| Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
 | Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
-| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | <ul><li><strong>Use:</strong> Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives.</li><li><strong>Behavior:</strong> Only types explicitly requested by the user become constraints.</li></ul> |
-| Hybrid retrieval | Folder-aware in v2.3 | <ul><li><strong>Use:</strong> Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals.</li><li><strong>Behavior:</strong> Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels.</li></ul> |
-| Folder-aware retrieval | Available in v2.3 | <ul><li><strong>Use:</strong> Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results.</li></ul> |
-| Explainable result cards | Available; evidence-backed in v2.2 | <ul><li><strong>Use:</strong> Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result.</li></ul> |
+| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
+| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
+| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
+| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
 | Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
-| Card-aware answers | Available | <ul><li><strong>Use:</strong> Summarizes results without duplicating filenames, paths, or source lists already shown in cards.</li></ul> |
-| Styled conversation text | Available in v0.8 | <ul><li><strong>Use:</strong> Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers.</li></ul> |
-| Automatic conversation scrolling | Available | <ul><li><strong>Use:</strong> Follows new messages, results, and completed answers while respecting reduced motion.</li></ul> |
+| Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
+| Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
+| Automatic conversation scrolling | Available | Follows new messages, results, and completed answers while respecting reduced motion. |
 | Message timestamps | Available | Uses local time for today and an abbreviated local date and time for older messages. |
 | Clear conversation history | Available | Removes saved messages and cards after confirmation. |
 | Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
 | Folder revocation | Available | Removes authorization and dependent private index records. |
 | Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
-| Continuous folder updates | Available in v1.0 source | <ul><li><strong>Use:</strong> Uses native macOS folder events while the application is running and performs a catch-up scan at launch.</li></ul> |
-| Indexing progress and pause | Available in v1.0 source | <ul><li><strong>Use:</strong> Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data.</li></ul> |
-| Index activity | Available in v1.0 source | <ul><li><strong>Use:</strong> Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders.</li></ul> |
+| Continuous folder updates | Available in v1.0 source | Uses native macOS folder events while the application is running and performs a catch-up scan at launch. |
+| Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
+| Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
 | PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
-| Local voice input | Available in v1.7 | <ul><li><strong>Use:</strong> Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop.</li></ul> |
+| Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
 | Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
@@ -326,7 +326,7 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 |---|---|
 | Plain text and common source files | Text extraction and chunking |
 | PDF | PDFKit extraction; Vision OCR for image-only pages |
-| PNG, JPEG, HEIC, TIFF, BMP, and GIF | <ul><li><strong>Use:</strong> Apple Vision OCR</li><li><strong>Behavior:</strong> labels and visible text become searchable, but visual objects and chart shapes are not captioned</li></ul> |
+| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR; labels and visible text become searchable, but visual objects and chart shapes are not captioned. |
 | DOCX | Visible Open XML text |
 | XLSX | Visible worksheet and shared-string XML text |
 | PPTX | Visible slide XML text |
@@ -373,11 +373,11 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 
 | Technology or concept | Use in this project |
 |---|---|
-| Retrieval-Augmented Generation (RAG) | <ul><li><strong>Use:</strong> Finds local evidence before answering.</li><li><strong>Behavior:</strong> HybridRetrievalService combines keyword, vector, filename, path, and recency signals</li><li><strong>Detail:</strong> GroundedAssistantService supplies bounded, cited passages.</li></ul> |
-| Embeddings | <ul><li><strong>Use:</strong> Numerical vectors represent queries and document passages so similar meanings can be retrieved through LocalEmbeddingService.</li></ul> |
-| Qwen3-4B Q4_K_M | <ul><li><strong>Use:</strong> The local chat and intent-classification model</li><li><strong>Behavior:</strong> generates answers without a hosted service.</li></ul> |
+| Retrieval-Augmented Generation (RAG) | Finds local evidence before answering. HybridRetrievalService combines keyword, vector, filename, path, and recency signals. GroundedAssistantService supplies bounded, cited passages. |
+| Embeddings | Numerical vectors represent queries and document passages so similar meanings can be retrieved through LocalEmbeddingService. |
+| Qwen3-4B Q4_K_M | The local chat and intent-classification model; generates answers without a hosted service. |
 | Qwen3-Embedding-0.6B Q8_0 | The local embedding model used for document indexing and query retrieval. |
-| llama.cpp | <ul><li><strong>Use:</strong> Statically linked inference engine that runs both GGUF models inside the application.</li></ul> |
+| llama.cpp | Statically linked inference engine that runs both GGUF models inside the application. |
 | GGUF | The packaged file format for the chat and embedding model weights. |
 | Whisper Small | The local speech-recognition model, stored as openai_whisper-small Core ML assets. |
 | WhisperKit | Runs the packaged speech-recognition model and its tokenizer. |
@@ -396,10 +396,10 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 
 | Technology or concept | Use in this project |
 |---|---|
-| Swift | <ul><li><strong>Use:</strong> Native Swift services and typed request routes orchestrate the app</li><li><strong>Behavior:</strong> no LangChain or LangGraph dependency.</li></ul> |
+| Swift | Native Swift services and typed request routes orchestrate the app; no LangChain or LangGraph dependency. |
 | Foundation | Supplies file, text, date, and structured-data APIs used by native services. |
-| Indexing | <ul><li><strong>Use:</strong> IndexingService extracts content, splits it into passages, and generates embeddings</li><li><strong>Behavior:</strong> complete reminder snapshots enter the same private knowledge index.</li></ul> |
-| CoreServices | <ul><li><strong>Use:</strong> FolderMonitorService uses filesystem events to detect changes for incremental indexing.</li></ul> |
+| Indexing | IndexingService extracts content, splits it into passages, and generates embeddings; complete reminder snapshots enter the same private knowledge index. |
+| CoreServices | FolderMonitorService uses filesystem events to detect changes for incremental indexing. |
 | PDFKit | Extracts PDF text and provides PDF handling alongside image OCR. |
 | ZIPFoundation | Reads bounded Office-document archive content during extraction. |
 
@@ -407,7 +407,7 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 
 | Technology or concept | Use in this project |
 |---|---|
-| SQLite | <ul><li><strong>Use:</strong> Embedded relational storage for metadata, monitoring preferences, history, and local reminder snapshots</li><li><strong>Behavior:</strong> not a database server.</li></ul> |
+| SQLite | Embedded relational storage for metadata, monitoring preferences, history, and local reminder snapshots; not a database server. |
 | SQLite FTS5 | Keyword/full-text retrieval over indexed text. |
 | sqlite-vec | Statically linked vector retrieval over stored embeddings. |
 
@@ -417,8 +417,8 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 |---|---|
 | Security-scoped bookmarks | Persist permission to authorized folders; the scanner keeps source access read-only. |
 | App Sandbox | Enforces the main app's offline and filesystem permission boundary. |
-| Agent-to-Agent (A2A) | <ul><li><strong>Use:</strong> The separate one-shot OpenClaw Connector sends explicitly authorized agent requests using A2A v1.0.</li></ul> |
-| SSH | <ul><li><strong>Use:</strong> The Connector's temporary encrypted tunnel</li><li><strong>Behavior:</strong> networking never moves into the main app.</li></ul> |
+| Agent-to-Agent (A2A) | The separate one-shot OpenClaw Connector sends explicitly authorized agent requests using A2A v1.0. |
+| SSH | The Connector's temporary encrypted tunnel; networking never moves into the main app. |
 
 <!-- project-control:section=models -->
 ### Models and shared storage
@@ -658,8 +658,6 @@ For source changes, follow the [repository instructions](../AGENTS.md#local-assi
 <!-- project-control:section=history -->
 ## Change history
 
-
-
 **Change-history numbering:** Version and build numbers. Follow the repository [version and build-number policy](../AGENTS.md#version-and-build-number-policy).
 
 One record per change; complete details and evidence are below. Older work dates and Git checkpoints remain labelled when they differ.
@@ -697,48 +695,11 @@ One record per change; complete details and evidence are below. Older work dates
 | v3.3 | 2026-08-26 | <ul><li><strong>Change:</strong> Hidden reminder knowledge and explicit OpenClaw actions.</li></ul> | [Full record](#change-26) |
 | v3.2 | 2026-08-26 | <ul><li><strong>Change:</strong> Private reminder RAG and an opt-in OpenClaw connector.</li></ul> | [Full record](#change-27) |
 | Dated change | 2026-08-23 | <ul><li><strong>Change:</strong> Removed the stale hard-coded version fallback so bundle metadata remains authoritative and unavailable metadata is reported explicitly.</li></ul> | [Full record](#change-85) |
-| v3.1 | 2026-08-22 | <ul><li><strong>Change:</strong> Storage figures moved beside each button.</li></ul> | [Full record](#change-28) |
-| v3.0 | 2026-08-22 | <ul><li><strong>Change:</strong> Storage figures next to each reset action.</li></ul> | [Full record](#change-29) |
-| v2.9 | 2026-08-22 | <ul><li><strong>Change:</strong> Bordered reset rows matching the folder-card style.</li></ul> | [Full record](#change-30) |
-| v2.8 | 2026-08-22 | <ul><li><strong>Change:</strong> Simplified reset rows and corrected model-removal placement.</li></ul> | [Full record](#change-31) |
-| v2.7 | 2026-08-22 | <ul><li><strong>Change:</strong> Reset controls integrated into their owning sections.</li></ul> | [Full record](#change-32) |
-| v2.6 | 2026-08-22 | <ul><li><strong>Change:</strong> On-demand model removal, search-index reset, and status check.</li></ul> | [Full record](#change-33) |
-| v2.5 | 2026-08-21 | <ul><li><strong>Change:</strong> Complete folder hierarchy and precise folder-scoped results.</li></ul> | [Full record](#change-34) |
-| v2.4 | 2026-08-21 | <ul><li><strong>Change:</strong> Reliable type-only listings and idle command pulse.</li></ul> | [Full record](#change-35) |
-| v2.3 | 2026-08-21 | <ul><li><strong>Change:</strong> Folder-aware retrieval and coordinated interface motion.</li></ul> | [Full record](#change-36) |
-| v2.2 | 2026-08-21 | <ul><li><strong>Change:</strong> Evidence-backed result cards and honest visual-search limits.</li></ul> | [Full record](#change-37) |
-| v2.1 | 2026-08-21 | <ul><li><strong>Change:</strong> Bounded vector search, visible button hover states, and clarified semantic-image limits.</li></ul> | [Full record](#change-38) |
-| v2.0 | 2026-08-21 | <ul><li><strong>Change:</strong> Selectable voice interactions, finalized speech, and conversational follow-ups.</li></ul> | [Full record](#change-39) |
-| v1.9 | 2026-08-21 | <ul><li><strong>Change:</strong> One light visual family across every screen.</li></ul> | [Full record](#change-40) |
-| v1.8 | 2026-08-21 | <ul><li><strong>Change:</strong> Light command interface with acquired-file modules.</li></ul> | [Full record](#change-41) |
-| v1.7 | 2026-08-21 | <ul><li><strong>Change:</strong> Current command presentation with complete conversation History.</li></ul> | [Full record](#change-42) |
-| Dated change | 2026-08-21 | <ul><li><strong>Change:</strong> - Added selectable voice input (click-to-speak or hold-to-talk) with a 120-second maximum-capture safeguard so the microphone can never stay open unattended.</li></ul> | [Full record](#change-91) |
-| v1.6 | 2026-08-20 | <ul><li><strong>Change:</strong> Spoken words appear and send, and the routing marker stays hidden.</li></ul> | [Full record](#change-43) |
-| v1.5 | 2026-08-20 | <ul><li><strong>Change:</strong> Recordings end on a pause and send what was said.</li></ul> | [Full record](#change-44) |
-| v1.4 | 2026-08-20 | <ul><li><strong>Change:</strong> Live waveform and on-screen speech, with no audio written to disk.</li></ul> | [Full record](#change-45) |
-| v1.3 | 2026-08-20 | <ul><li><strong>Change:</strong> The assistant stopped repeating its own result sentence.</li></ul> | [Full record](#change-46) |
-| v1.2 | 2026-08-20 | <ul><li><strong>Change:</strong> Vendored network code removed, with correctness fixes and automated tests.</li></ul> | [Full record](#change-47) |
-| v1.1 | 2026-08-20 | <ul><li><strong>Change:</strong> Simpler indexing controls and a clean shutdown on quit.</li></ul> | [Full record](#change-48) |
-| v1.0 | 2026-08-20 | <ul><li><strong>Change:</strong> Continuous folder monitoring, pausable indexing, and 30-day activity.</li></ul> | [Full record](#change-49) |
-| v0.9 | 2026-08-20 | <ul><li><strong>Change:</strong> Hard file-type filters, prompt safety, and tightened entitlements.</li></ul> | [Full record](#change-50) |
-| v0.8 | 2026-08-20 | <ul><li><strong>Change:</strong> Settings reordered, conversation text styled, and the README rewritten.</li></ul> | [Full record](#change-51) |
-| v0.7 | 2026-08-20 | <ul><li><strong>Change:</strong> Answers stopped repeating details already shown in the cards.</li></ul> | [Full record](#change-52) |
-| v0.6 | 2026-08-20 | <ul><li><strong>Change:</strong> Plain-language model readiness and result cards that survive relaunch.</li></ul> | [Full record](#change-53) |
-| v0.5 | 2026-08-20 | <ul><li><strong>Change:</strong> Message timestamps, Clear Conversation, and shorter result cards.</li></ul> | [Full record](#change-54) |
-| v0.4 | 2026-08-20 | <ul><li><strong>Change:</strong> Settings reorganized around status, folder access, and privacy.</li></ul> | [Full record](#change-55) |
-| v0.3 | 2026-08-20 | <ul><li><strong>Change:</strong> Local routing between chat, clarification, and file search.</li></ul> | [Full record](#change-56) |
-| v0.2 | 2026-08-20 | <ul><li><strong>Change:</strong> Focused interface with crash-safe indexing and folder revocation.</li></ul> | [Full record](#change-57) |
-| v0.1 | 2026-08-20 | <ul><li><strong>Change:</strong> First sandboxed assistant with local indexing, retrieval, and voice.</li></ul> | [Full record](#change-58) |
-| Dated change | 2026-08-20 | <ul><li><strong>Change:</strong> Committed v1.2–v1.6 extraction, search, voice, readiness, offline-boundary, and regression work.</li></ul> | [Full record](#change-99) |
-| Dated change | 2026-08-16 | <ul><li><strong>Change:</strong> Released v1.1 source with continuous native folder monitoring, pausable progress, and visible background indexing.</li></ul> | [Full record](#change-108) |
-| Dated change | 2026-08-15 | <ul><li><strong>Change:</strong> Imported the native offline assistant and its preserved source history, guardrails, target/configuration, tooling, indexing, private retrieval/storage, UI.</li></ul> | [Full record](#change-109) |
 
 <details>
 <summary>Full records for this table</summary>
 
 <a id="readme-organization"></a>
-
-
 
 ### README organization — 2026-09-06
 
@@ -749,8 +710,6 @@ One record per change; complete details and evidence are below. Older work dates
 
 <a id="change-1"></a>
 <a id="readability-maintenance"></a>
-
-
 
 ### Documentation readability
 
@@ -767,8 +726,6 @@ Local documentation changes; initially delivered uncommitted and recorded in thi
 [Back to change history](#change-history)
 
 <a id="change-2"></a>
-
-
 
 ### Documentation
 
@@ -790,8 +747,6 @@ Local documentation update; uncommitted
 <a id="readme-detail-3"></a>
 <a id="repository-record-1"></a>
 <a id="v54--reused-statements-and-atomic-activity-writes"></a>
-
-
 
 ### v5.4 / build 54
 
@@ -876,21 +831,21 @@ Both applications are installed on this Mac and the Connector's existing-setup u
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
-- **Source implementation:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> Local Assistant and OpenClaw Connector advance to v5.4/build 54.</li><li><strong>Behavior:</strong> Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged because no wire contract changed, and no Connector source changed in this release.</li></ul>
+- **Source implementation:** **v5.4 status:** Complete; **Meaning:** Local Assistant and OpenClaw Connector advance to v5.4/build 54. Connector runtime v1.9.0, server bridge v1.4.0, and runtime contract v3 are unchanged because no wire contract changed, and no Connector source changed in this release.
 
-- **Documentation:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> Records v5.4/build 54 here and in the repository README, including the signed build, the installed-Mac launch-agent verification, and the checks that were not repeated.</li></ul>
+- **Documentation:** **v5.4 status:** Complete; **Meaning:** Records v5.4/build 54 here and in the repository README, including the signed build, the installed-Mac launch-agent verification, and the checks that were not repeated.
 
-- **Release build:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> The clean offline Release build produced `Local Assistant.app` and `OpenClaw Connector.app` at v5.4/build 54 with a rebuilt disk image, replacing the v5.2 artifacts at the project root.</li><li><strong>Behavior:</strong> Both bundles pass a strict deep signature check, and the `DerivedData` cache was removed so the project root is the only place the build exists.</li></ul>
+- **Release build:** **v5.4 status:** Complete; **Meaning:** The clean offline Release build produced `Local Assistant.app` and `OpenClaw Connector.app` at v5.4/build 54 with a rebuilt disk image, replacing the v5.2 artifacts at the project root. Both bundles pass a strict deep signature check, and the `DerivedData` cache was removed so the project root is the only place the build exists.
 
-- **Automated tests:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> 146 macOS test cases and all 40 Connector tests pass on this source.</li><li><strong>Behavior:</strong> The three added cases cover statement reuse and were each confirmed to fail when the reuse code is deliberately broken.</li></ul>
+- **Automated tests:** **v5.4 status:** Complete; **Meaning:** 146 macOS test cases and all 40 Connector tests pass on this source. The three added cases cover statement reuse and were each confirmed to fail when the reuse code is deliberately broken.
 
-- **Static privacy audit:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> The offline-boundary audit passes against the signed v5.4 application.</li><li><strong>Behavior:</strong> It carries exactly four entitlements — sandbox, audio input, app-scope bookmarks, and user-selected read-only — with no network entitlement and no reachable network code path.</li></ul>
+- **Static privacy audit:** **v5.4 status:** Complete; **Meaning:** The offline-boundary audit passes against the signed v5.4 application. It carries exactly four entitlements — sandbox, audio input, app-scope bookmarks, and user-selected read-only — with no network entitlement and no reachable network code path.
 
-- **Interface inspection:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> No copy, layout, or visual styling changed in this release, and the installed v5.4 application's screens were inspected after the upgrade.</li></ul>
+- **Interface inspection:** **v5.4 status:** Complete; **Meaning:** No copy, layout, or visual styling changed in this release, and the installed v5.4 application's screens were inspected after the upgrade.
 
-- **Formal verification:** **v5.4 status:** Partial; **Meaning:** <ul><li><strong>Use:</strong> The corrected launchd registration is verified on this Mac.</li><li><strong>Behavior:</strong> The installed v5.4/build 54 Connector wrote `com.soucieux.LocalAssistant.OpenClawConnector.plist` to `~/Library/LaunchAgents` with owner-only permissions, removed the superseded `~/LaunchAgents` copy, and launchd reports the job loaded from that path with its scheduled spawn armed and a zero exit code.</li><li><strong>Detail:</strong> The disconnected acceptance run over the signed application was carried out separately;</li><li><strong>Limit:</strong> runtime socket inspection is still not part of this record.</li></ul>
+- **Formal verification:** **v5.4 status:** Partial; **Meaning:** The corrected launchd registration is verified on this Mac. The installed v5.4/build 54 Connector wrote `com.soucieux.LocalAssistant.OpenClawConnector.plist` to `~/Library/LaunchAgents` with owner-only permissions, removed the superseded `~/LaunchAgents` copy, and launchd reports the job loaded from that path with its scheduled spawn armed and a zero exit code. The disconnected acceptance run over the signed application was carried out separately; runtime socket inspection is still not part of this record.
 
-- **Release artifact integrity:** **v5.4 status:** Complete; **Meaning:** <ul><li><strong>Use:</strong> `Local Assistant Release.dmg` verifies its checksum, mounts, and carries both applications at v5.4/build 54 beside the `Applications` link.</li></ul>
+- **Release artifact integrity:** **v5.4 status:** Complete; **Meaning:** `Local Assistant Release.dmg` verifies its checksum, mounts, and carries both applications at v5.4/build 54 beside the `Applications` link.
 
 </details>
 
@@ -908,8 +863,6 @@ This v5.4/build 54 commit
 <a id="change-4"></a>
 <a id="readme-detail-2"></a>
 <a id="repository-record-2"></a>
-
-
 
 ### Documentation
 
@@ -934,8 +887,6 @@ This documentation commit
 <a id="readme-detail-4"></a>
 <a id="repository-record-3"></a>
 <a id="v53--connector-launchd-reliability-and-shared-code"></a>
-
-
 
 ### v5.3 / build 53
 
@@ -983,8 +934,6 @@ This v5.3/build 53 commit
 
 <a id="change-6"></a>
 
-
-
 ### Documentation
 
 - **Recorded date:** 2026-09-02.
@@ -1001,8 +950,6 @@ This documentation commit
 <a id="change-7"></a>
 <a id="repository-record-4"></a>
 <a id="v52--release-history-reconciliation"></a>
-
-
 
 ### v5.2 / build 52
 
@@ -1047,8 +994,6 @@ v5.2 release-history commit
 <a id="repository-record-7"></a>
 <a id="v51--explicit-architecture-inventory-and-readme-mappings"></a>
 
-
-
 ### v5.1 / build 51
 
 - **Recorded date:** 2026-08-31.
@@ -1083,8 +1028,6 @@ Historical work record
 <a id="repository-record-8"></a>
 <a id="v50--final-deterministic-ordering-and-indexing-cleanup"></a>
 
-
-
 ### v5.0 / build 50
 
 - **Recorded date:** 2026-08-29.
@@ -1111,8 +1054,6 @@ Historical work record
 <a id="readme-detail-5"></a>
 <a id="repository-record-9"></a>
 <a id="v49--deterministic-retrieval-and-connector-resilience"></a>
-
-
 
 ### v4.9 / build 49
 
@@ -1284,8 +1225,6 @@ Version-index record in `552d60a`; related date-group work: `66028eb`, `c883846`
 <a id="repository-record-10"></a>
 <a id="v48--responsive-setup-and-consistent-result-cards"></a>
 
-
-
 ### v4.8 / build 48
 
 - **Recorded date:** 2026-08-26.
@@ -1345,10 +1284,7 @@ Git reconciliation: Committed the reminder/Connector and responsive-interface se
 
 **Evidence and delivery status**
 
-`34ed7c5` (2026-08-26)
-
-- Version-index record in `34ed7c5`
-- related date-group work: `5a41509`, `4dfb84d`, `df78cbb`, `7a67a78`, `e687377`, `f422290`, `84b437d`, `2e80c49`, `ef521c8`, `048eba1`, `52d1a8b`, `4945532`, `95d6873`, `e5f4ae1`, `7ccba8a`, `8db0dcb`, `b83de02`, `0261280`, `069d075`, `e69b4f0`, `bfeedb6`, `9f2b25b`, `51ad2e1`, `34ed7c5`, `5af098b`, `a92db8e`, `cdf2134`
+Version-index record in `34ed7c5` (2026-08-26); related date-group work in `5a41509`, `4dfb84d`, `df78cbb`, `7a67a78`, `e687377`, `f422290`, `84b437d`, `2e80c49`, `ef521c8`, `048eba1`, `52d1a8b`, `4945532`, `95d6873`, `e5f4ae1`, `7ccba8a`, `8db0dcb`, `b83de02`, `0261280`, `069d075`, `e69b4f0`, `bfeedb6`, `9f2b25b`, `51ad2e1`, `34ed7c5`, `5af098b`, `a92db8e`, `cdf2134`
 
 [Back to change history](#change-history)
 
@@ -1356,8 +1292,6 @@ Git reconciliation: Committed the reminder/Connector and responsive-interface se
 <a id="readme-detail-7"></a>
 <a id="repository-record-11"></a>
 <a id="v47--private-a2a-connection-to-openclaw"></a>
-
-
 
 ### v4.7 / build 47
 
@@ -1401,8 +1335,6 @@ Version-index record in `069d075`
 <a id="readme-detail-8"></a>
 <a id="repository-record-12"></a>
 <a id="v46--responsive-native-markdown-responses"></a>
-
-
 
 ### v4.6 / build 46
 
@@ -1448,8 +1380,6 @@ Version-index record in `8db0dcb`
 <a id="readme-detail-9"></a>
 <a id="repository-record-13"></a>
 <a id="v45--natural-confirmation-centered-processing-and-dependency-security"></a>
-
-
 
 ### v4.5 / build 45
 
@@ -1499,8 +1429,6 @@ Version-index record in `95d6873`
 <a id="readme-detail-10"></a>
 <a id="repository-record-14"></a>
 <a id="v44--conversational-reminder-confirmation-and-runtime-compatibility"></a>
-
-
 
 ### v4.4 / build 44
 
@@ -1554,8 +1482,6 @@ Version-index record in `95d6873`
 <a id="readme-detail-11"></a>
 <a id="repository-record-15"></a>
 <a id="v43--natural-reminder-routing-and-responsive-result-cards"></a>
-
-
 
 ### v4.3 / build 43
 
@@ -1619,8 +1545,6 @@ Version-index record in `95d6873`
 <a id="repository-record-16"></a>
 <a id="v42--content-height-local-assistant-setup-cards"></a>
 
-
-
 ### v4.2 / build 42
 
 - **Recorded date:** 2026-08-26.
@@ -1664,8 +1588,6 @@ Version-index record in `95d6873`
 <a id="readme-detail-13"></a>
 <a id="repository-record-17"></a>
 <a id="v41--unified-connection-review-and-content-height-setup-cards"></a>
-
-
 
 ### v4.1 / build 41
 
@@ -1721,8 +1643,6 @@ Version-index record in `95d6873`
 <a id="readme-detail-14"></a>
 <a id="repository-record-18"></a>
 <a id="v40--credential-safe-connector-updates-and-cleanup"></a>
-
-
 
 ### v4.0 / build 40
 
@@ -1795,8 +1715,6 @@ Historical work record
 <a id="repository-record-23"></a>
 <a id="v39--reliable-connector-setup-refresh-and-lifecycle"></a>
 
-
-
 ### v3.9 / build 39
 
 - **Recorded dates:** 2026-08-26; 2026-08-25.
@@ -1856,8 +1774,6 @@ Version-index record in `7a67a78`
 <a id="readme-detail-16"></a>
 <a id="repository-record-24"></a>
 <a id="v38--on-demand-restricted-ssh-transport"></a>
-
-
 
 ### v3.8 / build 38
 
@@ -1919,8 +1835,6 @@ Version-index record in `7a67a78`
 <a id="repository-record-19"></a>
 <a id="v37--complete-private-tailscale-connection-setup"></a>
 
-
-
 ### v3.7 / build 37
 
 - **Recorded date:** 2026-08-26.
@@ -1962,8 +1876,6 @@ Version-index record in `7a67a78`
 <a id="readme-detail-17"></a>
 <a id="repository-record-25"></a>
 <a id="v36--user-created-server-zip-and-corrected-setup-packaging"></a>
-
-
 
 ### v3.6 / build 36
 
@@ -2030,8 +1942,6 @@ Historical work record
 <a id="repository-record-20"></a>
 <a id="v35--unambiguous-clean-device-openclaw-setup"></a>
 
-
-
 ### v3.5 / build 35
 
 - **Recorded date:** 2026-08-26.
@@ -2067,8 +1977,6 @@ Historical work record
 <a id="repository-record-21"></a>
 <a id="v34--live-openclaw-status-and-in-app-setup"></a>
 
-
-
 ### v3.4 / build 34
 
 - **Recorded date:** 2026-08-26.
@@ -2100,8 +2008,6 @@ Historical work record
 <a id="change-26"></a>
 <a id="repository-record-22"></a>
 <a id="v33--hidden-reminder-knowledge-and-explicit-openclaw-actions"></a>
-
-
 
 ### v3.3
 
@@ -2139,8 +2045,6 @@ Historical work record
 <a id="readme-detail-18"></a>
 <a id="repository-record-26"></a>
 <a id="v32--private-reminder-rag-and-an-opt-in-openclaw-connector"></a>
-
-
 
 ### v3.2
 
@@ -2189,8 +2093,6 @@ Retrospective work record; retained source in `5a41509`, `4dfb84d`, `7a67a78` (2
 <a id="change-85"></a>
 <a id="repository-record-27"></a>
 
-
-
 ### Removed the stale hard-coded version fallback so bundle metadata remains authoritative and unavailable metadata is reported explicitly
 
 - **Recorded date:** 2026-08-23.
@@ -2203,1051 +2105,15 @@ Retrospective work record; retained source in `5a41509`, `4dfb84d`, `7a67a78` (2
 
 [Back to change history](#change-history)
 
-<a id="change-28"></a>
-<a id="v31--storage-figures-moved-beside-each-button"></a>
-
-
-
-### v3.1
-
-- **Recorded date:** 2026-08-22.
-
-- Moved the model-storage figure off its own line and into the **Remove Downloaded Models** row,
-  right beside the button, inside the same grey-filled box.
-- Moved the index-storage figure off its own line and into the **Clear Search Index** row the same
-  way; the indexed-file count keeps its own separate line above the row.
-
-**Evidence and delivery status**
-
-`20faad1` (2026-08-22)
-
-[Back to change history](#change-history)
-
-<a id="change-29"></a>
-<a id="repository-record-29"></a>
-<a id="v30--storage-figures-next-to-each-reset-action"></a>
-
-
-
-### v3.0
-
-- **Recorded date:** 2026-08-22.
-
-- Git index record, not an independently established release date: [Storage figures next to each reset action](#v30--storage-figures-next-to-each-reset-action).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Added an index-storage figure next to the indexed-file count in Folder Access, showing the actual
-  on-disk size of the search index (database, passages, and vectors) beside **Clear Search Index**.
-- The existing model-storage figure now sits directly beside **Remove Downloaded Models** instead of
-  near the launch-check row.
-- Dropped the "#" symbol from the version badge in the Settings header; it now reads as plain text
-  (e.g. "v3.0").
-
-**Evidence and delivery status**
-
-`20faad1` (2026-08-22)
-
-`20faad1`
-
-[Back to change history](#change-history)
-
-<a id="change-30"></a>
-<a id="repository-record-30"></a>
-<a id="v29--bordered-reset-rows-matching-the-folder-card-style"></a>
-
-
-
-### v2.9
-
-- **Recorded date:** 2026-08-22.
-
-- Git index record, not an independently established release date: [Bordered reset rows matching the folder-card style](#v29--bordered-reset-rows-matching-the-folder-card-style).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Gave **Remove Downloaded Models** and **Clear Search Index** their own grey-filled, bordered row,
-  matching the visual treatment already used for each authorized folder.
-- Moved **Remove Downloaded Models** to sit directly under the model capability list as its own row,
-  rather than as a fourth entry sharing that list's box.
-
-**Evidence and delivery status**
-
-`20faad1` (2026-08-22)
-
-`20faad1`
-
-[Back to change history](#change-history)
-
-<a id="change-31"></a>
-<a id="repository-record-31"></a>
-<a id="v28--simplified-reset-rows-and-corrected-model-removal-placement"></a>
-
-
-
-### v2.8
-
-- **Recorded date:** 2026-08-22.
-
-- Git index record, not an independently established release date: [Simplified reset rows and corrected model-removal placement](#v28--simplified-reset-rows-and-corrected-model-removal-placement).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Moved **Remove Downloaded Models** into the model capability list itself, directly below Chat/File
-  search/Voice input, instead of sitting apart near the bottom of the Models section.
-- Dropped the inline explanation text under **Clear Search Index** and **Remove Downloaded Models**;
-  each row is now an icon, name, and button, with the full effect still explained in the
-  confirmation alert before anything is deleted.
-- Fixed a left-alignment inconsistency that made Clear Search Index appear indented relative to the
-  folder list above it.
-
-**Evidence and delivery status**
-
-`20faad1` (2026-08-22)
-
-`20faad1`
-
-[Back to change history](#change-history)
-
-<a id="change-32"></a>
-<a id="repository-record-32"></a>
-<a id="v27--reset-controls-integrated-into-their-owning-sections"></a>
-
-
-
-### v2.7
-
-- **Recorded date:** 2026-08-22.
-
-- Git index record, not an independently established release date: [Reset controls integrated into their owning sections](#v27--reset-controls-integrated-into-their-owning-sections).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Moved **Remove Downloaded Models** into the Models section, next to the capability list and
-  storage details it affects.
-- Moved **Clear Search Index** (and the indexed-file count) into Folder Access, next to the folder
-  list and indexing controls it affects, instead of sharing a block with model controls.
-- Removed automatic previous-build retention from the offline build script; a rebuild now always
-  leaves exactly one application at the project root.
-
-**Evidence and delivery status**
-
-`20faad1` (2026-08-22)
-
-`20faad1`
-
-[Back to change history](#change-history)
-
-<a id="change-33"></a>
-<a id="readme-detail-19"></a>
-<a id="repository-record-28"></a>
-<a id="v26--on-demand-model-removal-search-index-reset-and-status-check"></a>
-
-
-
-### v2.6
-
-- **Recorded date:** 2026-08-22.
-
-- Added an on-demand Check Now action in Settings that re-verifies installed models and re-counts
-  indexed files instead of only checking at launch.
-
-- Added Clear Search Index, letting a user rebuild the search index from scratch without deleting
-  the app or losing folder access and conversation history.
-
-- Added Remove Downloaded Models for a clean reinstall of the model files alone.
-
-- Showed the on-disk storage each action would free, directly beside its button. Git reconciliation:
-  Committed Settings reset controls and storage displays, with the documented v2.6–v3.1 iteration
-  history; required one retained root-level app bundle after rebuild.
-
-- Added **Check Now** to Settings, re-verifying installed models and re-counting indexed files on
-  demand instead of only at launch.
-- Added **Clear Search Index**, deleting every indexed file, passage, and vector, then immediately
-  re-indexing every authorized folder. Folder access, monitoring preferences, and conversation
-  history are untouched.
-- Added **Remove Downloaded Models**, deleting every installed model file and its verification cache
-  so a reinstall starts from a clean slate without deleting the application itself.
-- Both destructive actions require confirmation and are disabled while indexing, a request, or voice
-  capture is active.
-
-**Evidence and delivery status**
-
-`20faad1` (2026-08-22)
-
-`20faad1`, `dcf4d36`
-
-[Back to change history](#change-history)
-
-<a id="change-34"></a>
-<a id="v25--complete-folder-hierarchy-and-precise-folder-scoped-results"></a>
-
-
-
-### v2.5
-
-- **Recorded date:** 2026-08-21.
-
-- Published every scanned file and folder as searchable metadata before expensive extraction begins,
-  while preserving previously indexed passages. Interrupted runs no longer leave later folders
-  absent from the hierarchy.
-- Processed folder context before file contents and made a literal folder name or path the retrieval
-  boundary, preventing unrelated semantic candidates outside that folder from being presented as its
-  contents.
-- Recovered explicit file and folder requests when the local routing model returns only a generic
-  results acknowledgement, avoiding a response that claims matches while showing no cards.
-- Added the installed release number to the Settings header.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-[Back to change history](#change-history)
-
-<a id="change-35"></a>
-<a id="repository-record-34"></a>
-<a id="v24--reliable-type-only-listings-and-idle-command-pulse"></a>
-
-
-
-### v2.4
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [Reliable type-only listings and idle command pulse](#v24--reliable-type-only-listings-and-idle-command-pulse).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Normalized broad requests such as “Any PDFs?” into type-only listings so conversational filler no
-  longer becomes a false semantic-evidence requirement.
-- Preserved meaningful topics in requests such as “PDFs about insurance” and kept the requested file
-  type as a hard constraint.
-- Replaced the state-changing triangle phase collection with one stable continuous loop and
-  increased the bright-to-dim contrast while retaining a static full-red Reduce Motion presentation.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-36"></a>
-<a id="repository-record-35"></a>
-<a id="v23--folder-aware-retrieval-and-coordinated-interface-motion"></a>
-
-
-
-### v2.3
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [Folder-aware retrieval and coordinated interface motion](#v23--folder-aware-retrieval-and-coordinated-interface-motion).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Indexed each authorized root and descendant folder as a first-class result with a bounded, locally
-  embedded context derived from its name, relative path, and direct children.
-- Added hierarchy-aware retrieval so a strongly matched folder promotes contained files and folders,
-  while requested file types remain hard constraints within that scope.
-- Prioritized exact folder and path evidence over unrelated document passages and explained scoped
-  results with the folder that qualified them.
-- Added folder-aware Open actions, response and screen crossfades, staggered result acquisition, and
-  a slow idle pulse for the red command triangle. Reduce Motion keeps these states legible without
-  movement.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-37"></a>
-<a id="repository-record-36"></a>
-<a id="v22--evidence-backed-result-cards-and-honest-visual-search-limits"></a>
-
-
-
-### v2.2
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [Evidence-backed result cards and honest visual-search limits](#v22--evidence-backed-result-cards-and-honest-visual-search-limits).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Stopped a hard file-type constraint from qualifying otherwise unrelated files when a request also
-  contains a topic or content description. A non-empty search now requires filename, path, keyword,
-  or semantic evidence.
-- Derived hard file-type filters from the user's own words instead of trusting a model-generated
-  kind. Requests for files containing images no longer become an invented PDF or image-file
-  constraint.
-- Replaced generic content-search reasons with the strongest concrete evidence, including a bounded
-  indexed passage for keyword and semantic matches and calibrated wording for uncertain semantic
-  relations.
-- Reported requests that require recognizing visual subjects or embedded images as unsupported by
-  the current text-and-OCR index. This prevents false result cards while preserving the separately
-  scoped path to local multimodal retrieval.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-38"></a>
-<a id="repository-record-37"></a>
-<a id="v21--bounded-vector-search-visible-button-hover-states-and-clarified-semantic-image-limits"></a>
-
-
-
-### v2.1
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [Bounded vector search, visible button hover states, and clarified semantic-image limits](#v21--bounded-vector-search-visible-button-hover-states-and-clarified-semantic-image-limits).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Capped every sqlite-vec nearest-neighbor request at the embedded extension's 4,096-result limit
-  and stopped adaptive file-type expansion at the same boundary, preventing large indexes from
-  producing a 5,120-neighbor database error.
-- Added restrained hover feedback to every custom in-window button while preserving disabled states,
-  keyboard focus, stable layout, and reduced-motion behavior. Native macOS alert and menu buttons
-  retain their system-provided pointer states.
-- Confirmed that extracted passages are embedded with the local Qwen text model, stored in
-  sqlite-vec, and combined with filename, path, keyword, type, and recency signals during ranking.
-- Clarified that standalone images and image-only PDF pages contribute OCR text, not a visual
-  embedding. A chart can be found from its labels, caption, or surrounding extracted text;
-  recognizing an unlabeled histogram by shape requires a future local image-text model or
-  image-captioning stage.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-39"></a>
-<a id="repository-record-38"></a>
-<a id="v20--selectable-voice-interactions-finalized-speech-and-conversational-follow-ups"></a>
-
-
-
-### v2.0
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [Selectable voice interactions, finalized speech, and conversational follow-ups](#v20--selectable-voice-interactions-finalized-speech-and-conversational-follow-ups).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Added a persistent Voice input setting with **Click to speak** and **Hold Space** choices. Click
-  mode sends after two seconds of silence; hold mode records while Space is held and sends on
-  release without taking over the Space key during text editing.
-- Kept live multilingual recognition for immediate feedback, then added one complete in-memory
-  transcription pass before sending so the newest words and language decision are no longer limited
-  to the last streaming hypothesis.
-- Reframed recent history as actual user and assistant turns for the local Qwen model, bounded each
-  retained message, and prioritized the newest turns so long older responses cannot remove the
-  context needed by a follow-up.
-- Cleared the previous displayed request when a new text or voice interaction begins while
-  preserving a draft that is already being edited.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-40"></a>
-<a id="repository-record-39"></a>
-<a id="v19--one-light-visual-family-across-every-screen"></a>
-
-
-
-### v1.9
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [One light visual family across every screen](#v19--one-light-visual-family-across-every-screen).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Extended the warm light canvas, restrained scan texture, graphite hierarchy, signal-red identity,
-  and sharper surfaces from the command screen into History, Activity, file results, and Settings.
-- Kept each destination purpose-specific: History remains a chronological conversation archive,
-  Activity remains a filterable indexing ledger, and Settings retains every native control, status,
-  confirmation, recovery path, and privacy explanation.
-- Preserved natural capitalization in assistant responses and file explanations while reserving
-  uppercase treatment for short telemetry and interface labels.
-- Kept the application intentionally light-only, including when macOS uses Dark appearance.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-41"></a>
-<a id="repository-record-40"></a>
-<a id="v18--light-command-interface-with-acquired-file-modules"></a>
-
-
-
-### v1.8
-
-- **Recorded date:** 2026-08-21.
-
-- Git index record, not an independently established release date: [Light command interface with acquired-file modules](#v18--light-command-interface-with-acquired-file-modules).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Rebuilt the main screen around the approved light-only command design: a warm off-white canvas,
-  restrained scan texture, compact local-status rail, black monospaced hierarchy, and signal-red
-  command markers.
-- Replaced rounded command cards and material controls with square-edged file modules, acquisition
-  corners, section rules, and plain Open and Reveal actions. Main-screen modules omit absolute paths
-  while retained History preserves the established record.
-- Kept the idle prompt centered, moved the current request control to the bottom after interaction,
-  and preserved live voice text, local processing state, responsive file wrapping, reduced-motion
-  behavior, and the separate History screen.
-- Restyled background indexing as a compact command strip without removing its percentage, folder
-  state, Activity navigation, or safe Pause action.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-`4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-42"></a>
-<a id="v17--current-command-presentation-with-complete-conversation-history"></a>
-
-
-
-### v1.7
-
-- **Recorded date:** 2026-08-21.
-
-- Replaced the accumulating main chat with a voice-first command surface that starts centered and
-  moves its live voice or text input to the bottom after the first request.
-- Presents only the current processing state, latest response, and latest file findings on the main
-  screen; beginning another request replaces that presentation instead of adding another bubble.
-- Displays file findings in a centered adaptive grid with a restrained acquisition animation, while
-  retaining explicit Open and Reveal actions and a reduced-motion fallback.
-- Moved the established chronological message layout to an in-window History screen. It includes
-  restored messages and new requests from the current launch, while reopening the application resets
-  only the main command presentation.
-
-**Evidence and delivery status**
-
-`4893e05` (2026-08-21)
-
-[Back to change history](#change-history)
-
-<a id="change-91"></a>
-<a id="readme-detail-20"></a>
-<a id="repository-record-33"></a>
-
-
-
-### - Added selectable voice input (click-to-speak or hold-to-talk) with a 120-second maximum-capture safeguard so the microphone can never stay open unattended
-
-- **Recorded date:** 2026-08-21.
-
-- Replaced the chat view with a focused command surface and moved the complete retained conversation
-  to its own History screen.
-
-- Published the complete file and folder hierarchy before content extraction so interrupted indexing
-  no longer leaves later folders undiscoverable.
-
-- Made literal folder matches scope results to their own contents, preventing unrelated semantic
-  guesses from being presented as folder evidence.
-
-- Recovered explicit file and folder searches when the local routing model omits its structured
-  marker.
-
-- Added the installed release number to Settings. Git reconciliation: Committed the v1.7–v2.5
-  iteration history: command/history redesign, light presentation, bounded click/hold voice input,
-  evidence-backed results, folder-aware indexing/retrieval, layout refactoring, and v2.5/build-25
-  metadata.
-
-**Evidence and delivery status**
-
-`472631e`, `a04767e`, `c031050`, `5dc1951`, `4893e05`
-
-[Back to change history](#change-history)
-
-<a id="change-43"></a>
-<a id="v16--spoken-words-appear-and-send-and-the-routing-marker-stays-hidden"></a>
-
-
-
-### v1.6
-
-- **Recorded date:** 2026-08-20.
-
-- Fixed spoken words never appearing and no request being sent. Recognized text for a short phrase
-  arrives as unconfirmed segments, which the app ignored: it read only the confirmed list, which
-  fills once a recording is long enough to exceed the confirmation window, and the in-progress text,
-  which is cleared as soon as each chunk finishes.
-- Fixed a routing instruction being shown as the assistant's answer. The model is asked for a
-  doubled bracket marker and does not reliably reproduce the brackets, so a near miss was treated as
-  ordinary conversation and the raw marker and payload were displayed. The marker is now matched by
-  its token, whatever brackets surround it.
-- Neutralized that token wherever untrusted text enters a prompt, so an answer already stored in
-  history cannot teach the model to repeat it.
-
-**Evidence and delivery status**
-
-`aacd101` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-44"></a>
-<a id="repository-record-42"></a>
-<a id="v15--recordings-end-on-a-pause-and-send-what-was-said"></a>
-
-
-
-### v1.5
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Recordings end on a pause and send what was said](#v15--recordings-end-on-a-pause-and-send-what-was-said).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Fixed a spoken request never being sent after the recording ended on its own. Finishing ran inside
-  the task that following the recording had just cancelled, so the request was abandoned silently.
-- Fixed the recording not ending after a pause. The level below which audio counted as quiet was far
-  lower than a quiet room reports, so a pause was never recognized.
-- Ended a recording on a pause in the audio rather than on recognized text. Recognition lags speech
-  by about a second, so waiting for text delayed the stop or prevented it.
-- Shortened the pause that ends a recording to two seconds.
-- Reported a capture that fails instead of ending silently. A failed stream previously left the
-  interface showing a recording that was no longer running, with no message and no error.
-- Logged speech-library activity in Debug builds so a capture that produces no text can be
-  diagnosed. Release builds stay silent.
-
-**Evidence and delivery status**
-
-`c436b1f` (2026-08-20)
-
-`c436b1f`
-
-[Back to change history](#change-history)
-
-<a id="change-45"></a>
-<a id="repository-record-43"></a>
-<a id="v14--live-waveform-and-on-screen-speech-with-no-audio-written-to-disk"></a>
-
-
-
-### v1.4
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Live waveform and on-screen speech, with no audio written to disk](#v14--live-waveform-and-on-screen-speech-with-no-audio-written-to-disk).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Replaced the text field with a live waveform while the microphone is open, drawn from the audio
-  levels the speech model reports rather than a decorative animation.
-- Showed recognized words in the conversation as they are spoken, so it is clear what the app has
-  captured and when to stop. Settled words are shown plainly and words still being revised are
-  dimmed, because continuous recognition rewrites its most recent words as more audio arrives.
-- Ended a recording automatically after a pause, while the microphone control still stops it
-  immediately.
-- Stopped writing microphone audio to disk. Speech is recognized from memory as it arrives, so no
-  recording file is created, and any file left by an earlier version is deleted at startup.
-- Added a preparing state shown before capture begins. Continuous recognition needs the speech model
-  loaded first, so the interface says so instead of opening the microphone and discarding what it
-  cannot yet recognize.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-`bf0c74d`
-
-[Back to change history](#change-history)
-
-<a id="change-46"></a>
-<a id="v13--the-assistant-stopped-repeating-its-own-result-sentence"></a>
-
-
-
-### v1.3
-
-- **Recorded date:** 2026-08-20.
-
-- Stopped the assistant repeating "I found N matches. They are shown below." for every request. When
-  an answer duplicated card metadata, the app replaced it with that generated sentence, stored the
-  sentence as the assistant's reply, and then showed it back to the model as recent conversation.
-
-After a few such turns the model reproduced the sentence as its own answer, so every later request
-  returned the same text and no results.
-- Replaced a generated acknowledgement with a bracketed note wherever conversation history enters a
-  prompt, so the model keeps the context that results were shown without a sentence to imitate.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-47"></a>
-<a id="v12--vendored-network-code-removed-with-correctness-fixes-and-automated-tests"></a>
-
-
-
-### v1.2
-
-- **Recorded date:** 2026-08-20.
-
-**Offline boundary**
-
-- Removed the network path monitor that the vendored speech dependency started whenever it
-  constructed a model-hub client, so no code in the application observes network state.
-- Removed that dependency's fallback that downloaded a missing speech tokenizer from the internet,
-  and moved the tokenizer into the verified offline model package instead. A missing tokenizer now
-  reports a reinstall instruction rather than attempting a connection.
-- Stored both dependency modifications in the repository and re-applied and verified them during
-  preparation, so refreshing a pinned checkout cannot silently restore the original network code.
-- Extended the boundary audit to reject any executable in the bundle that links a networking library
-  or imports a network symbol, in addition to the existing entitlement checks.
-- Recorded the verified checksum and size of every added tokenizer file in the model manifest, and
-  made the preparation download fail loudly on a timeout, a partial file, or a truncated file
-  listing.
-
-**Search and extraction accuracy**
-
-- Made a multi-word file request match words individually instead of requiring the whole phrase to
-  appear as one run of characters, so a request naming a topic and a folder can still find the file.
-- Treated `%` and `_` typed in a request as ordinary characters rather than as database wildcards.
-- Scaled an oversized photograph or scan down to the supported recognition size instead of rejecting
-  it, so a high-resolution image is no longer indexed with no text at all.
-- Added Simplified Chinese alongside English to text recognition.
-- Kept the text of a PDF's readable pages when recognition fails on one page, instead of discarding
-  the whole document's text.
-- Detected the encoding of a plain-text file rather than assuming UTF-8, so a file saved in another
-  encoding is no longer indexed as replacement characters.
-- Excluded the real system and cache directories by absolute path, which a sandboxed application
-  cannot identify by name alone.
-- Stopped a concise answer from being replaced by a match count when a result's name was an ordinary
-  word, such as a folder named `Documents`.
-
-**Voice, models, and lifecycle**
-
-- Fixed voice capture discarding the first seconds of speech: the microphone now opens immediately
-  while the speech model loads alongside it.
-- Fixed a recording being read back before macOS had finished writing it, which could truncate or
-  empty a transcription.
-- Separated **Not installed** from **Damaged** in Settings so a missing model package and a file
-  that no longer matches its checksum no longer share one recovery instruction.
-- Reported voice input as unavailable when its tokenizer is absent, instead of reporting it ready
-  and failing at first use.
-- Re-verified model checksums on a weekly schedule rather than at every launch, and closed the
-  private database when the application quits.
-- Added an extraction version to each file's fingerprint, so an extraction correction re-extracts
-  already-indexed files once instead of leaving them on superseded text.
-
-**Performance and cleanup**
-
-- Replaced a repeated per-result database lookup with one batched read, and stopped semantic search
-  from scanning the whole vector table when no vector can satisfy the requested file type.
-- Made passage splitting cost time proportional to a document's length rather than to its length
-  squared.
-- Removed a retrieval lookup against an empty prototype table that ran on every search and could
-  never affect a score.
-- Added a native test target with 46 automated tests covering request routing, search-text escaping,
-  passage offsets, card-aware answers, and scanner exclusions.
-- Added previews for every model readiness state, so the not-installed and damaged wording can be
-  reviewed in both appearances without removing or corrupting installed model files. They are
-  excluded from the shipped application.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-48"></a>
-<a id="v11--simpler-indexing-controls-and-a-clean-shutdown-on-quit"></a>
-
-
-
-### v1.1
-
-- **Recorded date:** 2026-08-20.
-
-- Reworked file-state counts into compact metric tiles and consolidated each folder's
-  automatic-update state and action into one control.
-- Added a dedicated pause action for an active indexing run and redesigned activity-history filters
-  as consistent Source, Folder, and Status fields.
-- Anchored restored conversations at the newest message to prevent a visible top-to-bottom jump when
-  returning to the assistant.
-- Added orderly llama.cpp, Metal, voice, monitoring, and indexing teardown so a normal Quit no
-  longer produces an unexpected-termination report.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-49"></a>
-<a id="v10--continuous-folder-monitoring-pausable-indexing-and-30-day-activity"></a>
-
-
-
-### v1.0
-
-- **Recorded date:** 2026-08-20.
-
-- Added pausable per-folder indexing with determinate progress, percentages, and clearly labeled
-  new, modified, unchanged, removed, and skipped states.
-- Added process-lifetime native macOS folder monitoring, debounced incremental updates, and
-  launch-time catch-up scans without a daemon, login item, server, or runtime network access.
-- Added a same-window Activity screen with run filters, automatic monitoring events, summary badges,
-  expandable file details, and a rolling 30-day retention policy.
-- Kept retained activity after folder revocation while continuing to remove the bookmark and
-  dependent searchable index records.
-- Added a background-indexing banner so silent automatic work remains visible without blocking
-  conversation.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-50"></a>
-<a id="v09--hard-file-type-filters-prompt-safety-and-tightened-entitlements"></a>
-
-
-
-### v0.9
-
-- **Recorded date:** 2026-08-20.
-
-- Applied requested file-type constraints inside metadata and full-text queries before candidate
-  limits, and added adaptive vector-neighbor expansion so valid constrained semantic matches are not
-  hidden behind other file types.
-- Neutralized Qwen chat-control markers in questions, local history, paths, and excerpts before
-  untrusted text enters a parsed chat template.
-- Resolved current symlink targets before explicit Open or Reveal actions and rejected targets
-  outside the authorized root.
-- Made SQLite reads distinguish normal completion from execution failure, reject malformed required
-  identifiers, and close a partially initialized database connection after setup failure.
-- Removed duplicated presentation state, dead prototype APIs, unused constants, and duplicate
-  indexed-item decoding while retaining compatible prototype-era database tables.
-- Hardened temporary voice recordings with owner-only permissions, failed-start cleanup, and
-  stale-recording cleanup before the next capture.
-- Recorded unreadable traversal paths in indexing exclusions instead of silently continuing.
-- Restricted Release signing to the four approved sandbox entitlements and made the static audit
-  reject every unexpected entitlement.
-- Hardened connected dependency archive extraction on older system Python versions while preserving
-  safe in-repository symbolic links.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-51"></a>
-<a id="v08--settings-reordered-conversation-text-styled-and-the-readme-rewritten"></a>
-
-
-
-### v0.8
-
-- **Recorded date:** 2026-08-20.
-
-- Reordered Settings around Privacy, Folder Access, Models, and Assistant Status.
-- Updated the Settings introduction to follow the same information hierarchy.
-- Added restrained sender labels and role-specific typography to user and assistant messages.
-- Added local lightweight styling for emphasis, inline code, preserved paragraphs, and simple list
-  markers without introducing a web-rendering surface.
-- Consolidated the README into task-focused sections, converted troubleshooting to questions and
-  answers, integrated related operational guidance, preserved the architecture diagrams, and removed
-  machine-specific paths.
-- Converted the project folder into a lean source checkout by excluding regenerated dependencies,
-  model assets, offline packages, and built applications from Git.
-
-#### Delivery evidence
-
-- The isolated Debug build and clean offline Release build completed using pinned local
-  dependencies.
-- The clean-built and installed bundles report v0.8 with numeric build `8`.
-- The clean-built and installed executables are byte-identical with SHA-256
-  `1deb2c96ea3f6da614cea02477e905ea9c2850f2e5dd4035057313b2432be8ea`.
-- Deep signature validation and the static offline-boundary audit passed for the installed bundle.
-- Focused source checks confirmed the requested Settings order, sender labels, local rich-text
-  renderer, and absence of machine-specific paths in this README.
-- The installed application launched successfully and remained running during the startup smoke
-  check.
-- Automated visual capture was unavailable because the current macOS environment did not grant
-  accessibility or screen-recording permission; no permission boundary was widened to bypass that
-  restriction.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-52"></a>
-<a id="repository-record-44"></a>
-<a id="v07--answers-stopped-repeating-details-already-shown-in-the-cards"></a>
-
-
-
-### v0.7
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Answers stopped repeating details already shown in the cards](#v07--answers-stopped-repeating-details-already-shown-in-the-cards).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Stopped grounded replies from repeating filenames, paths, source numbers, or file-by-file lists
-  already presented in result cards.
-- Added a deterministic local safeguard that replaces duplicated card metadata with a concise match
-  count when necessary.
-- Applied the same safeguard to restored conversation history while preserving reusable cards.
-- Added project-hygiene rules and removed obsolete build caches, historical application bundles,
-  Finder metadata, and download-state files while preserving installed offline models and dependency
-  pins.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-`bf0c74d`
-
-[Back to change history](#change-history)
-
-<a id="change-53"></a>
-<a id="repository-record-45"></a>
-<a id="v06--plain-language-model-readiness-and-result-cards-that-survive-relaunch"></a>
-
-
-
-### v0.6
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Plain-language model readiness and result cards that survive relaunch](#v06--plain-language-model-readiness-and-result-cards-that-survive-relaunch).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Redesigned **Models** as a plain-language readiness summary for Chat and answers, File search, and
-  Voice input.
-- Added overall readiness, private model-storage usage, launch-check acknowledgement, and actionable
-  recovery wording without exposing model filenames in the interface.
-- Stored ranked result-card snapshots with their assistant messages and restored them after
-  relaunch.
-- Added migration for older citation-only messages when the cited item still exists in the current
-  index.
-- Revalidated saved-card actions against the current index, read-only folder authorization, path
-  containment, and disk presence.
-- Prevented result actions from collapsing into narrow vertical controls.
-- Standardized human-facing release labels with a `v` prefix and aligned the project folder name
-  with the application name.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-`bf0c74d`
-
-[Back to change history](#change-history)
-
-<a id="change-54"></a>
-<a id="repository-record-46"></a>
-<a id="v05--message-timestamps-clear-conversation-and-shorter-result-cards"></a>
-
-
-
-### v0.5
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Message timestamps, Clear Conversation, and shorter result cards](#v05--message-timestamps-clear-conversation-and-shorter-result-cards).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Added local timestamps below user and assistant messages.
-- Added a confirmed Clear Conversation action in the assistant header and application menu.
-- Limited history deletion to saved messages and current results; folders, permissions, models,
-  index records, and source files remain unchanged.
-- Reduced result-card height and replaced stacked ranking signals with one concise **Why it
-  matches** explanation.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-`bf0c74d`
-
-[Back to change history](#change-history)
-
-<a id="change-55"></a>
-<a id="repository-record-47"></a>
-<a id="v04--settings-reorganized-around-status-folder-access-and-privacy"></a>
-
-
-
-### v0.4
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Settings reorganized around status, folder access, and privacy](#v04--settings-reorganized-around-status-folder-access-and-privacy).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Reorganized Settings around assistant status, shortcut availability, folder access, and one
-  focused privacy statement.
-- Styled Control, Option, and Space as separate accessible keycaps.
-- Kept an individual **Update Index** action on every folder and showed **Update All Folders** only
-  when multiple folders were authorized.
-- Reduced repeated privacy wording while retaining read-only access and explicit revocation
-  controls.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-`bf0c74d`
-
-[Back to change history](#change-history)
-
-<a id="change-56"></a>
-<a id="repository-record-48"></a>
-<a id="v03--local-routing-between-chat-clarification-and-file-search"></a>
-
-
-
-### v0.3
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Local routing between chat, clarification, and file search](#v03--local-routing-between-chat-clarification-and-file-search).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Added local routing between ordinary conversation, clarification, and structured file search.
-- Made requested file types hard constraints instead of filename keywords.
-- Added deterministic clarification for singular, underspecified file requests while retaining broad
-  listing requests such as “Show me PDFs.”
-- Added automatic bottom scrolling, corrected message alignment, a richer native visual system,
-  in-window Settings, responsive result cards, and the selected blue folder-and-sparkle icon.
-
-**Evidence and delivery status**
-
-`bf0c74d` (2026-08-20)
-
-`bf0c74d`
-
-[Back to change history](#change-history)
-
-<a id="change-57"></a>
-<a id="repository-record-49"></a>
-<a id="v02--focused-interface-with-crash-safe-indexing-and-folder-revocation"></a>
-
-
-
-### v0.2
-
-- **Recorded date:** 2026-08-20.
-
-- Git index record, not an independently established release date: [Focused interface with crash-safe indexing and folder revocation](#v02--focused-interface-with-crash-safe-indexing-and-folder-revocation).
-- Preserves the documented intermediate release; no separate commit/build is invented.
-
-- Simplified the interface around conversation, file retrieval, voice input, shortcut access, and
-  Settings.
-- Added crash-safe sequential indexing, folder revocation, local conversation, and lazy local
-  speech-model loading.
-
-**Evidence and delivery status**
-
-`db1f803` (2026-08-20)
-
-`db1f803`
-
-[Back to change history](#change-history)
-
-<a id="change-58"></a>
-<a id="v01--first-sandboxed-assistant-with-local-indexing-retrieval-and-voice"></a>
-
-
-
-### v0.1
-
-- **Recorded date:** 2026-08-20.
-
-- Established the sandboxed SwiftUI application, read-only folder authorization, local indexing,
-  embedded inference, hybrid retrieval, OCR, and local voice foundation.
-
-**Evidence and delivery status**
-
-`db1f803` (2026-08-20)
-
-[Back to change history](#change-history)
-
-<a id="change-99"></a>
-<a id="repository-record-41"></a>
-
-
-
-### Committed v1.2–v1.6 extraction, search, voice, readiness, offline-boundary, and regression work
-
-- **Recorded date:** 2026-08-20.
-
-- Git record: Committed v1.2–v1.6 extraction, search, voice, readiness, offline-boundary, and regression work.
-- Added/corrected the retrospective v0.1–v1.6 index and normalized early version labels; moved/named the built app at project root.
-
-**Evidence and delivery status**
-
-- `e8888cd`, `2357ae7`, `8c8705e`, `85ed02a`, `aa69c88`, `fad81f4`, `565e23f`, `ed042ae`, `c524718`, `ff19951`, `bf0c74d`, `c436b1f`, `aacd101`, `872d805`, `7f52880`, `3fc50a8`, `4bac51b`, `52e18d9`, `31dfce6`, `db1f803`
-
-[Back to change history](#change-history)
-
-<a id="change-108"></a>
-<a id="repository-record-50"></a>
-
-
-
-### Released v1.1 source with continuous native folder monitoring, pausable progress, and visible background indexing
-
-- **Recorded date:** 2026-08-16.
-
-<ul><li>Released v1.1 source with continuous native folder monitoring, pausable progress, and visible background indexing.</li><li>Added 30-day local activity history with redesigned filters, file-state metrics, and retained records after folder revocation.</li><li>Improved conversation restoration and fixed unexpected termination during local model and Metal shutdown.</li></ul> Git reconciliation: Added v1.0/v1.1 continuous indexing, activity history, navigation/shutdown fixes, regression checks, and release documentation.
-
-**Evidence and delivery status**
-
-`8103032`, `feaa72c`, `fc59837`, `ab8e13a`
-
-[Back to change history](#change-history)
-
-<a id="change-109"></a>
-<a id="repository-record-51"></a>
-
-
-
-### Imported the native offline assistant and its preserved source history, guardrails, target/configuration, tooling, indexing, private retrieval/storage, UI
-
-- **Recorded date:** 2026-08-15.
-
-- Git record: Imported the native offline assistant and its preserved source history, guardrails, target/configuration, tooling, indexing, private retrieval/storage, UI, and voice.
-- The retained imported documentation already describes v0.9; this is not evidence that all earlier builds were published on the import date.
-
-**Evidence and delivery status**
-
-`0406220`, `3cd4429`, `cd137a4`, `ab335db`, `a456632`, `971ddc9`, `b14cdc4`, `d4d1921`, `7bb804e`, `c81f907`, `74bab06`, `e36232c`
-
-[Back to change history](#change-history)
-
 </details>
+
+### Earlier history
+
+Older records are archived by period. Each archive keeps the same table and full records.
+
+| Period | Changes | Archive |
+|---|---|---|
+| August 2026 | 35 | [history/2026-08.md](history/2026-08.md) |
 
 ## License
 
