@@ -141,8 +141,7 @@ port. Run the command without editing a source or configuration file:
 Each token command displays a non-echoing prompt. The first credential can reach only the
 read-only reminder snapshot plugin. The second authenticates the private A2A route and its
 delegated OpenClaw agent call and carries OpenClaw's normal tool authority. Neither credential is
-written to configuration, the spool, a
-command line, or the repository.
+written to configuration, the spool, a command line, or the repository.
 
 Run one queue pass with:
 
