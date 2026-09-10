@@ -141,22 +141,34 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 
 ## Capabilities
 
+### Conversation
+
 | Capability | Availability | Notes |
 |---|---|---|
 | Local conversation | Available | Runs through an embedded model in the application process. |
 | Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
 | Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
 | Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
-| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
-| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
-| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
-| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
-| Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
 | Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
 | Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
 | Automatic conversation scrolling | Available | Follows new messages, results, and completed answers while respecting reduced motion. |
 | Message timestamps | Available | Uses local time for today and an abbreviated local date and time for older messages. |
 | Clear conversation history | Available | Removes saved messages and cards after confirmation. |
+
+### Finding files
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
+| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
+| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
+| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
+| Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
+
+### Authorized folders and indexing
+
+| Capability | Availability | Notes |
+|---|---|---|
 | Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
 | Folder revocation | Available | Removes authorization and dependent private index records. |
 | Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
@@ -164,14 +176,21 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 | Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
 | Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
 | PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
+
+### Speaking and shortcuts
+
+| Capability | Availability | Notes |
+|---|---|---|
 | Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
 | Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
+
+### Deliberately not included
+
+| Capability | Availability | Notes |
+|---|---|---|
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
 | Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
-
-<a id="build-and-install-from-source"></a>
-
 ## Build from source
 
 <details>
@@ -658,7 +677,8 @@ For source changes, follow the [repository instructions](../AGENTS.md#local-assi
 <!-- project-control:section=history -->
 ## Change history
 
-**Change-history numbering:** Version and build numbers. Follow the repository [version and build-number policy](../AGENTS.md#version-and-build-number-policy).
+**Change-history numbering:** This project uses marketing versions and integer build numbers.
+Follow the repository-wide [version and build-number policy](../AGENTS.md#version-and-build-number-policy).
 
 One record per change; complete details and evidence are below. Older work dates and Git checkpoints remain labelled when they differ.
 
@@ -666,8 +686,8 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
-| README organization | 2026-09-06 | <ul><li><strong>Structure:</strong> User guide first; one history table.</li><li><strong>Rules:</strong> Scoped contributor guidance under AGENTS.</li></ul> | [Full record](#readme-organization) |
-| Documentation readability | 2026-09-06 | <ul><li><strong>Change:</strong> Reorganized long paragraphs and table cells without dropping details.</li></ul> | [Full record](#change-1) |
+| Documentation | 2026-09-06 | <ul><li><strong>Structure:</strong> User guide first; one history table.</li><li><strong>Rules:</strong> Scoped contributor guidance under AGENTS.</li></ul> | [Full record](#readme-organization) |
+| Maintenance | 2026-09-06 | <ul><li><strong>Change:</strong> Reorganized long paragraphs and table cells without dropping details.</li></ul> | [Full record](#change-1) |
 | Documentation | 2026-09-06 | <ul><li><strong>Change:</strong> Moved complete project descriptions, register details, and repository-origin history into this README.</li></ul> | [Full record](#change-2) |
 | v5.4 / build 54 | 2026-09-05 | <ul><li><strong>Change:</strong> Reused statements and atomic activity writes.</li></ul> | [Full record](#change-3) |
 | Documentation | 2026-09-04 | <ul><li><strong>Change:</strong> Merged the version index and the dated maintenance history into one change-history table using the repository's required first-column labels.</li></ul> | [Full record](#change-4) |
@@ -692,9 +712,9 @@ One record per change; complete details and evidence are below. Older work dates
 | v3.6 / build 36 | 2026-08-26 | <ul><li><strong>Change:</strong> User-created server ZIP and corrected setup packaging.</li></ul> | [Full record](#change-23) |
 | v3.5 / build 35 | 2026-08-26 | <ul><li><strong>Change:</strong> Unambiguous clean-device OpenClaw setup.</li></ul> | [Full record](#change-24) |
 | v3.4 / build 34 | 2026-08-26 | <ul><li><strong>Change:</strong> Live OpenClaw status and in-app setup.</li></ul> | [Full record](#change-25) |
-| v3.3 | 2026-08-26 | <ul><li><strong>Change:</strong> Hidden reminder knowledge and explicit OpenClaw actions.</li></ul> | [Full record](#change-26) |
-| v3.2 | 2026-08-26 | <ul><li><strong>Change:</strong> Private reminder RAG and an opt-in OpenClaw connector.</li></ul> | [Full record](#change-27) |
-| Dated change | 2026-08-23 | <ul><li><strong>Change:</strong> Removed the stale hard-coded version fallback so bundle metadata remains authoritative and unavailable metadata is reported explicitly.</li></ul> | [Full record](#change-85) |
+| v3.3 / build 33 | 2026-08-26 | <ul><li><strong>Change:</strong> Hidden reminder knowledge and explicit OpenClaw actions.</li></ul> | [Full record](#change-26) |
+| v3.2 / build 32 | 2026-08-26 | <ul><li><strong>Change:</strong> Private reminder RAG and an opt-in OpenClaw connector.</li></ul> | [Full record](#change-27) |
+| Maintenance | 2026-08-23 | <ul><li><strong>Change:</strong> Removed the stale hard-coded version fallback so bundle metadata remains authoritative and unavailable metadata is reported explicitly.</li></ul> | [Full record](#change-85) |
 
 <details>
 <summary>Full records for this table</summary>
@@ -2009,8 +2029,7 @@ Historical work record
 <a id="repository-record-22"></a>
 <a id="v33--hidden-reminder-knowledge-and-explicit-openclaw-actions"></a>
 
-### v3.3
-
+### v3.3 / build 33
 - **Recorded date:** 2026-08-26.
 
 - Git index record, not an independently established release date: [Hidden reminder knowledge and explicit OpenClaw actions](#v33--hidden-reminder-knowledge-and-explicit-openclaw-actions).
@@ -2046,8 +2065,7 @@ Historical work record
 <a id="repository-record-26"></a>
 <a id="v32--private-reminder-rag-and-an-opt-in-openclaw-connector"></a>
 
-### v3.2
-
+### v3.2 / build 32
 - **Recorded dates:** 2026-08-26; 2026-08-23.
 - **Date provenance:** Change history: 2026-08-26; Repository history records: 2026-08-23. Different source dates are retained; they are not newly established release dates.
 
