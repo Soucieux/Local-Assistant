@@ -664,7 +664,7 @@ To identify an application bundle, read `CFBundleShortVersionString` in its `Inf
 <!-- project-control:section=ignore -->
 ## Contributing
 
-For source changes, follow the [repository instructions](../AGENTS.md#local-assistant-product-guardrails).
+For source changes, follow the [Local Assistant contribution guide](CONTRIBUTING.md).
 
 <a id="repository-history-records"></a>
 <a id="change-log"></a>
@@ -678,7 +678,7 @@ For source changes, follow the [repository instructions](../AGENTS.md#local-assi
 ## Change history
 
 **Change-history numbering:** This project uses marketing versions and integer build numbers.
-Follow the repository-wide [version and build-number policy](../AGENTS.md#version-and-build-number-policy).
+Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
 
 One record per change; complete details and evidence are below. Older work dates and Git checkpoints remain labelled when they differ.
 
@@ -686,6 +686,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-09-11 | <ul><li><strong>Contributing:</strong> Added a standalone project guide that works in both the canonical workspace and the public subtree mirror.</li><li><strong>Links:</strong> Removed README dependencies on parent-only repository files.</li><li><strong>Repository:</strong> Added a feature-first public GitHub description for new users.</li></ul> | [Full record](#public-contributor-guide) |
 | Documentation | 2026-09-06 | <ul><li><strong>Structure:</strong> User guide first; one history table.</li><li><strong>Rules:</strong> Scoped contributor guidance under AGENTS.</li></ul> | [Full record](#readme-organization) |
 | Maintenance | 2026-09-06 | <ul><li><strong>Change:</strong> Reorganized long paragraphs and table cells without dropping details.</li></ul> | [Full record](#change-1) |
 | Documentation | 2026-09-06 | <ul><li><strong>Change:</strong> Moved complete project descriptions, register details, and repository-origin history into this README.</li></ul> | [Full record](#change-2) |
@@ -718,6 +719,25 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="public-contributor-guide"></a>
+
+### Public contributor guide — 2026-09-11
+
+- Added `CONTRIBUTING.md` with Local Assistant's public project boundaries, focused change checks,
+  and version/build policy.
+- Changed every README policy link to a path inside this project, so the canonical private subtree
+  and standalone public repository can keep identical files without broken parent links.
+- Kept the canonical workspace's root instructions and scoped internal procedures authoritative for
+  private repository workflow; no private governance file was copied into the public subtree.
+- Set the public GitHub repository description to a newcomer-friendly summary that highlights
+  offline privacy, local chat, read-only file search, OCR, voice input, hybrid RAG, reminder
+  knowledge, and the optional isolated Connector. Confirmed the saved value through GitHub's
+  repository API.
+- **Status:** Documentation only. Application behavior, v5.4/build 54 source metadata, signed
+  artifacts, installed applications, model storage, and deployment state are unchanged.
+
+[Back to change history](#change-history)
 
 <a id="readme-organization"></a>
 
@@ -846,7 +866,7 @@ The project root now holds the signed v5.4 build 54 applications and disk image,
 Both applications are installed on this Mac and the Connector's existing-setup update has re-registered the background job, so that correction is now in effect here.
 
 - **Change-history numbering:** Local Assistant uses marketing versions and integer build numbers.
-- Follow the repository-wide [version and build-number policy](../AGENTS.md#version-and-build-number-policy).
+- Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
 
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
