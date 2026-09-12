@@ -67,8 +67,9 @@ Local Assistant uses a marketing version and an integer build number:
 - Write versions as `v<major>.<minor>`, with one minor digit from `0` through `9`. After `v0.9`
   comes `v1.0`.
 - Derive the build as `major x 10 + minor`; for example, `v5.4` uses build `54`.
-- Advance both values together for a user-facing implementation change. Documentation-only
-  corrections, history reconciliation, and unchanged rebuilds do not require a new version.
+- Advance both values together for every change except a documentation-only one. Documentation
+  corrections, history reconciliation, configuration prose, an unchanged clean rebuild, and
+  artifact relocation do not by themselves require a new version.
 - Keep source metadata, packaged artifacts, and documentation on the same version and build. Never
   relabel an existing signed or distributed artifact as a newer release.
 - Record source implementation, tests, builds, installation, deployment, and publication as
