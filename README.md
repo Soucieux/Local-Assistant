@@ -1,11 +1,5 @@
 # Local Assistant
 
-<a id="local-assistant-1"></a>
-
-<a id="repository-description-archive"></a>
-
-<a id="repository-register-detail"></a>
-
 <!-- project-control:section=overview -->
 ## Overview
 
@@ -135,9 +129,6 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 | `OpenClaw, delete the permit reminder` | Still asks for confirmation because every reminder change is confirmation-gated. |
 | `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 | `OpenClaw, summarize today's weather plan` | Sends the exact non-reminder request to OpenClaw through A2A. |
-
-<a id="product-reference"></a>
-<a id="core-capabilities"></a>
 
 ## Capabilities
 
@@ -527,8 +518,6 @@ Local Assistant/
 
 </details>
 
-<a id="privacy-boundary"></a>
-
 ## Boundaries and limitations
 
 ### Privacy and security boundaries
@@ -646,33 +635,14 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
-<a id="references"></a>
-
 ## Design reference
 
 [ARCHITECTURE.md](ARCHITECTURE.md) explains system design, data flow, and privacy boundaries.
-
-<a id="project-guardrails"></a>
-<a id="local-assistant-product-guardrails"></a>
-<a id="runtime-and-data-boundaries"></a>
-<a id="retrieval-and-response-presentation"></a>
-<a id="interface-and-visual-checks"></a>
-<a id="installed-app-setup"></a>
-<a id="release-and-build-delivery"></a>
-<a id="local-assistant-vendor-guidance"></a>
 
 <!-- project-control:section=ignore -->
 ## Contributing
 
 For source changes, follow the [Local Assistant contribution guide](CONTRIBUTING.md).
-
-<a id="repository-history-records"></a>
-<a id="change-log"></a>
-<a id="release-notes"></a>
-
-<a id="history-index-1"></a>
-
-<a id="history-index-3"></a>
 
 <!-- project-control:section=history -->
 ## Change history
@@ -746,7 +716,7 @@ One record per change; complete details and evidence are below. Older work dates
 - **Structure:** Put purpose, capabilities, setup, architecture, and workflows before history.
 - **History:** Merge matching repository-origin records into the owning change; preserve unique detail, evidence, and older links.
 - **Ownership:** Keep user documentation here; route scoped contributor rules through root AGENTS.
-- **Status:** Documentation changes only; uncommitted. Existing application versions, artifacts, and deployment state are unchanged.
+- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `795cd8e`. Existing application versions, artifacts, and deployment state are unchanged.
 
 <a id="change-1"></a>
 <a id="readability-maintenance"></a>
@@ -777,16 +747,11 @@ Local documentation changes; initially delivered uncommitted and recorded in thi
 
 **Evidence and delivery status**
 
-Local documentation update; uncommitted
+Local documentation update; initially delivered uncommitted and recorded in `795cd8e`
 
 [Back to change history](#change-history)
 
 <a id="change-3"></a>
-<a id="current-release-status"></a>
-<a id="readme-detail-1"></a>
-<a id="readme-detail-3"></a>
-<a id="repository-record-1"></a>
-<a id="v54--reused-statements-and-atomic-activity-writes"></a>
 
 ### v5.4 / build 54
 
@@ -865,9 +830,6 @@ The project root now holds the signed v5.4 build 54 applications and disk image,
 
 Both applications are installed on this Mac and the Connector's existing-setup update has re-registered the background job, so that correction is now in effect here.
 
-- **Change-history numbering:** Local Assistant uses marketing versions and integer build numbers.
-- Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
-
 <details>
 <summary>Detailed build, test, privacy, and release evidence</summary>
 
@@ -901,8 +863,6 @@ This v5.4/build 54 commit
 [Back to change history](#change-history)
 
 <a id="change-4"></a>
-<a id="readme-detail-2"></a>
-<a id="repository-record-2"></a>
 
 ### Documentation
 
@@ -924,9 +884,6 @@ This documentation commit
 [Back to change history](#change-history)
 
 <a id="change-5"></a>
-<a id="readme-detail-4"></a>
-<a id="repository-record-3"></a>
-<a id="v53--connector-launchd-reliability-and-shared-code"></a>
 
 ### v5.3 / build 53
 
@@ -988,8 +945,6 @@ This documentation commit
 [Back to change history](#change-history)
 
 <a id="change-7"></a>
-<a id="repository-record-4"></a>
-<a id="v52--release-history-reconciliation"></a>
 
 ### v5.2 / build 52
 
@@ -1029,10 +984,6 @@ v5.2 release-history commit
 [Back to change history](#change-history)
 
 <a id="change-8"></a>
-<a id="repository-record-5"></a>
-<a id="repository-record-6"></a>
-<a id="repository-record-7"></a>
-<a id="v51--explicit-architecture-inventory-and-readme-mappings"></a>
 
 ### v5.1 / build 51
 
@@ -1065,8 +1016,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-9"></a>
-<a id="repository-record-8"></a>
-<a id="v50--final-deterministic-ordering-and-indexing-cleanup"></a>
 
 ### v5.0 / build 50
 
@@ -1091,9 +1040,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-10"></a>
-<a id="readme-detail-5"></a>
-<a id="repository-record-9"></a>
-<a id="v49--deterministic-retrieval-and-connector-resilience"></a>
 
 ### v4.9 / build 49
 
@@ -1261,9 +1207,6 @@ Version-index record in `552d60a`; related date-group work: `66028eb`, `c883846`
 [Back to change history](#change-history)
 
 <a id="change-11"></a>
-<a id="readme-detail-6"></a>
-<a id="repository-record-10"></a>
-<a id="v48--responsive-setup-and-consistent-result-cards"></a>
 
 ### v4.8 / build 48
 
@@ -1329,9 +1272,6 @@ Version-index record in `34ed7c5` (2026-08-26); related date-group work in `5a41
 [Back to change history](#change-history)
 
 <a id="change-12"></a>
-<a id="readme-detail-7"></a>
-<a id="repository-record-11"></a>
-<a id="v47--private-a2a-connection-to-openclaw"></a>
 
 ### v4.7 / build 47
 
@@ -1372,9 +1312,6 @@ Version-index record in `069d075`
 [Back to change history](#change-history)
 
 <a id="change-13"></a>
-<a id="readme-detail-8"></a>
-<a id="repository-record-12"></a>
-<a id="v46--responsive-native-markdown-responses"></a>
 
 ### v4.6 / build 46
 
@@ -1417,9 +1354,6 @@ Version-index record in `8db0dcb`
 [Back to change history](#change-history)
 
 <a id="change-14"></a>
-<a id="readme-detail-9"></a>
-<a id="repository-record-13"></a>
-<a id="v45--natural-confirmation-centered-processing-and-dependency-security"></a>
 
 ### v4.5 / build 45
 
@@ -1466,9 +1400,6 @@ Version-index record in `95d6873`
 [Back to change history](#change-history)
 
 <a id="change-15"></a>
-<a id="readme-detail-10"></a>
-<a id="repository-record-14"></a>
-<a id="v44--conversational-reminder-confirmation-and-runtime-compatibility"></a>
 
 ### v4.4 / build 44
 
@@ -1519,9 +1450,6 @@ Version-index record in `95d6873`
 [Back to change history](#change-history)
 
 <a id="change-16"></a>
-<a id="readme-detail-11"></a>
-<a id="repository-record-15"></a>
-<a id="v43--natural-reminder-routing-and-responsive-result-cards"></a>
 
 ### v4.3 / build 43
 
@@ -1581,9 +1509,6 @@ Version-index record in `95d6873`
 [Back to change history](#change-history)
 
 <a id="change-17"></a>
-<a id="readme-detail-12"></a>
-<a id="repository-record-16"></a>
-<a id="v42--content-height-local-assistant-setup-cards"></a>
 
 ### v4.2 / build 42
 
@@ -1625,9 +1550,6 @@ Version-index record in `95d6873`
 [Back to change history](#change-history)
 
 <a id="change-18"></a>
-<a id="readme-detail-13"></a>
-<a id="repository-record-17"></a>
-<a id="v41--unified-connection-review-and-content-height-setup-cards"></a>
 
 ### v4.1 / build 41
 
@@ -1680,9 +1602,6 @@ Version-index record in `95d6873`
 [Back to change history](#change-history)
 
 <a id="change-19"></a>
-<a id="readme-detail-14"></a>
-<a id="repository-record-18"></a>
-<a id="v40--credential-safe-connector-updates-and-cleanup"></a>
 
 ### v4.0 / build 40
 
@@ -1751,9 +1670,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-20"></a>
-<a id="readme-detail-15"></a>
-<a id="repository-record-23"></a>
-<a id="v39--reliable-connector-setup-refresh-and-lifecycle"></a>
 
 ### v3.9 / build 39
 
@@ -1811,9 +1727,6 @@ Version-index record in `7a67a78`
 [Back to change history](#change-history)
 
 <a id="change-21"></a>
-<a id="readme-detail-16"></a>
-<a id="repository-record-24"></a>
-<a id="v38--on-demand-restricted-ssh-transport"></a>
 
 ### v3.8 / build 38
 
@@ -1872,7 +1785,6 @@ Version-index record in `7a67a78`
 [Back to change history](#change-history)
 
 <a id="change-22"></a>
-<a id="repository-record-19"></a>
 <a id="v37--complete-private-tailscale-connection-setup"></a>
 
 ### v3.7 / build 37
@@ -1913,9 +1825,6 @@ Version-index record in `7a67a78`
 [Back to change history](#change-history)
 
 <a id="change-23"></a>
-<a id="readme-detail-17"></a>
-<a id="repository-record-25"></a>
-<a id="v36--user-created-server-zip-and-corrected-setup-packaging"></a>
 
 ### v3.6 / build 36
 
@@ -1979,7 +1888,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-24"></a>
-<a id="repository-record-20"></a>
 <a id="v35--unambiguous-clean-device-openclaw-setup"></a>
 
 ### v3.5 / build 35
@@ -2014,7 +1922,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-25"></a>
-<a id="repository-record-21"></a>
 <a id="v34--live-openclaw-status-and-in-app-setup"></a>
 
 ### v3.4 / build 34
@@ -2046,7 +1953,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-26"></a>
-<a id="repository-record-22"></a>
 <a id="v33--hidden-reminder-knowledge-and-explicit-openclaw-actions"></a>
 
 ### v3.3 / build 33
@@ -2081,9 +1987,6 @@ Historical work record
 [Back to change history](#change-history)
 
 <a id="change-27"></a>
-<a id="readme-detail-18"></a>
-<a id="repository-record-26"></a>
-<a id="v32--private-reminder-rag-and-an-opt-in-openclaw-connector"></a>
 
 ### v3.2 / build 32
 - **Recorded dates:** 2026-08-26; 2026-08-23.
@@ -2129,7 +2032,6 @@ Retrospective work record; retained source in `5a41509`, `4dfb84d`, `7a67a78` (2
 [Back to change history](#change-history)
 
 <a id="change-85"></a>
-<a id="repository-record-27"></a>
 
 ### Removed the stale hard-coded version fallback so bundle metadata remains authoritative and unavailable metadata is reported explicitly
 

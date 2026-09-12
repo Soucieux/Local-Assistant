@@ -14,8 +14,6 @@ public repository.
 - Keep temporary build output, credentials, private app data, and local model files out of source
   control. Retain only the established project-root delivery artifacts documented by the README.
 
-<a id="project-boundaries"></a>
-
 ## Project boundaries
 
 - Keep the main macOS app fully local and offline. Do not add network entitlements, clients,
