@@ -1,5 +1,7 @@
 # Local Assistant
 
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.4%20build%2054-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+
 <!-- project-control:section=overview -->
 ## Overview
 
