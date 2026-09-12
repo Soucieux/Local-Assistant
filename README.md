@@ -2147,11 +2147,10 @@ Retrospective work record; retained source in `5a41509`, `4dfb84d`, `7a67a78` (2
 
 ### Earlier history
 
-Older records are archived by period. Each archive keeps the same table and full records.
+Older records are archived by period, newest first. Each archive keeps the same table
+and full records; the count after a link is how many records it holds.
 
-| Period | Changes | Archive |
-|---|---|---|
-| August 2026 | 35 | [history/2026-08.md](history/2026-08.md) |
+- **Months** — [August 2026](history/2026-08.md) (35)
 
 ## License
 
