@@ -658,6 +658,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-09-13 | <ul><li><strong>License:</strong> Added the approved Soucieux proprietary-software notice.</li></ul> | [Full record](#soucieux-proprietary-license) |
 | Documentation | 2026-09-11 | <ul><li><strong>Contributing:</strong> Added a standalone project guide that works in both the canonical workspace and the public subtree mirror.</li><li><strong>Links:</strong> Removed README dependencies on parent-only repository files.</li><li><strong>Repository:</strong> Added a feature-first public GitHub description for new users.</li></ul> | [Full record](#public-contributor-guide) |
 | Documentation | 2026-09-06 | <ul><li><strong>Structure:</strong> User guide first; one history table.</li><li><strong>Rules:</strong> Scoped contributor guidance under AGENTS.</li></ul> | [Full record](#readme-organization) |
 | Maintenance | 2026-09-06 | <ul><li><strong>Change:</strong> Reorganized long paragraphs and table cells without dropping details.</li></ul> | [Full record](#change-1) |
@@ -691,6 +692,18 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="soucieux-proprietary-license"></a>
+
+### Documentation
+
+- **Recorded date:** 2026-09-13.
+- Added the approved Soucieux proprietary-software notice, reserving rights in original project
+  materials while retaining third-party license and attribution requirements.
+- Documentation only; application behavior, v5.4/build 54, artifacts, deployment, and publication
+  status are unchanged.
+
+[Back to change history](#change-history)
 
 <a id="public-contributor-guide"></a>
 
@@ -2056,6 +2069,19 @@ and full records; the count after a link is how many records it holds.
 
 - **Months** — [August 2026](history/2026-08.md) (35)
 
-## License
+---
 
-No project-level license has been assigned. Each dependency and model retains its own license and attribution requirements; review them before redistribution.
+<!-- project-control:section=ignore -->
+## 🔒 License
+
+**PROPRIETARY SOFTWARE — ALL RIGHTS RESERVED**
+
+Copyright © 2024–2026 Soucieux. All rights reserved.
+
+The original source code, documentation, and other original materials in this repository are proprietary and are not open-source software.
+
+Except where applicable law expressly permits otherwise, no permission is granted to copy, modify, publish, distribute, sublicense, sell, deploy, or create derivative works from these materials, in whole or in part, without prior written authorization from the copyright owner.
+
+Access to this repository does not grant a license. Third-party software and materials remain subject to their respective license terms.
+
+*This private project is not open for external contributions.*
