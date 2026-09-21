@@ -17,7 +17,8 @@ KIT_DIR="${APP_BUNDLE}/Contents/Resources/${KIT_NAME}"
 /bin/rm -rf "${KIT_DIR}"
 /bin/mkdir -p \
   "${KIT_DIR}/plugin/src" \
-  "${KIT_DIR}/workspace/scripts/local_assistant_reminder_bridge"
+  "${KIT_DIR}/workspace/scripts/local_assistant_reminder_bridge" \
+  "${KIT_DIR}/workspace/scripts/runtime_support"
 
 /bin/cp \
   "${OPENCLAW_DIR}/plugins/local-assistant-bridge/index.js" \
@@ -32,6 +33,12 @@ KIT_DIR="${APP_BUNDLE}/Contents/Resources/${KIT_NAME}"
 /bin/cp \
   "${OPENCLAW_DIR}/scripts/local_assistant_reminder_bridge/"*.py \
   "${KIT_DIR}/workspace/scripts/local_assistant_reminder_bridge/"
+# The bridge and the store manager both import runtime_support, so the package
+# ships with its callers. Without it, installing this kit onto a workspace older
+# than runtime_support.strict_json leaves the bridge unable to import.
+/bin/cp \
+  "${OPENCLAW_DIR}/scripts/runtime_support/"*.py \
+  "${KIT_DIR}/workspace/scripts/runtime_support/"
 /bin/cp \
   "${OPENCLAW_DIR}/scripts/reminder-store-manager-v3.sh" \
   "${KIT_DIR}/workspace/scripts/reminder-store-manager-v3.sh"

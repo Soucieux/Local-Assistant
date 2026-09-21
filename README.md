@@ -633,7 +633,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v5.4 (build 54)**. [Release details and delivery evidence](#change-3).
+**v5.5 (build 55)**. [Release details and delivery evidence](#openclaw-kit-runtime-support).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -658,6 +658,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v5.5 / build 55 | 2026-09-20 | <ul><li><strong>Server kit:</strong> Ships the shared runtime_support package that the reminder bridge and the store manager import, so installing the kit no longer leaves the bridge unable to import.</li><li><strong>Release:</strong> Signed applications and a rebuilt disk image replace the v5.4 artifacts at the project root.</li></ul> | [Full record](#openclaw-kit-runtime-support) |
 | Documentation | 2026-09-13 | <ul><li><strong>License:</strong> Added the approved Soucieux proprietary-software notice.</li></ul> | [Full record](#soucieux-proprietary-license) |
 | Documentation | 2026-09-11 | <ul><li><strong>Contributing:</strong> Added a standalone project guide that works in both the canonical workspace and the public subtree mirror.</li><li><strong>Links:</strong> Removed README dependencies on parent-only repository files.</li><li><strong>Repository:</strong> Added a feature-first public GitHub description for new users.</li></ul> | [Full record](#public-contributor-guide) |
 | Documentation | 2026-09-06 | <ul><li><strong>Structure:</strong> User guide first; one history table.</li><li><strong>Rules:</strong> Scoped contributor guidance under AGENTS.</li></ul> | [Full record](#readme-organization) |
@@ -692,6 +693,29 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="openclaw-kit-runtime-support"></a>
+
+### v5.5 / build 55
+
+- **Recorded date:** 2026-09-20.
+
+- The server setup kit now ships `runtime_support`, the shared Python package that the typed reminder bridge and the reminder store manager both import, and the installer places it beside them in the workspace.
+- Before this, the kit shipped both callers without their package. Both import `runtime_support.strict_json`, so installing the kit onto a workspace provisioned before that module existed left the bridge unable to import at all, and the setup's own snapshot test then timed out against a Gateway that was healthy, reporting the wrong cause.
+- The installer places the shared package before its callers, so a failure leaves the workspace on its previous self-consistent pair rather than a new caller over an older package. Each install keeps the directory it replaces under a `.before-local-assistant-setup` name for rollback, and the two package installs now share one helper instead of repeating the same sequence twice.
+- Existing users create and run a fresh server setup ZIP once for this to reach a server.
+
+**Evidence and delivery status**
+
+Source change only. A kit built from this source was confirmed to carry the package, and every import the kit's bridge and store manager make resolved from the installed set alone; removing the package again reproduced the original `ModuleNotFoundError`.
+
+The clean offline Release build produced signed v5.5/build 55 applications and a rebuilt disk image that replace the v5.4 artifacts at the project root. Both bundles pass a strict deep signature check and keep the project's ad-hoc signature with the hardened runtime; the signed-app offline-boundary audit passes with only the four expected entitlements and no network entitlement; and the disk image verifies its checksum and mounts with both applications at v5.5/build 55. The shipped Connector carries the corrected kit: its embedded setup payload contains the nine-module `runtime_support` package and the installer that places it before its callers.
+
+146 macOS test cases and all 40 Connector tests pass against this source; the Debug test cache was removed afterwards so the project root holds only the delivered build.
+
+Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source is still **uncommitted**.
+
+[Back to change history](#change-history)
 
 <a id="soucieux-proprietary-license"></a>
 
