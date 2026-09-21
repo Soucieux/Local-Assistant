@@ -658,6 +658,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-09-21 | <ul><li><strong>Contributor guide:</strong> The two llama.cpp links now address upstream, because the prepared vendor tree is not part of the repository and neither link resolved for a reader of it.</li><li><strong>Label:</strong> The second link now names the upstream agent instruction document it actually opens.</li></ul> | [Full record](#upstream-llama-cpp-links) |
 | v5.5 / build 55 | 2026-09-20 | <ul><li><strong>Server kit:</strong> Ships the shared runtime_support package that the reminder bridge and the store manager import, so installing the kit no longer leaves the bridge unable to import.</li><li><strong>Release:</strong> Signed applications and a rebuilt disk image replace the v5.4 artifacts at the project root.</li></ul> | [Full record](#openclaw-kit-runtime-support) |
 | Documentation | 2026-09-13 | <ul><li><strong>License:</strong> Added the approved Soucieux proprietary-software notice.</li></ul> | [Full record](#soucieux-proprietary-license) |
 | Documentation | 2026-09-11 | <ul><li><strong>Contributing:</strong> Added a standalone project guide that works in both the canonical workspace and the public subtree mirror.</li><li><strong>Links:</strong> Removed README dependencies on parent-only repository files.</li><li><strong>Repository:</strong> Added a feature-first public GitHub description for new users.</li></ul> | [Full record](#public-contributor-guide) |
@@ -693,6 +694,34 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="upstream-llama-cpp-links"></a>
+
+### Documentation
+
+- **Recorded date:** 2026-09-21.
+- The contributor guide's two links into `Vendor/llama.cpp` now address upstream's
+  [contribution guide](https://github.com/ggml-org/llama.cpp/blob/master/CONTRIBUTING.md) and
+  [agent instructions](https://github.com/ggml-org/llama.cpp/blob/master/AGENTS.md).
+- The prepared `Vendor` tree is recreated from pinned revisions and is not part of the repository,
+  so both links resolved for no reader of the public repository. Only a checkout that had already
+  run the preparation script could follow them.
+- The second label also named the wrong destination. The preserved file is upstream's agent
+  instruction document under a local name, kept that way so no nested instruction file sits in a
+  project folder. The label now names what it opens, and the sentence still records that the
+  prepared tree holds it as `CONTRIBUTOR_GUIDANCE.md`.
+- The links address `master` rather than the pinned revision, because a contributor changing the
+  prepared source should follow upstream's current contribution rules.
+
+**Evidence and delivery status**
+
+Documentation only. Both upstream documents were retrieved and their headings match the preserved
+copies: `Contributors` for the contribution guide and `Instructions for llama.cpp` for the agent
+instructions. The repository link check now reports that all links in 31 documents resolve and name
+their destination, where it previously reported these two as broken; the README layout and retention
+checks pass. No source, build, application version or build number changed.
+
+[Back to change history](#change-history)
 
 <a id="openclaw-kit-runtime-support"></a>
 

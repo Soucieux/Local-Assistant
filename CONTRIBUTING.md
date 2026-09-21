@@ -52,9 +52,10 @@ public repository.
   signed or delivered artifact without following its release and recovery procedure.
 - For installed-app instructions, assume a clean Mac whose user knows only how to open Mac Terminal
   and the server terminal. Give location-specific steps, completion cues, and nearby recovery help.
-- When changing the prepared llama.cpp source under `Vendor/llama.cpp`, also follow its
-  [upstream contribution guide](Vendor/llama.cpp/CONTRIBUTING.md) and preserved
-  [contributor guidance](Vendor/llama.cpp/CONTRIBUTOR_GUIDANCE.md).
+- When changing the prepared llama.cpp source under `Vendor/llama.cpp`, also follow upstream's
+  [contribution guide](https://github.com/ggml-org/llama.cpp/blob/master/CONTRIBUTING.md) and
+  [agent instructions](https://github.com/ggml-org/llama.cpp/blob/master/AGENTS.md), which the
+  prepared tree preserves as `CONTRIBUTOR_GUIDANCE.md`.
 
 <a id="version-and-build-policy"></a>
 
