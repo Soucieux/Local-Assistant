@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.4%20build%2054-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.6%20build%2056-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 <!-- project-control:section=overview -->
 ## Overview
@@ -633,7 +633,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v5.5 (build 55)**. [Release details and delivery evidence](#openclaw-kit-runtime-support).
+**v5.6 (build 56)**. [Release details and delivery evidence](#private-local-capabilities-icon).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -658,6 +658,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v5.6 / build 56 | 2026-09-21 | <ul><li><strong>Identity:</strong> A private conversation core now connects visibly to local documents, voice input, and reminders.</li><li><strong>Delivery:</strong> The matching main app and Connector, plus the clean-Mac disk image, were rebuilt and validated.</li></ul> | [Full record](#private-local-capabilities-icon) |
 | Documentation | 2026-09-21 | <ul><li><strong>Contributor guide:</strong> The two llama.cpp links now address upstream, because the prepared vendor tree is not part of the repository and neither link resolved for a reader of it.</li><li><strong>Label:</strong> The second link now names the upstream agent instruction document it actually opens.</li></ul> | [Full record](#upstream-llama-cpp-links) |
 | v5.5 / build 55 | 2026-09-20 | <ul><li><strong>Server kit:</strong> Ships the shared runtime_support package that the reminder bridge and the store manager import, so installing the kit no longer leaves the bridge unable to import.</li><li><strong>Release:</strong> Signed applications and a rebuilt disk image replace the v5.4 artifacts at the project root.</li></ul> | [Full record](#openclaw-kit-runtime-support) |
 | Documentation | 2026-09-13 | <ul><li><strong>License:</strong> Added the approved Soucieux proprietary-software notice.</li></ul> | [Full record](#soucieux-proprietary-license) |
@@ -694,6 +695,32 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="private-local-capabilities-icon"></a>
+
+### v5.6 / build 56
+
+- **Recorded date:** 2026-09-21.
+- **Identity:** The application icon now depicts a private conversation core linked by a local-only
+  teal ring to documents, voice input, and reminders. Those are the app's actual local capabilities,
+  rather than a generic assistant mark.
+- **Source:** The complete macOS asset catalog was regenerated from the approved transparent master
+  at every standard and Retina size from 16 through 1024 pixels.
+- **Release alignment:** Local Assistant and OpenClaw Connector both advance to v5.6/build 56. The
+  Connector keeps its separate existing artwork; only its version moves so the two applications
+  remain an accepted pair.
+- **Scope:** No assistant, retrieval, reminder, voice, storage, Connector, or privacy behavior
+  changed.
+
+**Evidence and delivery status**
+
+The full macOS test suite passed. The offline Release build produced the signed v5.6/build 56 main
+application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed
+strict deep signature verification, the main app passed the offline-boundary audit, the disk image
+checksum is valid, and the packaged 256-pixel icon representation matches the source catalog pixels.
+The rebuilt deliverables are at the project root; publication was not requested.
+
+[Back to change history](#change-history)
 
 <a id="upstream-llama-cpp-links"></a>
 
