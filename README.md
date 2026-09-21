@@ -713,7 +713,7 @@ The clean offline Release build produced signed v5.5/build 55 applications and a
 
 146 macOS test cases and all 40 Connector tests pass against this source; the Debug test cache was removed afterwards so the project root holds only the delivered build.
 
-Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `ee4332c`.
+Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `5035744`.
 
 [Back to change history](#change-history)
 
@@ -755,7 +755,7 @@ Not established by this build: the applications were not launched, so runtime be
 - **Structure:** Put purpose, capabilities, setup, architecture, and workflows before history.
 - **History:** Merge matching repository-origin records into the owning change; preserve unique detail, evidence, and older links.
 - **Ownership:** Keep user documentation here; route scoped contributor rules through root AGENTS.
-- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `795cd8e`. Existing application versions, artifacts, and deployment state are unchanged.
+- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `07fa894`. Existing application versions, artifacts, and deployment state are unchanged.
 
 [Back to change history](#change-history)
 
@@ -788,7 +788,7 @@ Local documentation changes; initially delivered uncommitted and recorded in thi
 
 **Evidence and delivery status**
 
-Local documentation update; initially delivered uncommitted and recorded in `795cd8e`
+Local documentation update; initially delivered uncommitted and recorded in `07fa894`
 
 [Back to change history](#change-history)
 
@@ -1050,7 +1050,7 @@ Grouped the complete architecture inventory into AI, frontend, on-device logic, 
 
 **Evidence and delivery status**
 
-`6ed828e`, `68f9787`
+`475ce69`, `539e14b`
 
 Historical work record
 
@@ -1076,7 +1076,7 @@ Historical work record
 
 **Evidence and delivery status**
 
-`7835160`, `8c1c2a7`, `e9d0dac`, `c6fb6e9`, `c12833b`, `c3f8154`
+`3f1b433`, `dcc3bd3`, `77bbd16`, `2ea8810`, `1803626`, `3c36fdf`
 
 [Back to change history](#change-history)
 
@@ -1241,9 +1241,9 @@ Seven end-to-end run tests now cover the first scan, unchanged and modified file
 
 **Evidence and delivery status**
 
-`552d60a` (2026-08-28)
+`66ae195` (2026-08-28)
 
-Version-index record in `552d60a`; related date-group work: `66028eb`, `c883846`, `9ac79af`, `c17bfe6`, `c3e4834`, `2070247`, `d643ca1`, `552d60a`
+Version-index record in `66ae195`; related date-group work: `4a4e598`, `8f3ed7c`, `1ededcb`, `6674a0b`, `f8da2e1`, `3ac61a3`, `3781759`, `66ae195`
 
 [Back to change history](#change-history)
 
@@ -1308,7 +1308,7 @@ Git reconciliation: Committed the reminder/Connector and responsive-interface se
 
 **Evidence and delivery status**
 
-Version-index record in `34ed7c5` (2026-08-26); related date-group work in `5a41509`, `4dfb84d`, `df78cbb`, `7a67a78`, `e687377`, `f422290`, `84b437d`, `2e80c49`, `ef521c8`, `048eba1`, `52d1a8b`, `4945532`, `95d6873`, `e5f4ae1`, `7ccba8a`, `8db0dcb`, `b83de02`, `0261280`, `069d075`, `e69b4f0`, `bfeedb6`, `9f2b25b`, `51ad2e1`, `34ed7c5`, `5af098b`, `a92db8e`, `cdf2134`
+Version-index record in `0efc623` (2026-08-26); related date-group work in `dfb5057`, `5da7990`, `6185970`, `ea58bc9`, `d2cb05a`, `d8893f3`, `e0f1095`, `28640c9`, `6adfdab`, `b69e98a`, `ee7fe4f`, `f893a3f`, `ed3df06`, `77f5965`, `4061edc`, `8239dd6`, `b5a046a`, `65c4630`, `1962569`, `2f2228d`, `cbc2fc9`, `a06a422`, `4075c43`, `0efc623`, `421dac9`, `38c0de6`, `06b0ca2`
 
 [Back to change history](#change-history)
 
@@ -1346,9 +1346,9 @@ Version-index record in `34ed7c5` (2026-08-26); related date-group work in `5a41
 
 **Evidence and delivery status**
 
-`069d075` (2026-08-26)
+`1962569` (2026-08-26)
 
-Version-index record in `069d075`
+Version-index record in `1962569`
 
 [Back to change history](#change-history)
 
@@ -1388,9 +1388,9 @@ Version-index record in `069d075`
 
 **Evidence and delivery status**
 
-`8db0dcb` (2026-08-26)
+`8239dd6` (2026-08-26)
 
-Version-index record in `8db0dcb`
+Version-index record in `8239dd6`
 
 [Back to change history](#change-history)
 
@@ -1434,9 +1434,9 @@ Version-index record in `8db0dcb`
 
 **Evidence and delivery status**
 
-`95d6873` (2026-08-26)
+`ed3df06` (2026-08-26)
 
-Version-index record in `95d6873`
+Version-index record in `ed3df06`
 
 [Back to change history](#change-history)
 
@@ -1484,9 +1484,9 @@ Version-index record in `95d6873`
 
 **Evidence and delivery status**
 
-`95d6873` (2026-08-26)
+`ed3df06` (2026-08-26)
 
-Version-index record in `95d6873`
+Version-index record in `ed3df06`
 
 [Back to change history](#change-history)
 
@@ -1543,9 +1543,9 @@ Version-index record in `95d6873`
 
 **Evidence and delivery status**
 
-`95d6873` (2026-08-26)
+`ed3df06` (2026-08-26)
 
-Version-index record in `95d6873`
+Version-index record in `ed3df06`
 
 [Back to change history](#change-history)
 
@@ -1584,9 +1584,9 @@ Version-index record in `95d6873`
 
 **Evidence and delivery status**
 
-`95d6873` (2026-08-26)
+`ed3df06` (2026-08-26)
 
-Version-index record in `95d6873`
+Version-index record in `ed3df06`
 
 [Back to change history](#change-history)
 
@@ -1636,9 +1636,9 @@ Version-index record in `95d6873`
 
 **Evidence and delivery status**
 
-`95d6873` (2026-08-26)
+`ed3df06` (2026-08-26)
 
-Version-index record in `95d6873`
+Version-index record in `ed3df06`
 
 [Back to change history](#change-history)
 
@@ -1704,7 +1704,7 @@ Version-index record in `95d6873`
 
 **Evidence and delivery status**
 
-`95d6873` (2026-08-26)
+`ed3df06` (2026-08-26)
 
 Historical work record
 
@@ -1761,9 +1761,9 @@ Historical work record
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-Version-index record in `7a67a78`
+Version-index record in `ea58bc9`
 
 [Back to change history](#change-history)
 
@@ -1819,9 +1819,9 @@ Version-index record in `7a67a78`
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-Version-index record in `7a67a78`
+Version-index record in `ea58bc9`
 
 [Back to change history](#change-history)
 
@@ -1859,9 +1859,9 @@ Version-index record in `7a67a78`
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-`7a67a78`
+`ea58bc9`
 
 [Back to change history](#change-history)
 
@@ -1922,7 +1922,7 @@ Version-index record in `7a67a78`
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
 Historical work record
 
@@ -1956,9 +1956,9 @@ Historical work record
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-`7a67a78`
+`ea58bc9`
 
 [Back to change history](#change-history)
 
@@ -1987,9 +1987,9 @@ Historical work record
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-`7a67a78`
+`ea58bc9`
 
 [Back to change history](#change-history)
 
@@ -2021,9 +2021,9 @@ Historical work record
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-`7a67a78`
+`ea58bc9`
 
 [Back to change history](#change-history)
 
@@ -2066,9 +2066,9 @@ Historical work record
 
 **Evidence and delivery status**
 
-`7a67a78` (2026-08-26)
+`ea58bc9` (2026-08-26)
 
-Retrospective work record; retained source in `5a41509`, `4dfb84d`, `7a67a78` (2026-08-26)
+Retrospective work record; retained source in `dfb5057`, `5da7990`, `ea58bc9` (2026-08-26)
 
 [Back to change history](#change-history)
 
@@ -2082,7 +2082,7 @@ Retrospective work record; retained source in `5a41509`, `4dfb84d`, `7a67a78` (2
 
 **Evidence and delivery status**
 
-`ab56da8`
+`ccc028d`
 
 [Back to change history](#change-history)
 
