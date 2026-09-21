@@ -713,7 +713,7 @@ The clean offline Release build produced signed v5.5/build 55 applications and a
 
 146 macOS test cases and all 40 Connector tests pass against this source; the Debug test cache was removed afterwards so the project root holds only the delivered build.
 
-Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source is still **uncommitted**.
+Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `ee4332c`.
 
 [Back to change history](#change-history)
 
