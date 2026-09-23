@@ -633,7 +633,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v5.6 (build 56)**. [Release details and delivery evidence](#private-local-capabilities-icon).
+**v5.7 (build 57)**. [Release details and delivery evidence](#openclaw-kit-shared-config).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -658,6 +658,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v5.7 / build 57 | 2026-09-23 | <ul><li><strong>Server kit:</strong> Ships the shared configuration the reminder bridge imports, so installing the kit onto an older server no longer fails at import.</li><li><strong>Setup:</strong> Carries bridge v1.5.1, whose installer names a missing CloudBase endpoint up front instead of timing out.</li></ul> | [Full record](#openclaw-kit-shared-config) |
 | v5.6 / build 56 | 2026-09-21 | <ul><li><strong>Identity:</strong> A private conversation core now connects visibly to local documents, voice input, and reminders.</li><li><strong>Delivery:</strong> The matching main app and Connector, plus the clean-Mac disk image, were rebuilt and validated.</li></ul> | [Full record](#private-local-capabilities-icon) |
 | Documentation | 2026-09-21 | <ul><li><strong>Contributor guide:</strong> The two llama.cpp links now address upstream, because the prepared vendor tree is not part of the repository and neither link resolved for a reader of it.</li><li><strong>Label:</strong> The second link now names the upstream agent instruction document it actually opens.</li></ul> | [Full record](#upstream-llama-cpp-links) |
 | v5.5 / build 55 | 2026-09-20 | <ul><li><strong>Server kit:</strong> Ships the shared runtime_support package that the reminder bridge and the store manager import, so installing the kit no longer leaves the bridge unable to import.</li><li><strong>Release:</strong> Signed applications and a rebuilt disk image replace the v5.4 artifacts at the project root.</li></ul> | [Full record](#openclaw-kit-runtime-support) |
@@ -695,6 +696,35 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="openclaw-kit-shared-config"></a>
+
+### v5.7 / build 57
+
+- **Recorded date:** 2026-09-23.
+- **Server kit:** The OpenClaw server setup kit now ships the shared `config.py` and `config.sh`
+  beside the reminder bridge and store manager that import them. On a server whose workspace was
+  older than that configuration, the previous kit installed the bridge without it, so the bridge
+  failed at import and setup stopped with only a readiness timeout.
+- **Setup:** The kit now carries Local Assistant bridge v1.5.1. Its installer checks for a CloudBase
+  endpoint before it changes anything and says how to supply one. The bridge cannot serve a
+  reminder request without an endpoint, and the earlier installer reported that only as a timeout.
+- **Guard:** `OpenClawConnector/tests/test_server_kit.py` fails whenever a file the kit ships
+  imports a module the kit leaves out. A standalone checkout cannot build the kit, so it skips them.
+- **Release alignment:** Local Assistant and OpenClaw Connector both advance to v5.7/build 57. Only
+  the Connector's embedded server kit changed; the main application's behavior is unchanged.
+
+**Evidence and delivery status**
+
+The full macOS test suite passed, 146 test cases, and all 43 Connector tests passed. The offline
+Release build produced the signed v5.7/build 57 main application, the matching signed Connector,
+and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main
+app passed the offline-boundary audit, and the disk image checksum is valid. The Connector's
+embedded kit was confirmed to carry `config.py`, `config.sh` and the v1.5.1 installer, each
+identical to its source. The rebuilt deliverables are at the project root; publication was not
+requested. The source and this record are committed together.
+
+[Back to change history](#change-history)
 
 <a id="private-local-capabilities-icon"></a>
 
