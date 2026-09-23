@@ -39,6 +39,14 @@ KIT_DIR="${APP_BUNDLE}/Contents/Resources/${KIT_NAME}"
 /bin/cp \
   "${OPENCLAW_DIR}/scripts/runtime_support/"*.py \
   "${KIT_DIR}/workspace/scripts/runtime_support/"
+# The bridge imports config.py and the store manager sources config.sh, so the
+# shared configuration ships with its callers. Without them, installing this kit
+# onto a workspace older than CLOUDBASE_RESPONSE_MAX_BYTES leaves the bridge
+# unable to import.
+/bin/cp \
+  "${OPENCLAW_DIR}/scripts/config.py" \
+  "${OPENCLAW_DIR}/scripts/config.sh" \
+  "${KIT_DIR}/workspace/scripts/"
 /bin/cp \
   "${OPENCLAW_DIR}/scripts/reminder-store-manager-v3.sh" \
   "${KIT_DIR}/workspace/scripts/reminder-store-manager-v3.sh"
