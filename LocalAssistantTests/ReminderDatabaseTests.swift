@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Complete-snapshot writes must be atomic because CloudBase has no tombstones or cursor.
-struct ReminderDatabaseTests {
+internal struct ReminderDatabaseTests {
     @Test("An incomplete changed embedding set keeps the previous complete snapshot")
     internal func preservesSnapshotOnIncompleteReplacement() async throws {
         let fixture = try DatabaseFixture()

@@ -35,12 +35,26 @@ class ExistingSetupState(TypedDict):
 
 
 def _is_safe_file(path: Path, *, allow_public_read: bool = False) -> bool:
-    """Accept one owned regular file without following a symbolic link."""
+    """Accept one owned regular file without following a symbolic link.
+
+    Args:
+        path: File to inspect.
+        allow_public_read: Whether other users may read the file, as they may
+            for a public key; nobody else may ever write it.
+
+    Returns:
+        Whether the file is a non-empty regular file this user owns with
+        permissions no wider than allowed.
+    """
     try:
         metadata = path.lstat()
     except OSError:
         return False
-    disallowed_mode = 0o022 if allow_public_read else 0o077
+    disallowed_mode = (
+        constants.GROUP_AND_OTHER_WRITE_MASK
+        if allow_public_read
+        else constants.GROUP_AND_OTHER_ACCESS_MASK
+    )
     return (
         stat.S_ISREG(metadata.st_mode)
         and not stat.S_ISLNK(metadata.st_mode)
@@ -51,7 +65,12 @@ def _is_safe_file(path: Path, *, allow_public_read: bool = False) -> bool:
 
 
 def _pinned_host_key() -> str:
-    """Return only the public key material from the exact pinned-host record."""
+    """Read only the public key material from the exact pinned-host record.
+
+    Returns:
+        The key type and base64 body, or an empty string when the record is
+        missing, unsafe, or not the single expected entry.
+    """
     target = ssh_known_hosts_path()
     if not _is_safe_file(target):
         return ""
@@ -69,7 +88,12 @@ def _pinned_host_key() -> str:
 
 
 def existing_setup_state() -> ExistingSetupState:
-    """Return reusable non-secret values and credential-presence booleans."""
+    """Collect reusable non-secret values and credential-presence booleans.
+
+    Returns:
+        Setup facts for the packaged application. Token values are never
+        read; only whether each Keychain entry exists.
+    """
     configured = False
     ssh_host = ""
     ssh_port = constants.DEFAULT_SSH_PORT
@@ -116,27 +140,24 @@ def existing_setup_state() -> ExistingSetupState:
 
 
 def forget_connector_data() -> None:
-    """Remove only Connector Keychain entries and private Application Support data."""
+    """Remove only Connector Keychain entries and private Application Support data.
+
+    Raises:
+        ConnectorError: When the application directory is a link, is not a
+            directory, or belongs to another user, so nothing is removed.
+    """
     root = application_directory()
     if root.exists() or root.is_symlink():
         try:
             metadata = root.lstat()
         except OSError as exc:
-            raise ConnectorError(
-                constants.ERROR_KIND_INVALID_REQUEST,
-                constants.ERROR_FILE_BOUNDARY,
-                False,
-            ) from exc
+            raise ConnectorError.invalid_request(constants.ERROR_FILE_BOUNDARY) from exc
         if (
             not stat.S_ISDIR(metadata.st_mode)
             or stat.S_ISLNK(metadata.st_mode)
             or metadata.st_uid != os.getuid()
         ):
-            raise ConnectorError(
-                constants.ERROR_KIND_INVALID_REQUEST,
-                constants.ERROR_FILE_BOUNDARY,
-                False,
-            )
+            raise ConnectorError.invalid_request(constants.ERROR_FILE_BOUNDARY)
 
     delete_token(constants.KEYCHAIN_REMINDER_ACCOUNT)
     delete_token(constants.KEYCHAIN_AGENT_ACCOUNT)

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Keeps assistant prose concise when result cards already present file metadata.
-enum FileCardAnswerFormatter {
+internal enum FileCardAnswerFormatter {
     /// Replaces model output that duplicates visible card metadata with a concise result count.
     /// - Parameters:
     ///   - answer: Candidate local-model answer.

@@ -19,14 +19,26 @@ TREE_PAGE_LIMIT = 1000
 
 
 def request_json(url: str) -> object:
-    """Read JSON from one HTTPS endpoint."""
+    """Read JSON from one HTTPS endpoint.
+
+    Args:
+        url: Metadata endpoint to query.
+
+    Returns:
+        The decoded JSON value, still unvalidated.
+    """
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=METADATA_TIMEOUT_SECONDS) as response:
         return json.load(response)
 
 
 def download(url: str, destination: pathlib.Path) -> None:
-    """Download one file atomically into the staging bundle."""
+    """Download one file atomically into the staging bundle.
+
+    Args:
+        url: Immutable source address.
+        destination: Final path; a partial download never appears under it.
+    """
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_suffix(destination.suffix + ".partial")
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -41,7 +53,16 @@ def download(url: str, destination: pathlib.Path) -> None:
 
 
 def download_verified(url: str, destination: pathlib.Path, expected: str) -> None:
-    """Download one file and keep it only when it matches its pinned digest."""
+    """Download one file and keep it only when it matches its pinned digest.
+
+    Args:
+        url: Immutable source address.
+        destination: Final path of the verified file.
+        expected: Pinned lowercase SHA-256 digest.
+
+    Raises:
+        RuntimeError: When the downloaded content has another digest.
+    """
     download(url, destination)
     actual = sha256(destination)
     if actual != expected:
@@ -50,7 +71,14 @@ def download_verified(url: str, destination: pathlib.Path, expected: str) -> Non
 
 
 def sha256(path: pathlib.Path) -> str:
-    """Return a streaming SHA-256 digest."""
+    """Hash one file without loading it into memory.
+
+    Args:
+        path: File to hash.
+
+    Returns:
+        The lowercase hexadecimal SHA-256 digest.
+    """
     digest = hashlib.sha256()
     with path.open("rb") as source:
         while chunk := source.read(BUFFER_BYTES):
@@ -59,13 +87,30 @@ def sha256(path: pathlib.Path) -> str:
 
 
 def resolve_url(repository: str, revision: str, path: str) -> str:
-    """Build an immutable Hugging Face resolve URL."""
+    """Build an immutable Hugging Face resolve URL.
+
+    Args:
+        repository: Owner and model name.
+        revision: Pinned commit revision.
+        path: File path inside the repository.
+
+    Returns:
+        A download address that always serves that revision's bytes.
+    """
     encoded_path = "/".join(urllib.parse.quote(component, safe="") for component in path.split("/"))
     return f"https://huggingface.co/{repository}/resolve/{revision}/{encoded_path}?download=true"
 
 
 def download_file_model(model: dict[str, object], output: pathlib.Path) -> None:
-    """Download and verify one pinned GGUF file."""
+    """Download and verify one pinned GGUF file.
+
+    Args:
+        model: Manifest entry describing a single-file model.
+        output: Staging directory that receives the installed filename.
+
+    Raises:
+        RuntimeError: When the downloaded file fails its digest.
+    """
     download_verified(
         resolve_url(str(model["repository"]), str(model["revision"]), str(model["sourcePath"])),
         output / str(model["installedName"]),
@@ -78,6 +123,13 @@ def download_additional_files(model: dict[str, object], destination_root: pathli
 
     WhisperKit loads its tokenizer from the model directory and otherwise reaches out to
     the Hugging Face Hub at first use, so these files must ship with the model.
+
+    Args:
+        model: Manifest entry that may list pinned companion files.
+        destination_root: Installed model directory that receives them.
+
+    Raises:
+        RuntimeError: When an entry is malformed or a file fails its digest.
     """
     for entry in model.get("additionalFiles", []):
         if not isinstance(entry, dict):
@@ -90,7 +142,16 @@ def download_additional_files(model: dict[str, object], destination_root: pathli
 
 
 def download_directory_model(model: dict[str, object], output: pathlib.Path) -> None:
-    """Download every file under one pinned model directory."""
+    """Download every file under one pinned model directory.
+
+    Args:
+        model: Manifest entry describing a directory model.
+        output: Staging directory that receives the installed directory.
+
+    Raises:
+        RuntimeError: When the file listing is unexpected, possibly truncated,
+            or empty, or a companion file fails its digest.
+    """
     repository = str(model["repository"])
     revision = str(model["revision"])
     source_path = str(model["sourcePath"])
@@ -123,7 +184,11 @@ def download_directory_model(model: dict[str, object], output: pathlib.Path) -> 
 
 
 def main() -> int:
-    """Download all manifest models into a staging output directory."""
+    """Download all manifest models into a staging output directory.
+
+    Returns:
+        Zero once every model is downloaded.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)

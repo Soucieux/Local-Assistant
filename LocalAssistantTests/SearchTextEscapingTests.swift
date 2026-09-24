@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Escaping decides whether a query matches at all, so each transform is pinned here.
-struct SearchTextEscapingTests {
+internal struct SearchTextEscapingTests {
     @Test("Underscores are escaped so they cannot act as single-character wildcards")
     internal func escapesUnderscore() {
         #expect(SearchTextEscaping.escapedLike("budget_2024") == #"budget\_2024"#)

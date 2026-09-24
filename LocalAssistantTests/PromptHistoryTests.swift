@@ -7,7 +7,7 @@ import Testing
 ///
 /// A generated acknowledgement stored as assistant text and replayed as recent conversation
 /// taught the model to answer every request with that sentence and no results.
-struct PromptHistoryTests {
+internal struct PromptHistoryTests {
     private let builder = GroundedPromptBuilder()
 
     /// Builds one stored assistant message with no cards attached.
@@ -114,5 +114,4 @@ struct PromptHistoryTests {
         #expect(prompt.contains(latestUser.text))
         #expect(prompt.contains(latestAssistant.text))
     }
-
 }

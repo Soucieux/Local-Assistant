@@ -1,65 +1,82 @@
 import Foundation
 
 /// A user-selected directory represented by a security-scoped bookmark.
-struct AuthorizedRoot: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let displayName: String
-    let lastKnownPath: String
-    let bookmarkData: Data
-    let addedAt: Date
-    var lastIndexedAt: Date?
-    var isAvailable: Bool
+internal struct AuthorizedRoot: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let displayName: String
+    internal let lastKnownPath: String
+    internal let bookmarkData: Data
+    internal let addedAt: Date
+    internal var lastIndexedAt: Date?
+    internal var isAvailable: Bool
 }
 
 /// Metadata for a file or directory stored in the local index.
-struct IndexedItem: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let rootID: UUID
-    let parentID: UUID?
-    let url: URL
-    let relativePath: String
-    let displayName: String
-    let kind: IndexedItemKind
-    let contentType: String?
-    let byteCount: Int64
-    let createdAt: Date?
-    let modifiedAt: Date?
-    let contentHash: String?
-    let metadataHash: String
-    let isDirectory: Bool
-    let isHidden: Bool
+internal struct IndexedItem: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let rootID: UUID
+    internal let parentID: UUID?
+    internal let url: URL
+    internal let relativePath: String
+    internal let displayName: String
+    internal let kind: IndexedItemKind
+    internal let contentType: String?
+    internal let byteCount: Int64
+    internal let createdAt: Date?
+    internal let modifiedAt: Date?
+    internal let contentHash: String?
+    internal let metadataHash: String
+    internal let isDirectory: Bool
+    internal let isHidden: Bool
+
+    /// Returns the same metadata carrying a different content hash.
+    ///
+    /// Indexing publishes fresh metadata with the previous hash, then the final hash once
+    /// content is processed, so the field-by-field copy lives here instead of in each caller.
+    /// - Parameter contentHash: Hash to carry, or `nil` when no content has been indexed.
+    /// - Returns: A copy identical in every field except its content hash.
+    internal func replacingContentHash(_ contentHash: String?) -> IndexedItem {
+        IndexedItem(
+            id: id,
+            rootID: rootID,
+            parentID: parentID,
+            url: url,
+            relativePath: relativePath,
+            displayName: displayName,
+            kind: kind,
+            contentType: contentType,
+            byteCount: byteCount,
+            createdAt: createdAt,
+            modifiedAt: modifiedAt,
+            contentHash: contentHash,
+            metadataHash: metadataHash,
+            isDirectory: isDirectory,
+            isHidden: isHidden
+        )
+    }
 }
 
 /// Searchable passage derived from a locally indexed item.
-struct ContentChunk: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let itemID: UUID
-    let ordinal: Int
-    let text: String
-    let characterStart: Int
-    let characterEnd: Int
-    let pageNumber: Int?
-    let sectionName: String?
-    let embedding: [Float]?
+internal struct ContentChunk: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let itemID: UUID
+    internal let ordinal: Int
+    internal let text: String
+    internal let characterStart: Int
+    internal let characterEnd: Int
+    internal let pageNumber: Int?
+    internal let sectionName: String?
+    internal let embedding: [Float]?
 }
 
 /// Optional constraints applied to a local search.
-struct SearchFilter: Codable, Hashable, Sendable {
-    var rootIDs: Set<UUID>
-    var kinds: Set<IndexedItemKind>
-    var modifiedAfter: Date?
-    var modifiedBefore: Date?
-    var minimumBytes: Int64?
-    var maximumBytes: Int64?
-
-    static let none = SearchFilter(
-        rootIDs: [],
-        kinds: [],
-        modifiedAfter: nil,
-        modifiedBefore: nil,
-        minimumBytes: nil,
-        maximumBytes: nil
-    )
+internal struct SearchFilter: Codable, Hashable, Sendable {
+    internal var rootIDs: Set<UUID>
+    internal var kinds: Set<IndexedItemKind>
+    internal var modifiedAfter: Date?
+    internal var modifiedBefore: Date?
+    internal var minimumBytes: Int64?
+    internal var maximumBytes: Int64?
 
     /// Creates a filter containing only hard file-type constraints.
     /// - Parameter kinds: Eligible indexed item categories.
@@ -77,25 +94,25 @@ struct SearchFilter: Codable, Hashable, Sendable {
 }
 
 /// A normalized request sent to the retrieval engine.
-struct SearchQuery: Codable, Hashable, Sendable {
-    let text: String
-    let filter: SearchFilter
-    let limit: Int
+internal struct SearchQuery: Codable, Hashable, Sendable {
+    internal let text: String
+    internal let filter: SearchFilter
+    internal let limit: Int
 }
 
 /// Explainable components contributing to a result's rank.
-struct ScoreBreakdown: Codable, Hashable, Sendable {
-    let exactName: Double
-    let path: Double
-    let keyword: Double
-    let semantic: Double
-    let fileType: Double
-    let recency: Double
-    let reciprocalRank: Double
-    let total: Double
+internal struct ScoreBreakdown: Codable, Hashable, Sendable {
+    internal let exactName: Double
+    internal let path: Double
+    internal let keyword: Double
+    internal let semantic: Double
+    internal let fileType: Double
+    internal let recency: Double
+    internal let reciprocalRank: Double
+    internal let total: Double
 
     /// Neutral ranking values used only when restoring a legacy cited file card.
-    static let zero = ScoreBreakdown(
+    internal static let zero = ScoreBreakdown(
         exactName: 0,
         path: 0,
         keyword: 0,
@@ -113,38 +130,38 @@ struct ScoreBreakdown: Codable, Hashable, Sendable {
 }
 
 /// A bounded excerpt linking an answer to a local file.
-struct EvidenceCitation: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let itemID: UUID
-    let chunkID: UUID?
-    let absolutePath: String
-    let displayName: String
-    let excerpt: String
-    let pageNumber: Int?
-    let sectionName: String?
-    let modifiedAt: Date?
+internal struct EvidenceCitation: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let itemID: UUID
+    internal let chunkID: UUID?
+    internal let absolutePath: String
+    internal let displayName: String
+    internal let excerpt: String
+    internal let pageNumber: Int?
+    internal let sectionName: String?
+    internal let modifiedAt: Date?
 }
 
 /// Ranked file match returned by hybrid retrieval.
-struct SearchResult: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let item: IndexedItem
-    let score: ScoreBreakdown
-    let confidence: ConfidenceLevel
-    let explanation: String
-    let citations: [EvidenceCitation]
+internal struct SearchResult: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let item: IndexedItem
+    internal let score: ScoreBreakdown
+    internal let confidence: ConfidenceLevel
+    internal let explanation: String
+    internal let citations: [EvidenceCitation]
 }
 
 /// One item in a local conversation.
-struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let role: MessageRole
-    let text: String
-    let createdAt: Date
-    let citations: [EvidenceCitation]
-    let fileMatches: [SearchResult]
-    let reminderMatches: [ReminderSearchResult]
-    let reminderPresentation: ReminderCardPresentation
+internal struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let role: MessageRole
+    internal let text: String
+    internal let createdAt: Date
+    internal let citations: [EvidenceCitation]
+    internal let fileMatches: [SearchResult]
+    internal let reminderMatches: [ReminderSearchResult]
+    internal let reminderPresentation: ReminderCardPresentation
 
     /// Creates one persistable message with any file cards attached to that turn.
     /// - Parameters:
@@ -198,21 +215,6 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
             ReminderCardPresentation.self,
             forKey: .reminderPresentation
         ) ?? .focused
-    }
-
-    /// Encodes the visible message and its reusable file-card snapshots.
-    /// - Parameter encoder: JSON encoder writing the private conversation payload.
-    /// - Throws: An encoding error when the payload cannot be represented.
-    internal func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(role, forKey: .role)
-        try container.encode(text, forKey: .text)
-        try container.encode(createdAt, forKey: .createdAt)
-        try container.encode(citations, forKey: .citations)
-        try container.encode(fileMatches, forKey: .fileMatches)
-        try container.encode(reminderMatches, forKey: .reminderMatches)
-        try container.encode(reminderPresentation, forKey: .reminderPresentation)
     }
 
     /// Creates a new user-authored message.
@@ -269,14 +271,14 @@ struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
 }
 
 /// Local conversational response or evidence-grounded file answer.
-struct AssistantResponse: Hashable, Sendable {
-    let answer: String
-    let citations: [EvidenceCitation]
-    let alternatives: [SearchResult]
-    let confidence: ConfidenceLevel
-    let reminderMatches: [ReminderSearchResult]
-    let reminderPresentation: ReminderCardPresentation
-    let openClawRequest: OpenClawRequestIntent?
+internal struct AssistantResponse: Hashable, Sendable {
+    internal let answer: String
+    internal let citations: [EvidenceCitation]
+    internal let alternatives: [SearchResult]
+    internal let confidence: ConfidenceLevel
+    internal let reminderMatches: [ReminderSearchResult]
+    internal let reminderPresentation: ReminderCardPresentation
+    internal let openClawRequest: OpenClawRequestIntent?
 
     /// Creates a conversational, file, or reminder response.
     /// - Parameters:
@@ -307,24 +309,24 @@ struct AssistantResponse: Hashable, Sendable {
 }
 
 /// Live progress for a read-only indexing run.
-struct IndexingProgress: Codable, Hashable, Sendable {
-    var runID: UUID?
-    var rootID: UUID?
-    var folderName: String?
-    var trigger: IndexingTrigger?
-    var state: IndexingState
-    var currentPath: String?
-    var currentItemState: IndexingItemState?
-    var processedItems: Int
-    var totalItems: Int
-    var skippedItems: Int
-    var newItems: Int
-    var updatedItems: Int
-    var unchangedItems: Int
-    var removedItems: Int
-    var fractionCompleted: Double
+internal struct IndexingProgress: Codable, Hashable, Sendable {
+    internal var runID: UUID?
+    internal var rootID: UUID?
+    internal var folderName: String?
+    internal var trigger: IndexingTrigger?
+    internal var state: IndexingState
+    internal var currentPath: String?
+    internal var currentItemState: IndexingItemState?
+    internal var processedItems: Int
+    internal var totalItems: Int
+    internal var skippedItems: Int
+    internal var newItems: Int
+    internal var updatedItems: Int
+    internal var unchangedItems: Int
+    internal var removedItems: Int
+    internal var fractionCompleted: Double
 
-    static let idle = IndexingProgress(
+    internal static let idle = IndexingProgress(
         runID: nil,
         rootID: nil,
         folderName: nil,
@@ -344,39 +346,39 @@ struct IndexingProgress: Codable, Hashable, Sendable {
 }
 
 /// Durable summary of one automatic, manual, or startup indexing run.
-struct IndexingRunRecord: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let rootID: UUID
-    let folderName: String
-    let folderPath: String
-    let trigger: IndexingTrigger
-    var state: IndexingRunState
-    let startedAt: Date
-    var finishedAt: Date?
-    var totalItems: Int
-    var newItems: Int
-    var updatedItems: Int
-    var unchangedItems: Int
-    var removedItems: Int
-    var skippedItems: Int
+internal struct IndexingRunRecord: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let rootID: UUID
+    internal let folderName: String
+    internal let folderPath: String
+    internal let trigger: IndexingTrigger
+    internal var state: IndexingRunState
+    internal let startedAt: Date
+    internal var finishedAt: Date?
+    internal var totalItems: Int
+    internal var newItems: Int
+    internal var updatedItems: Int
+    internal var unchangedItems: Int
+    internal var removedItems: Int
+    internal var skippedItems: Int
 }
 
 /// Durable per-file classification retained for the activity details view.
-struct IndexingItemRecord: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let runID: UUID
-    let displayName: String
-    let relativePath: String
-    var state: IndexingItemState
-    var detail: String?
-    var updatedAt: Date
+internal struct IndexingItemRecord: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let runID: UUID
+    internal let displayName: String
+    internal let relativePath: String
+    internal var state: IndexingItemState
+    internal var detail: String?
+    internal var updatedAt: Date
 }
 
 /// Durable non-file event retained in the activity timeline.
-struct IndexActivityEventRecord: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    let rootID: UUID
-    let folderName: String
-    let kind: IndexActivityEventKind
-    let occurredAt: Date
+internal struct IndexActivityEventRecord: Identifiable, Codable, Hashable, Sendable {
+    internal let id: UUID
+    internal let rootID: UUID
+    internal let folderName: String
+    internal let kind: IndexActivityEventKind
+    internal let occurredAt: Date
 }

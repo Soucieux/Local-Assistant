@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Ownership classification is retained as read-only reminder-card metadata.
-struct ReminderOwnershipTests {
+internal struct ReminderOwnershipTests {
     @Test("Both historical Local Assistant markers classify a CloudBase-only row")
     internal func classifiesLocalAssistantOwnership() {
         let reminder = cached(

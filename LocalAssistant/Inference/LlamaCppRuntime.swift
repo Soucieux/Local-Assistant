@@ -3,11 +3,11 @@ import llama
 
 /// Owns non-Sendable llama.cpp pointers whose lifetime is confined to one runtime actor.
 private final class LlamaResources: @unchecked Sendable {
-    var chatModel: OpaquePointer?
-    var chatContext: OpaquePointer?
-    var embeddingModel: OpaquePointer?
-    var embeddingContext: OpaquePointer?
-    var backendInitialized = false
+    internal var chatModel: OpaquePointer?
+    internal var chatContext: OpaquePointer?
+    internal var embeddingModel: OpaquePointer?
+    internal var embeddingContext: OpaquePointer?
+    internal var backendInitialized = false
 
     deinit {
         release()
@@ -41,7 +41,7 @@ private final class LlamaResources: @unchecked Sendable {
 }
 
 /// Owns embedded llama.cpp models and performs all chat and embedding inference in process.
-actor LlamaCppRuntime {
+internal actor LlamaCppRuntime {
     private let resources = LlamaResources()
 
     /// Loads both verified Qwen models once for the current process.
@@ -108,7 +108,7 @@ actor LlamaCppRuntime {
         var lastBatchTokenCount: Int32 = 0
         while processed < tokens.count {
             let upper = min(processed + Int(InferenceConstants.batchTokenCount), tokens.count)
-            var batch = llama_batch_init(Int32(upper - processed), 0, 1)
+            var batch = llama_batch_init(Int32(upper - processed), 0, Int32(InferenceConstants.sequenceCount))
             defer { llama_batch_free(batch) }
             clear(batch: &batch)
             for index in processed..<upper {
@@ -142,7 +142,7 @@ actor LlamaCppRuntime {
             if llama_vocab_is_eog(vocab, token) { break }
             outputBytes.append(contentsOf: tokenPiece(token: token, vocab: vocab))
 
-            var batch = llama_batch_init(1, 0, 1)
+            var batch = llama_batch_init(1, 0, Int32(InferenceConstants.sequenceCount))
             defer { llama_batch_free(batch) }
             clear(batch: &batch)
             add(token: token, position: position, logits: true, batch: &batch)
@@ -177,7 +177,7 @@ actor LlamaCppRuntime {
             throw LocalAssistantError.inference(InferenceConstants.promptTooLong)
         }
         llama_memory_clear(llama_get_memory(context), true)
-        var batch = llama_batch_init(Int32(tokens.count), 0, 1)
+        var batch = llama_batch_init(Int32(tokens.count), 0, Int32(InferenceConstants.sequenceCount))
         defer { llama_batch_free(batch) }
         clear(batch: &batch)
         for (index, token) in tokens.enumerated() {

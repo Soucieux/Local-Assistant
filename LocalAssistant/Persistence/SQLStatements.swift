@@ -1,8 +1,8 @@
 import Foundation
 
 /// Centralized SQL used by the private embedded database.
-enum SQLStatements {
-    static let pragmas = """
+internal enum SQLStatements {
+    internal static let pragmas = """
         PRAGMA foreign_keys = ON;
         PRAGMA journal_mode = WAL;
         PRAGMA synchronous = NORMAL;
@@ -10,7 +10,7 @@ enum SQLStatements {
         PRAGMA temp_store = MEMORY;
         """
 
-    static let schema = """
+    internal static let schema = """
         CREATE TABLE IF NOT EXISTS authorized_roots (
             id TEXT PRIMARY KEY NOT NULL,
             display_name TEXT NOT NULL,
@@ -73,40 +73,11 @@ enum SQLStatements {
             embedding float[\(AppConstants.Indexing.embeddingDimensions)]
         );
 
-        CREATE TABLE IF NOT EXISTS saved_searches (
-            id TEXT PRIMARY KEY NOT NULL,
-            name TEXT NOT NULL,
-            payload BLOB NOT NULL,
-            created_at REAL NOT NULL,
-            updated_at REAL NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS collections (
-            id TEXT PRIMARY KEY NOT NULL,
-            name TEXT NOT NULL,
-            payload BLOB NOT NULL,
-            created_at REAL NOT NULL,
-            updated_at REAL NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS personal_aliases (
-            id TEXT PRIMARY KEY NOT NULL,
-            phrase TEXT NOT NULL UNIQUE COLLATE NOCASE,
-            expansion TEXT NOT NULL,
-            created_at REAL NOT NULL,
-            updated_at REAL NOT NULL
-        );
-
         CREATE TABLE IF NOT EXISTS chat_messages (
             id TEXT PRIMARY KEY NOT NULL,
             role TEXT NOT NULL,
             payload BLOB NOT NULL,
             created_at REAL NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS app_metadata (
-            key TEXT PRIMARY KEY NOT NULL,
-            value TEXT NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS folder_monitoring_states (
@@ -202,11 +173,11 @@ enum SQLStatements {
         );
         """
 
-    static let beginTransaction = "BEGIN IMMEDIATE TRANSACTION;"
-    static let commitTransaction = "COMMIT;"
-    static let rollbackTransaction = "ROLLBACK;"
+    internal static let beginTransaction = "BEGIN IMMEDIATE TRANSACTION;"
+    internal static let commitTransaction = "COMMIT;"
+    internal static let rollbackTransaction = "ROLLBACK;"
 
-    static let upsertRoot = """
+    internal static let upsertRoot = """
         INSERT INTO authorized_roots (
             id, display_name, last_known_path, bookmark_data, added_at, last_indexed_at, is_available
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -217,13 +188,13 @@ enum SQLStatements {
             last_indexed_at = excluded.last_indexed_at,
             is_available = excluded.is_available;
         """
-    static let fetchRoots = """
+    internal static let fetchRoots = """
         SELECT id, display_name, last_known_path, bookmark_data, added_at, last_indexed_at, is_available
         FROM authorized_roots ORDER BY display_name COLLATE NOCASE;
         """
-    static let deleteRoot = "DELETE FROM authorized_roots WHERE id = ?;"
+    internal static let deleteRoot = "DELETE FROM authorized_roots WHERE id = ?;"
 
-    static let upsertItem = """
+    internal static let upsertItem = """
         INSERT INTO indexed_items (
             id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
             byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
@@ -244,46 +215,51 @@ enum SQLStatements {
             is_directory = excluded.is_directory,
             is_hidden = excluded.is_hidden;
         """
-    static let fetchItem = """
-        SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
-               byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+
+    /// Columns every indexed-item query returns, in the order `readIndexedItem` decodes them.
+    ///
+    /// Rows are decoded by position, so one list keeps every query in step with the decoder.
+    private static let itemColumns = """
+        id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
+        byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+        """
+    internal static let fetchItem = """
+        SELECT \(itemColumns)
         FROM indexed_items WHERE id = ?;
         """
-    static let fetchItemsForRoot = """
-        SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
-               byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+    internal static let fetchItemsForRoot = """
+        SELECT \(itemColumns)
         FROM indexed_items WHERE root_id = ?;
         """
-    static let fetchItemsByKind = """
-        SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
-               byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+    internal static let fetchItemsByKind = """
+        SELECT \(itemColumns)
         FROM indexed_items
         WHERE kind = ?
         ORDER BY modified_at DESC, display_name COLLATE NOCASE
         LIMIT ?;
         """
-    static let countIndexedFiles = "SELECT COUNT(*) FROM indexed_items WHERE is_directory = 0;"
-    static let deleteItem = "DELETE FROM indexed_items WHERE id = ?;"
-    static let deleteChunksForItem = "DELETE FROM content_chunks WHERE item_id = ?;"
-    static let deleteFTSForItem = "DELETE FROM chunk_fts WHERE item_id = ?;"
-    static let fetchChunkRowsForItem = "SELECT row_id FROM content_chunks WHERE item_id = ?;"
-    static let deleteVector = "DELETE FROM chunk_vectors WHERE rowid = ?;"
-    static let clearChunkVectors = "DELETE FROM chunk_vectors;"
-    static let clearChunkFTS = "DELETE FROM chunk_fts;"
-    static let clearContentChunks = "DELETE FROM content_chunks;"
-    static let clearIndexedItems = "DELETE FROM indexed_items;"
-    static let vacuum = "VACUUM;"
-    static let insertChunk = """
+    internal static let countIndexedFiles = "SELECT COUNT(*) FROM indexed_items WHERE is_directory = 0;"
+    internal static let deleteItem = "DELETE FROM indexed_items WHERE id = ?;"
+    internal static let deleteChunksForItem = "DELETE FROM content_chunks WHERE item_id = ?;"
+    internal static let deleteFTSForItem = "DELETE FROM chunk_fts WHERE item_id = ?;"
+    internal static let fetchChunkRowsForItem = "SELECT row_id FROM content_chunks WHERE item_id = ?;"
+    internal static let deleteVector = "DELETE FROM chunk_vectors WHERE rowid = ?;"
+    internal static let clearChunkVectors = "DELETE FROM chunk_vectors;"
+    internal static let clearChunkFTS = "DELETE FROM chunk_fts;"
+    internal static let clearContentChunks = "DELETE FROM content_chunks;"
+    internal static let clearIndexedItems = "DELETE FROM indexed_items;"
+    internal static let vacuum = "VACUUM;"
+    internal static let insertChunk = """
         INSERT INTO content_chunks (
             id, item_id, ordinal, text, character_start, character_end, page_number, section_name
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
         """
-    static let insertFTS = """
+    internal static let insertFTS = """
         INSERT INTO chunk_fts (chunk_id, item_id, display_name, relative_path, body)
         VALUES (?, ?, ?, ?, ?);
         """
-    static let insertVector = "INSERT INTO chunk_vectors(rowid, embedding) VALUES (?, ?);"
-    static let vectorCount = "SELECT COUNT(*) FROM chunk_vectors;"
+    internal static let insertVector = "INSERT INTO chunk_vectors(rowid, embedding) VALUES (?, ?);"
+    internal static let vectorCount = "SELECT COUNT(*) FROM chunk_vectors;"
 
     /// Counts vectors belonging to the requested item kinds.
     ///
@@ -301,11 +277,11 @@ enum SQLStatements {
         WHERE \(kindPredicate(column: "i.kind", count: kindCount));
         """
     }
-    static let insertChatMessage = "INSERT OR REPLACE INTO chat_messages (id, role, payload, created_at) VALUES (?, ?, ?, ?);"
-    static let fetchChatMessages = "SELECT payload FROM chat_messages ORDER BY created_at DESC LIMIT ?;"
-    static let clearChatMessages = "DELETE FROM chat_messages;"
+    internal static let insertChatMessage = "INSERT OR REPLACE INTO chat_messages (id, role, payload, created_at) VALUES (?, ?, ?, ?);"
+    internal static let fetchChatMessages = "SELECT payload FROM chat_messages ORDER BY created_at DESC LIMIT ?;"
+    internal static let clearChatMessages = "DELETE FROM chat_messages;"
 
-    static let fetchReminders = """
+    internal static let fetchReminders = """
         SELECT id, text, date, start_time, end_time, tag, link, managed_by,
                client_request_id, sync_pair_id, source_message_id, ownership,
                content_hash, last_synced_at
@@ -317,10 +293,10 @@ enum SQLStatements {
             start_time COLLATE NOCASE,
             text COLLATE NOCASE;
         """
-    static let fetchReminderContentHashes = "SELECT id, content_hash FROM reminder_items;"
-    static let fetchReminderIDs = "SELECT id FROM reminder_items;"
-    static let fetchReminderRowID = "SELECT row_id FROM reminder_items WHERE id = ?;"
-    static let upsertReminder = """
+    internal static let fetchReminderContentHashes = "SELECT id, content_hash FROM reminder_items;"
+    internal static let fetchReminderIDs = "SELECT id FROM reminder_items;"
+    internal static let fetchReminderRowID = "SELECT row_id FROM reminder_items WHERE id = ?;"
+    internal static let upsertReminder = """
         INSERT INTO reminder_items (
             id, text, date, start_time, end_time, tag, link, managed_by,
             client_request_id, sync_pair_id, source_message_id, ownership,
@@ -341,28 +317,28 @@ enum SQLStatements {
             content_hash = excluded.content_hash,
             last_synced_at = excluded.last_synced_at;
         """
-    static let deleteReminder = "DELETE FROM reminder_items WHERE id = ?;"
-    static let deleteReminderFTS = "DELETE FROM reminder_fts WHERE reminder_id = ?;"
-    static let deleteReminderVector = "DELETE FROM reminder_vectors WHERE rowid = ?;"
-    static let insertReminderFTS = """
+    internal static let deleteReminder = "DELETE FROM reminder_items WHERE id = ?;"
+    internal static let deleteReminderFTS = "DELETE FROM reminder_fts WHERE reminder_id = ?;"
+    internal static let deleteReminderVector = "DELETE FROM reminder_vectors WHERE rowid = ?;"
+    internal static let insertReminderFTS = """
         INSERT INTO reminder_fts (reminder_id, text, date, tag, link)
         VALUES (?, ?, ?, ?, ?);
         """
-    static let insertReminderVector = """
+    internal static let insertReminderVector = """
         INSERT INTO reminder_vectors(rowid, embedding) VALUES (?, ?);
         """
-    static let upsertReminderSyncState = """
+    internal static let upsertReminderSyncState = """
         INSERT INTO reminder_sync_state (singleton, last_successful_sync, item_count)
         VALUES (1, ?, ?)
         ON CONFLICT(singleton) DO UPDATE SET
             last_successful_sync = excluded.last_successful_sync,
             item_count = excluded.item_count;
         """
-    static let fetchReminderSyncState = """
+    internal static let fetchReminderSyncState = """
         SELECT last_successful_sync, item_count
         FROM reminder_sync_state WHERE singleton = 1;
         """
-    static let reminderKeywordSearch = """
+    internal static let reminderKeywordSearch = """
         SELECT reminder_fts.reminder_id,
                bm25(reminder_fts, 0.0, 6.0, 1.0, 2.0, 1.0) AS rank
         FROM reminder_fts
@@ -370,7 +346,7 @@ enum SQLStatements {
         ORDER BY rank
         LIMIT ?;
         """
-    static let reminderSemanticSearch = """
+    internal static let reminderSemanticSearch = """
         SELECT r.id, v.distance
         FROM reminder_vectors AS v
         JOIN reminder_items AS r ON r.row_id = v.rowid
@@ -378,32 +354,32 @@ enum SQLStatements {
         ORDER BY v.distance;
         """
 
-    static let upsertMonitoringState = """
+    internal static let upsertMonitoringState = """
         INSERT INTO folder_monitoring_states (root_id, is_enabled, updated_at)
         VALUES (?, ?, ?)
         ON CONFLICT(root_id) DO UPDATE SET
             is_enabled = excluded.is_enabled,
             updated_at = excluded.updated_at;
         """
-    static let fetchMonitoringStates = "SELECT root_id, is_enabled FROM folder_monitoring_states;"
-    static let insertIndexingRun = """
+    internal static let fetchMonitoringStates = "SELECT root_id, is_enabled FROM folder_monitoring_states;"
+    internal static let insertIndexingRun = """
         INSERT INTO indexing_runs (
             id, root_id, folder_name, folder_path, trigger, state, started_at, finished_at,
             total_items, new_items, updated_items, unchanged_items, removed_items, skipped_items
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
-    static let updateIndexingRun = """
+    internal static let updateIndexingRun = """
         UPDATE indexing_runs SET
             state = ?, finished_at = ?, total_items = ?, new_items = ?, updated_items = ?,
             unchanged_items = ?, removed_items = ?, skipped_items = ?
         WHERE id = ?;
         """
-    static let fetchIndexingRuns = """
+    internal static let fetchIndexingRuns = """
         SELECT id, root_id, folder_name, folder_path, trigger, state, started_at, finished_at,
                total_items, new_items, updated_items, unchanged_items, removed_items, skipped_items
         FROM indexing_runs ORDER BY started_at DESC;
         """
-    static let upsertIndexingRunItem = """
+    internal static let upsertIndexingRunItem = """
         INSERT INTO indexing_run_items (id, run_id, display_name, relative_path, state, detail, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(run_id, relative_path) DO UPDATE SET
@@ -412,27 +388,27 @@ enum SQLStatements {
             detail = excluded.detail,
             updated_at = excluded.updated_at;
         """
-    static let fetchIndexingRunItems = """
+    internal static let fetchIndexingRunItems = """
         SELECT id, run_id, display_name, relative_path, state, detail, updated_at
         FROM indexing_run_items WHERE run_id = ?
         ORDER BY relative_path COLLATE NOCASE;
         """
-    static let insertIndexActivityEvent = """
+    internal static let insertIndexActivityEvent = """
         INSERT INTO index_activity_events (id, root_id, folder_name, kind, occurred_at)
         VALUES (?, ?, ?, ?, ?);
         """
-    static let fetchIndexActivityEvents = """
+    internal static let fetchIndexActivityEvents = """
         SELECT id, root_id, folder_name, kind, occurred_at
         FROM index_activity_events ORDER BY occurred_at DESC;
         """
-    static let deleteExpiredIndexingRuns = "DELETE FROM indexing_runs WHERE started_at < ?;"
-    static let deleteExpiredIndexActivityEvents = "DELETE FROM index_activity_events WHERE occurred_at < ?;"
-    static let clearIndexingRuns = "DELETE FROM indexing_runs;"
-    static let clearIndexActivityEvents = "DELETE FROM index_activity_events;"
-    static let stopInterruptedIndexingRuns = """
+    internal static let deleteExpiredIndexingRuns = "DELETE FROM indexing_runs WHERE started_at < ?;"
+    internal static let deleteExpiredIndexActivityEvents = "DELETE FROM index_activity_events WHERE occurred_at < ?;"
+    internal static let clearIndexingRuns = "DELETE FROM indexing_runs;"
+    internal static let clearIndexActivityEvents = "DELETE FROM index_activity_events;"
+    internal static let stopInterruptedIndexingRuns = """
         UPDATE indexing_runs SET state = ?, finished_at = ? WHERE state = ?;
         """
-    static let resetInterruptedIndexingItems = """
+    internal static let resetInterruptedIndexingItems = """
         UPDATE indexing_run_items
         SET state = CASE state
                 WHEN ? THEN ?
@@ -451,8 +427,7 @@ enum SQLStatements {
     /// - Returns: Parameterized metadata search SQL.
     internal static func metadataSearch(kindCount: Int, tokenCount: Int) -> String {
         """
-        SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
-               byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+        SELECT \(itemColumns)
         FROM indexed_items
         WHERE \(kindPredicate(column: "kind", count: kindCount))
           AND \(tokenPredicate(count: tokenCount))
@@ -470,8 +445,7 @@ enum SQLStatements {
     /// - Returns: Parameterized descendant search SQL.
     internal static func descendantItems(kindCount: Int) -> String {
         """
-        SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
-               byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+        SELECT \(itemColumns)
         FROM indexed_items
         WHERE root_id = ?
           AND id != ?
@@ -493,8 +467,7 @@ enum SQLStatements {
     internal static func fetchItems(idCount: Int) -> String {
         let placeholders = Array(repeating: "?", count: idCount).joined(separator: ", ")
         return """
-            SELECT id, root_id, parent_id, absolute_path, relative_path, display_name, kind, content_type,
-                   byte_count, created_at, modified_at, content_hash, metadata_hash, is_directory, is_hidden
+            SELECT \(itemColumns)
             FROM indexed_items WHERE id IN (\(placeholders));
             """
     }

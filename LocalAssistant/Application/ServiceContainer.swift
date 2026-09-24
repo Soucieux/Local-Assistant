@@ -2,20 +2,20 @@ import Foundation
 
 /// Constructs and retains the app's local-only service graph.
 @MainActor
-final class ServiceContainer {
-    let database: AssistantDatabase
-    let authorization: ReadOnlyAuthorizationService
-    let modelStore: ModelStore
-    let runtime: LlamaCppRuntime
-    let embeddings: LocalEmbeddingService
-    let retrieval: HybridRetrievalService
-    let reminderSpool: ReminderSpoolService
-    let reminderRetrieval: ReminderRetrievalService
-    let reminders: ReminderService
-    let indexing: IndexingService
-    let monitoring: FolderMonitorService
-    let assistant: GroundedAssistantService
-    let voice: LocalVoiceService
+internal final class ServiceContainer {
+    internal let database: AssistantDatabase
+    internal let authorization: ReadOnlyAuthorizationService
+    internal let modelStore: ModelStore
+    internal let runtime: LlamaCppRuntime
+    internal let embeddings: LocalEmbeddingService
+    internal let retrieval: HybridRetrievalService
+    internal let reminderSpool: ReminderSpoolService
+    internal let reminderRetrieval: ReminderRetrievalService
+    internal let reminders: ReminderService
+    internal let indexing: IndexingService
+    internal let monitoring: FolderMonitorService
+    internal let assistant: GroundedAssistantService
+    internal let voice: LocalVoiceService
 
     /// Creates the complete in-process dependency graph without opening files or models.
     internal init() {

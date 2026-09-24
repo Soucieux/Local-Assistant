@@ -1,7 +1,7 @@
 import Foundation
 
 /// Resolves and protects the app's private writable directories.
-enum AppDirectories {
+internal enum AppDirectories {
     /// Returns the private application-support directory.
     /// - Returns: The application-support URL inside the sandbox container.
     /// - Throws: A local error when the location cannot be resolved.
@@ -39,41 +39,14 @@ enum AppDirectories {
     }
 
     /// Returns the owner-only spool shared with the optional connector process.
+    ///
+    /// The spool service creates and protects this folder and its queues on every use, so
+    /// `prepare()` leaves them to it.
     /// - Returns: The connector root inside this app's private container.
     /// - Throws: A local error when application support cannot be resolved.
     internal static func connectorDirectory() throws -> URL {
         try applicationSupport().appendingPathComponent(
             ReminderConstants.Identity.connectorDirectory,
-            isDirectory: true
-        )
-    }
-
-    /// Returns the queue where the app atomically publishes connector requests.
-    /// - Returns: Request queue inside the private connector spool.
-    /// - Throws: A local directory-resolution error when the container is unavailable.
-    internal static func connectorRequestsDirectory() throws -> URL {
-        try connectorDirectory().appendingPathComponent(
-            ReminderConstants.Identity.requestDirectory,
-            isDirectory: true
-        )
-    }
-
-    /// Returns the connector-owned directory for claimed requests.
-    /// - Returns: Processing queue inside the private connector spool.
-    /// - Throws: A local directory-resolution error when the container is unavailable.
-    internal static func connectorProcessingDirectory() throws -> URL {
-        try connectorDirectory().appendingPathComponent(
-            ReminderConstants.Identity.processingDirectory,
-            isDirectory: true
-        )
-    }
-
-    /// Returns the queue where the connector atomically publishes responses.
-    /// - Returns: Response queue inside the private connector spool.
-    /// - Throws: A local directory-resolution error when the container is unavailable.
-    internal static func connectorResponsesDirectory() throws -> URL {
-        try connectorDirectory().appendingPathComponent(
-            ReminderConstants.Identity.responseDirectory,
             isDirectory: true
         )
     }
@@ -85,17 +58,13 @@ enum AppDirectories {
         try indexDirectory().appendingPathComponent(AppConstants.Identity.databaseFilename)
     }
 
-    /// Creates all private writable directories with owner-only permissions.
+    /// Creates the app's own private writable directories with owner-only permissions.
     /// - Throws: A local error when a directory cannot be created or protected.
     internal static func prepare() throws {
         let directories = try [
             applicationSupport(),
             indexDirectory(),
-            modelsDirectory(),
-            connectorDirectory(),
-            connectorRequestsDirectory(),
-            connectorProcessingDirectory(),
-            connectorResponsesDirectory()
+            modelsDirectory()
         ]
         let fileManager = FileManager.default
 

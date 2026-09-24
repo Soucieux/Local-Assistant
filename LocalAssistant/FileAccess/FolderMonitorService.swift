@@ -3,8 +3,8 @@ import Foundation
 
 /// Bridges one FSEvents stream callback to a root-specific Swift closure.
 private final class FolderMonitorContext: @unchecked Sendable {
-    let rootID: UUID
-    let onChange: @Sendable (UUID) -> Void
+    internal let rootID: UUID
+    internal let onChange: @Sendable (UUID) -> Void
 
     /// Creates a callback context retained for the native stream lifetime.
     /// - Parameters:
@@ -18,11 +18,11 @@ private final class FolderMonitorContext: @unchecked Sendable {
 
 /// Receives recursive macOS folder-change notifications without reading file content.
 @MainActor
-final class FolderMonitorService {
+internal final class FolderMonitorService {
     private struct Entry {
-        let stream: FSEventStreamRef
-        let access: SecurityScopedAccess
-        let context: FolderMonitorContext
+        internal let stream: FSEventStreamRef
+        internal let access: SecurityScopedAccess
+        internal let context: FolderMonitorContext
     }
 
     private var entries: [UUID: Entry] = [:]

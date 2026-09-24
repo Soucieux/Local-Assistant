@@ -141,18 +141,7 @@ extension AssistantDatabase {
         }
         let statement = try preparedStatement(SQLStatements.reminderSemanticSearch)
         defer { recycle(statement) }
-        let result = embedding.withUnsafeBytes { bytes in
-            sqlite3_bind_blob(
-                statement,
-                1,
-                bytes.baseAddress,
-                Int32(bytes.count),
-                DatabaseConstants.transientDestructor
-            )
-        }
-        guard result == SQLITE_OK else {
-            throw LocalAssistantError.database(databaseErrorMessage())
-        }
+        try bind(embedding, at: 1, in: statement)
         try bind(limit, at: 2, in: statement)
         var identifiers: [String] = []
         while try step(statement) {
@@ -231,18 +220,7 @@ extension AssistantDatabase {
         let insertion = try preparedStatement(SQLStatements.insertReminderVector)
         defer { recycle(insertion) }
         try bind(rowID, at: 1, in: insertion)
-        let result = embedding.withUnsafeBytes { bytes in
-            sqlite3_bind_blob(
-                insertion,
-                2,
-                bytes.baseAddress,
-                Int32(bytes.count),
-                DatabaseConstants.transientDestructor
-            )
-        }
-        guard result == SQLITE_OK else {
-            throw LocalAssistantError.database(databaseErrorMessage())
-        }
+        try bind(embedding, at: 2, in: insertion)
         try stepDone(insertion)
     }
 

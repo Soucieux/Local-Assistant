@@ -2,7 +2,7 @@ import Foundation
 import ZIPFoundation
 
 /// Extracts searchable OCR from the locally stored preview of a Pages document.
-struct PagesPreviewExtractor: Sendable {
+internal struct PagesPreviewExtractor: Sendable {
     private let ocrService = LocalOCRService()
 
     /// Recognizes the available Pages preview without modifying the package.
@@ -41,13 +41,7 @@ struct PagesPreviewExtractor: Sendable {
         for filename in ExtractionConstants.previewFilenames {
             let path = ExtractionConstants.pagesPreviewPath(filename: filename)
             guard let entry = archive[path] else { continue }
-            var data = Data()
-            _ = try archive.extract(entry) { chunk in
-                guard data.count + chunk.count <= AppConstants.Indexing.maximumArchiveEntryBytes else {
-                    throw LocalAssistantError.unsupported(path)
-                }
-                data.append(chunk)
-            }
+            let data = try archive.boundedData(for: entry)
             return document(text: try ocrService.recognize(data: data))
         }
         throw LocalAssistantError.unsupported(url.path)

@@ -3,11 +3,11 @@ import Foundation
 @testable import LocalAssistant
 
 /// Owner of one isolated temporary SQLite database and its directory.
-struct DatabaseFixture {
+internal struct DatabaseFixture {
     private static let databaseFilename = "assistant.sqlite3"
 
-    let directory: URL
-    let databaseURL: URL
+    internal let directory: URL
+    internal let databaseURL: URL
 
     /// Creates an isolated writable directory outside production storage.
     /// - Throws: A file error when the temporary directory cannot be created.

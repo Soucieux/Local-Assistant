@@ -11,23 +11,7 @@ extension IndexingService {
         _ item: IndexedItem,
         preservingContentHash contentHash: String?
     ) -> IndexedItem {
-        IndexedItem(
-            id: item.id,
-            rootID: item.rootID,
-            parentID: item.parentID,
-            url: item.url,
-            relativePath: item.relativePath,
-            displayName: item.displayName,
-            kind: item.kind,
-            contentType: item.contentType,
-            byteCount: item.byteCount,
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-            contentHash: contentHash,
-            metadataHash: item.metadataHash,
-            isDirectory: item.isDirectory,
-            isHidden: item.isHidden
-        )
+        item.replacingContentHash(contentHash)
     }
 
     /// Computes a content hash for a changed file or synthesized folder context.
@@ -47,23 +31,7 @@ extension IndexingService {
         } else {
             try FileHasher.sha256(of: item.url)
         }
-        return IndexedItem(
-            id: item.id,
-            rootID: item.rootID,
-            parentID: item.parentID,
-            url: item.url,
-            relativePath: item.relativePath,
-            displayName: item.displayName,
-            kind: item.kind,
-            contentType: item.contentType,
-            byteCount: item.byteCount,
-            createdAt: item.createdAt,
-            modifiedAt: item.modifiedAt,
-            contentHash: digest,
-            metadataHash: item.metadataHash,
-            isDirectory: item.isDirectory,
-            isHidden: item.isHidden
-        )
+        return item.replacingContentHash(digest)
     }
 
     /// Builds a bounded progress snapshot.

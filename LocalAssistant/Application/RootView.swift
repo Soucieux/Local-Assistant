@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// Single-purpose assistant surface with privacy-safe error presentation.
-struct RootView: View {
+internal struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Builds the assistant or Settings inside one main-window surface.
-    var body: some View {
+    internal var body: some View {
         @Bindable var model = model
         Group {
             if model.isStarting {

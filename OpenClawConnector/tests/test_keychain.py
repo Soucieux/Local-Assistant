@@ -15,7 +15,11 @@ class KeychainTests(unittest.TestCase):
 
     @patch("local_assistant_connector.keychain.subprocess.run")
     def test_token_exists_uses_metadata_only_query(self, run: Mock) -> None:
-        """Presence checks never request or capture the Keychain secret."""
+        """Presence checks never request or capture the Keychain secret.
+
+        Args:
+            run: Replacement for the ``security`` subprocess call.
+        """
         run.return_value = Mock(returncode=0)
 
         self.assertTrue(token_exists(constants.KEYCHAIN_REMINDER_ACCOUNT))
@@ -38,14 +42,22 @@ class KeychainTests(unittest.TestCase):
 
     @patch("local_assistant_connector.keychain.subprocess.run")
     def test_token_exists_returns_false_for_missing_item(self, run: Mock) -> None:
-        """A missing Keychain item is reported without raising an error."""
+        """A missing Keychain item is reported without raising an error.
+
+        Args:
+            run: Replacement for the ``security`` subprocess call.
+        """
         run.return_value = Mock(returncode=44)
 
         self.assertFalse(token_exists(constants.KEYCHAIN_AGENT_ACCOUNT))
 
     @patch("local_assistant_connector.keychain.subprocess.run")
     def test_token_exists_returns_false_when_query_times_out(self, run: Mock) -> None:
-        """Setup discovery cannot wait indefinitely for Keychain metadata."""
+        """Setup discovery cannot wait indefinitely for Keychain metadata.
+
+        Args:
+            run: Replacement for the ``security`` subprocess call.
+        """
         run.side_effect = subprocess.TimeoutExpired(
             constants.KEYCHAIN_SECURITY_EXECUTABLE,
             constants.KEYCHAIN_METADATA_TIMEOUT_SECONDS,

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Combines filename, path, FTS5, vector, and recency signals.
-actor HybridRetrievalService {
+internal actor HybridRetrievalService {
     private let database: AssistantDatabase
     private let embeddings: LocalEmbeddingService
 
@@ -521,19 +521,19 @@ actor HybridRetrievalService {
 
 /// Mutable internal state used while fusing search channels.
 private struct ScoreAccumulator {
-    var exactName = 0.0
-    var path = 0.0
-    var keyword = 0.0
-    var semantic = 0.0
-    var reciprocalRank = 0.0
-    var keywordEvidence: (UUID, String)?
-    var semanticEvidence: (UUID, String)?
-    var folderEvidence: String?
+    internal var exactName = 0.0
+    internal var path = 0.0
+    internal var keyword = 0.0
+    internal var semantic = 0.0
+    internal var reciprocalRank = 0.0
+    internal var keywordEvidence: (UUID, String)?
+    internal var semanticEvidence: (UUID, String)?
+    internal var folderEvidence: String?
 }
 
 /// One folder whose metadata or semantic context can scope descendant retrieval.
 private struct FolderScopeMatch {
-    let folder: IndexedItem
-    let strength: Double
-    let isLiteral: Bool
+    internal let folder: IndexedItem
+    internal let strength: Double
+    internal let isLiteral: Bool
 }

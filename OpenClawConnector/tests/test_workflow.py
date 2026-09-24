@@ -26,7 +26,14 @@ class FakeTransport:
         self.agents = []
 
     def send_reminder(self, document):
-        """Return one typed read-only snapshot response."""
+        """Return one typed read-only snapshot response.
+
+        Args:
+            document: Reminder request to record.
+
+        Returns:
+            A completed empty snapshot for the same task.
+        """
         self.reminders.append(document)
         return {
             constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
@@ -37,7 +44,16 @@ class FakeTransport:
         }
 
     def send_agent(self, task_id, context_id, message):
-        """Return one typed agent response and capture the exact message."""
+        """Return one typed agent response and capture the exact message.
+
+        Args:
+            task_id: Task identifier to record and echo.
+            context_id: Context identifier to record and echo.
+            message: Exact text the workflow chose to disclose.
+
+        Returns:
+            A completed agent response for the same task and context.
+        """
         self.agents.append((task_id, context_id, message))
         return {
             constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
@@ -55,7 +71,18 @@ def request_document(
     confirmed=False,
     authorization=None,
 ):
-    """Build one connector task envelope with the skill's required policy."""
+    """Build one connector task envelope with the skill's required policy.
+
+    Args:
+        skill: Reminder or agent skill that selects the lane.
+        operation: Operation requested from that skill.
+        payload: Skill-specific request content.
+        confirmed: Whether the user confirmed the request.
+        authorization: Agent authorization; explicit OpenClaw when omitted.
+
+    Returns:
+        A request document using the fixed test identifiers.
+    """
     policy = (
         constants.CALENDAR_POLICY_OPENCLAW_DEFAULT
         if skill == constants.AGENT_SKILL
@@ -83,7 +110,15 @@ class WorkflowTests(unittest.TestCase):
     """Verify read-only snapshots and exact authorized OpenClaw disclosure."""
 
     def invoke(self, transport, document):
-        """Invoke one isolated graph and close its checkpoint connection."""
+        """Invoke one isolated graph and close its checkpoint connection.
+
+        Args:
+            transport: Fake transport the graph's lanes send through.
+            document: Request to run.
+
+        Returns:
+            The workflow's response.
+        """
         with tempfile.TemporaryDirectory() as temporary_directory:
             workflow = ConnectorWorkflow(
                 transport,

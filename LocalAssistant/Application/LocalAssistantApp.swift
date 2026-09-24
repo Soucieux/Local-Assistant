@@ -3,12 +3,12 @@ import SwiftUI
 
 /// Native macOS entry point for the local-only assistant.
 @main
-struct LocalAssistantApp: App {
+internal struct LocalAssistantApp: App {
     @NSApplicationDelegateAdaptor(ApplicationDelegate.self) private var applicationDelegate
     @State private var model = AppModel()
 
     /// Declares one normal assistant window and a minimal command menu.
-    var body: some Scene {
+    internal var body: some Scene {
         Window(UIStrings.appName, id: AppConstants.Identity.mainWindowIdentifier) {
             RootView()
                 .environment(model)
@@ -28,11 +28,8 @@ struct LocalAssistantApp: App {
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button(UIStrings.about) {
-                    let version = Bundle.main.object(
-                        forInfoDictionaryKey: AppConstants.Identity.bundleShortVersionKey
-                    ) as? String ?? AppConstants.Identity.fallbackVersion
                     NSApp.orderFrontStandardAboutPanel(
-                        options: [.version: UIStrings.displayVersion(version)]
+                        options: [.version: UIStrings.installedVersionLabel]
                     )
                 }
             }

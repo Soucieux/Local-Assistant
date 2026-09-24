@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Folder indexing must preserve hierarchy and provide bounded local search context.
-struct FolderIndexingTests {
+internal struct FolderIndexingTests {
     @Test("The authorized root and its child hierarchy are included in a scan")
     internal func scansAuthorizedRootAsFolder() throws {
         let rootURL = URL(fileURLWithPath: NSTemporaryDirectory())
@@ -85,15 +85,7 @@ struct FolderIndexingTests {
         defer { fixture.remove() }
         let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
-        let root = AuthorizedRoot(
-            id: FolderIndexTestConstants.rootID,
-            displayName: FolderIndexTestConstants.schoolName,
-            lastKnownPath: FolderIndexTestConstants.schoolPath,
-            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
-            addedAt: Date(),
-            lastIndexedAt: nil,
-            isAvailable: true
-        )
+        let root = schoolRoot()
         try await database.upsertRoot(root)
         let items = folderItems()
         for item in items {
@@ -116,15 +108,7 @@ struct FolderIndexingTests {
         defer { fixture.remove() }
         let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
-        let root = AuthorizedRoot(
-            id: FolderIndexTestConstants.rootID,
-            displayName: FolderIndexTestConstants.schoolName,
-            lastKnownPath: FolderIndexTestConstants.schoolPath,
-            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
-            addedAt: Date(),
-            lastIndexedAt: nil,
-            isAvailable: true
-        )
+        let root = schoolRoot()
         try await database.upsertRoot(root)
         let items = folderItems()
         try await database.upsertItemMetadata(items)
@@ -152,28 +136,10 @@ struct FolderIndexingTests {
         defer { fixture.remove() }
         let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
-        let root = AuthorizedRoot(
-            id: FolderIndexTestConstants.rootID,
-            displayName: FolderIndexTestConstants.schoolName,
-            lastKnownPath: FolderIndexTestConstants.schoolPath,
-            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
-            addedAt: Date(),
-            lastIndexedAt: nil,
-            isAvailable: true
-        )
+        let root = schoolRoot()
         try await database.upsertRoot(root)
         let transcript = folderItems()[2]
-        let chunk = ContentChunk(
-            id: UUID(),
-            itemID: transcript.id,
-            ordinal: 0,
-            text: FolderIndexTestConstants.transcriptSearchText,
-            characterStart: 0,
-            characterEnd: FolderIndexTestConstants.transcriptSearchText.count,
-            pageNumber: nil,
-            sectionName: nil,
-            embedding: nil
-        )
+        let chunk = transcriptChunk(for: transcript)
         try await database.replaceItem(transcript, chunks: [chunk])
         try await database.upsertItemMetadata([transcript])
 
@@ -193,28 +159,10 @@ struct FolderIndexingTests {
         defer { fixture.remove() }
         let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
-        let root = AuthorizedRoot(
-            id: FolderIndexTestConstants.rootID,
-            displayName: FolderIndexTestConstants.schoolName,
-            lastKnownPath: FolderIndexTestConstants.schoolPath,
-            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
-            addedAt: Date(),
-            lastIndexedAt: nil,
-            isAvailable: true
-        )
+        let root = schoolRoot()
         try await database.upsertRoot(root)
         let transcript = folderItems()[2]
-        let chunk = ContentChunk(
-            id: UUID(),
-            itemID: transcript.id,
-            ordinal: 0,
-            text: FolderIndexTestConstants.transcriptSearchText,
-            characterStart: 0,
-            characterEnd: FolderIndexTestConstants.transcriptSearchText.count,
-            pageNumber: nil,
-            sectionName: nil,
-            embedding: nil
-        )
+        let chunk = transcriptChunk(for: transcript)
         try await database.replaceItem(transcript, chunks: [chunk])
         try await database.insertChatMessage(.user(FolderIndexTestConstants.schoolSearchTerm))
 
@@ -239,15 +187,7 @@ struct FolderIndexingTests {
         defer { fixture.remove() }
         let database = AssistantDatabase(databaseURL: fixture.databaseURL)
         try await database.open()
-        let root = AuthorizedRoot(
-            id: FolderIndexTestConstants.rootID,
-            displayName: FolderIndexTestConstants.schoolName,
-            lastKnownPath: FolderIndexTestConstants.schoolPath,
-            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
-            addedAt: Date(),
-            lastIndexedAt: nil,
-            isAvailable: true
-        )
+        let root = schoolRoot()
         try await database.upsertRoot(root)
 
         let byteCount = try await database.databaseByteCount()
@@ -257,6 +197,37 @@ struct FolderIndexingTests {
 
         #expect(byteCount > 0)
         #expect(byteCount >= onDiskSize ?? 0)
+    }
+
+    /// Creates the authorization every stored fixture item belongs to.
+    /// - Returns: One available root with a placeholder bookmark.
+    private func schoolRoot() -> AuthorizedRoot {
+        AuthorizedRoot(
+            id: FolderIndexTestConstants.rootID,
+            displayName: FolderIndexTestConstants.schoolName,
+            lastKnownPath: FolderIndexTestConstants.schoolPath,
+            bookmarkData: Data([FolderIndexTestConstants.bookmarkByte]),
+            addedAt: Date(),
+            lastIndexedAt: nil,
+            isAvailable: true
+        )
+    }
+
+    /// Creates the single searchable passage stored for the transcript fixture.
+    /// - Parameter transcript: Indexed PDF the passage belongs to.
+    /// - Returns: One unembedded passage holding the transcript search text.
+    private func transcriptChunk(for transcript: IndexedItem) -> ContentChunk {
+        ContentChunk(
+            id: UUID(),
+            itemID: transcript.id,
+            ordinal: 0,
+            text: FolderIndexTestConstants.transcriptSearchText,
+            characterStart: 0,
+            characterEnd: FolderIndexTestConstants.transcriptSearchText.count,
+            pageNumber: nil,
+            sectionName: nil,
+            embedding: nil
+        )
     }
 
     /// Creates one root folder, one direct folder, and one direct PDF fixture.

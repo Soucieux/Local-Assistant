@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// A complete indexing run must classify every file and survive per-file failures.
-struct IndexingRunTests {
+internal struct IndexingRunTests {
     @Test("A first run indexes every readable file and completes")
     internal func indexesEveryFileOnFirstRun() async throws {
         let harness = try IndexingRunHarness()

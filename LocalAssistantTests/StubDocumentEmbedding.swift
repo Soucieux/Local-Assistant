@@ -3,10 +3,10 @@ import Foundation
 @testable import LocalAssistant
 
 /// Stands in for the local model so indexing runs can be exercised without loading it.
-actor StubDocumentEmbedding: DocumentEmbedding {
+internal actor StubDocumentEmbedding: DocumentEmbedding {
     private let failure: LocalAssistantError?
     private let oversizedTexts: Set<String>
-    private(set) var embedCallCount = 0
+    internal private(set) var embedCallCount = 0
 
     /// Creates an embedding stub with an optional scripted failure.
     /// - Parameters:

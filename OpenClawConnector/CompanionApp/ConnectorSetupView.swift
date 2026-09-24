@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// Credential-safe setup and update workbench for the separately packaged Connector.
-struct ConnectorSetupView: View {
+internal struct ConnectorSetupView: View {
     @StateObject private var model = ConnectorSetupModel()
     @State private var showsRemovalConfirmation = false
 
     /// Presents loading, existing-install, or complete setup content.
-    var body: some View {
+    internal var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Ranks cached reminders using deterministic identity, FTS, embeddings, and time.
-actor ReminderRetrievalService {
+internal actor ReminderRetrievalService {
     private let database: AssistantDatabase
     private let embeddings: LocalEmbeddingService
     private let calendar: Calendar
@@ -41,11 +41,11 @@ actor ReminderRetrievalService {
         now: Date = Date()
     ) async throws -> [ReminderSearchResult] {
         guard limit > 0 else { return [] }
-        let reminders = try await database.fetchReminders()
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard query.isEmpty == false else {
             return Array((try await completeList(now: now)).prefix(limit))
         }
+        let reminders = try await database.fetchReminders()
 
         let keywordIDs = try await database.reminderKeywordSearch(
             text: query,

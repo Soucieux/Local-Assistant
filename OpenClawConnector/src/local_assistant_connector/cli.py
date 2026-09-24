@@ -11,7 +11,7 @@ import sys
 from . import constants
 from .configuration import load_config, parse_config, save_config, save_ssh_host_key
 from .keychain import save_token
-from .models import ConnectorError
+from .models import ConnectorConfig, ConnectorError
 from .service import ConnectorService
 from .setup_state import existing_setup_state, forget_connector_data
 from .spool import SpoolStore
@@ -19,7 +19,11 @@ from .transport import OpenClawTransport
 
 
 def _parser() -> argparse.ArgumentParser:
-    """Build the connector's explicit subcommand parser."""
+    """Build the connector's explicit subcommand parser.
+
+    Returns:
+        A parser that requires exactly one known subcommand.
+    """
     parser = argparse.ArgumentParser(description=constants.CLI_DESCRIPTION)
     commands = parser.add_subparsers(
         dest=constants.CLI_ARGUMENT_COMMAND,
@@ -53,7 +57,14 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _configure(arguments: argparse.Namespace) -> None:
-    """Validate and save non-secret connector configuration."""
+    """Validate and save non-secret connector configuration.
+
+    Args:
+        arguments: Parsed ``configure`` options.
+
+    Raises:
+        ConnectorError: When an option fails configuration validation.
+    """
     document = {
         constants.CONFIG_SSH_HOST: arguments.ssh_host,
         constants.CONFIG_SSH_PORT: arguments.ssh_port,
@@ -66,23 +77,65 @@ def _configure(arguments: argparse.Namespace) -> None:
 
 
 def _save_prompted_token(account: str, prompt: str) -> None:
-    """Prompt without echo and store one credential in Keychain."""
+    """Prompt without echo and store one credential in Keychain.
+
+    Args:
+        account: Keychain account that names the credential.
+        prompt: Text shown while the terminal hides the typed value.
+
+    Raises:
+        ConnectorError: When the entered credential is empty.
+    """
     save_token(account, getpass.getpass(prompt))
     print(constants.CLI_TOKEN_SAVED)
 
 
+def _read_stdin_document() -> object:
+    """Read one JSON document from bounded standard input.
+
+    Returns:
+        The decoded JSON value, still untrusted.
+
+    Raises:
+        ValueError: When the input exceeds the setup bound or is not JSON.
+    """
+    raw = sys.stdin.buffer.read(constants.MAX_SETUP_STDIN_BYTES + 1)
+    if len(raw) > constants.MAX_SETUP_STDIN_BYTES:
+        raise ValueError(constants.ERROR_TOO_LARGE)
+    return json.loads(raw.decode("utf-8"))
+
+
+def _connection_config(document: dict[str, object]) -> ConnectorConfig:
+    """Validate the non-secret connection fields of a setup document.
+
+    Args:
+        document: Setup document whose field names were already checked.
+
+    Returns:
+        The validated configuration, built without the document's secrets.
+
+    Raises:
+        ConnectorError: When a connection field is invalid.
+    """
+    return parse_config(
+        {field: document[field] for field in constants.CONFIG_REQUIRED_FIELDS}
+    )
+
+
 def _save_setup_document(document: object) -> None:
-    """Validate and save one complete packaged-app setup document."""
+    """Validate and save one complete packaged-app setup document.
+
+    Args:
+        document: Untrusted decoded JSON value.
+
+    Raises:
+        ValueError: When the fields are not exactly the expected set or a
+            token is not text.
+        ConnectorError: When a connection field, host key, or token is invalid.
+    """
     if not isinstance(document, dict) or frozenset(document) != constants.SETUP_REQUIRED_FIELDS:
         raise ValueError(constants.ERROR_INVALID_CONFIG)
-    config = parse_config(
-        {
-            constants.CONFIG_SSH_HOST: document[constants.CONFIG_SSH_HOST],
-            constants.CONFIG_SSH_PORT: document[constants.CONFIG_SSH_PORT],
-            constants.CONFIG_SSH_USER: document[constants.CONFIG_SSH_USER],
-            constants.CONFIG_SPOOL_DIRECTORY: document[constants.CONFIG_SPOOL_DIRECTORY],
-        }
-    )
+    config = _connection_config(document)
     reminder_token = document[constants.SETUP_REMINDER_TOKEN]
     agent_token = document[constants.SETUP_AGENT_TOKEN]
     if not isinstance(reminder_token, str) or not isinstance(agent_token, str):
@@ -94,44 +147,34 @@ def _save_setup_document(document: object) -> None:
     print(constants.CLI_SETUP_SAVED)
 
 
-def _setup_from_stdin() -> None:
-    """Save packaged-app setup received only through bounded standard input."""
-    raw = sys.stdin.buffer.read(constants.MAX_SETUP_STDIN_BYTES + 1)
-    if len(raw) > constants.MAX_SETUP_STDIN_BYTES:
-        raise ValueError(constants.ERROR_TOO_LARGE)
-    _save_setup_document(json.loads(raw.decode("utf-8")))
-
-
 def _save_reconfigure_document(document: object) -> None:
-    """Save changed non-secret values while retaining existing Keychain tokens."""
+    """Save changed non-secret values while retaining existing Keychain tokens.
+
+    Args:
+        document: Untrusted decoded JSON value.
+
+    Raises:
+        ValueError: When the fields are not exactly the expected set.
+        ConnectorError: When a connection field or the host key is invalid.
+    """
     if (
         not isinstance(document, dict)
         or frozenset(document) != constants.RECONFIGURE_REQUIRED_FIELDS
     ):
         raise ValueError(constants.ERROR_INVALID_CONFIG)
-    config = parse_config(
-        {
-            constants.CONFIG_SSH_HOST: document[constants.CONFIG_SSH_HOST],
-            constants.CONFIG_SSH_PORT: document[constants.CONFIG_SSH_PORT],
-            constants.CONFIG_SSH_USER: document[constants.CONFIG_SSH_USER],
-            constants.CONFIG_SPOOL_DIRECTORY: document[constants.CONFIG_SPOOL_DIRECTORY],
-        }
-    )
+    config = _connection_config(document)
     save_ssh_host_key(document[constants.SETUP_SSH_HOST_KEY])
     save_config(config)
     print(constants.CLI_CONFIGURED)
 
 
-def _reconfigure_from_stdin() -> None:
-    """Receive changed non-secret setup only through bounded standard input."""
-    raw = sys.stdin.buffer.read(constants.MAX_SETUP_STDIN_BYTES + 1)
-    if len(raw) > constants.MAX_SETUP_STDIN_BYTES:
-        raise ValueError(constants.ERROR_TOO_LARGE)
-    _save_reconfigure_document(json.loads(raw.decode("utf-8")))
-
-
 def main() -> int:
-    """Execute one configuration, credential, status, or service command."""
+    """Execute one configuration, credential, status, or service command.
+
+    Returns:
+        Zero on success, or the verification exit code that tells the
+        packaged application which check failed.
+    """
     arguments = _parser().parse_args()
     if arguments.command == constants.CLI_CONFIGURE:
         _configure(arguments)
@@ -153,10 +196,10 @@ def main() -> int:
         print(constants.CLI_SSH_HOST_KEY_SAVED)
         return 0
     if arguments.command == constants.CLI_SETUP_STDIN:
-        _setup_from_stdin()
+        _save_setup_document(_read_stdin_document())
         return 0
     if arguments.command == constants.CLI_RECONFIGURE_STDIN:
-        _reconfigure_from_stdin()
+        _save_reconfigure_document(_read_stdin_document())
         return 0
     if arguments.command == constants.CLI_STATUS:
         config = load_config()

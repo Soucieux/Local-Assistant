@@ -3,11 +3,11 @@ import Foundation
 @testable import LocalAssistant
 
 /// Builds an isolated root folder and private database so one indexing run can be observed.
-final class IndexingRunHarness {
-    let rootURL: URL
-    let databaseURL: URL
-    let database: AssistantDatabase
-    let embeddings: StubDocumentEmbedding
+internal final class IndexingRunHarness {
+    internal let rootURL: URL
+    internal let databaseURL: URL
+    internal let database: AssistantDatabase
+    internal let embeddings: StubDocumentEmbedding
     private let root: AuthorizedRoot
 
     /// Creates a temporary root holding two readable notes and an empty private index.

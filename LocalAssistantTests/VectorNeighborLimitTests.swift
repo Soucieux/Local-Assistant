@@ -3,7 +3,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Regression coverage for sqlite-vec nearest-neighbor request limits.
-struct VectorNeighborLimitTests {
+internal struct VectorNeighborLimitTests {
     @Test("caps an expanded neighbor request at the sqlite-vec ceiling")
     internal func capsExpandedNeighborRequest() {
         #expect(DatabaseConstants.boundedVectorNeighborCount(5_120) == 4_096)

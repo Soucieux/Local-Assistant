@@ -1,19 +1,19 @@
 import SwiftUI
 
 /// Typography scale used for the live response surface or retained conversation history.
-enum ResponseMarkdownPresentation: Sendable {
+internal enum ResponseMarkdownPresentation: Sendable {
     case command
     case history
 }
 
 /// Native, selectable block-Markdown presentation for local and OpenClaw responses.
-struct ResponseMarkdownView: View {
-    let text: String
-    let presentation: ResponseMarkdownPresentation
+internal struct ResponseMarkdownView: View {
+    internal let text: String
+    internal let presentation: ResponseMarkdownPresentation
     private let parser = ResponseMarkdownParser()
 
     /// Builds one responsive semantic document without a WebView or active links.
-    var body: some View {
+    internal var body: some View {
         let document = parser.parse(text)
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.large) {
             ForEach(Array(document.blocks.enumerated()), id: \.offset) { _, block in
@@ -136,13 +136,13 @@ struct ResponseMarkdownView: View {
 
 /// Selectable inline Markdown with links deliberately rendered inert.
 private struct ResponseInlineMarkdownText: View {
-    let text: String
-    let font: Font
-    let color: Color
-    let lineSpacing: CGFloat
+    internal let text: String
+    internal let font: Font
+    internal let color: Color
+    internal let lineSpacing: CGFloat
 
     /// Builds one selectable line-wrapping text block.
-    var body: some View {
+    internal var body: some View {
         Text(renderedText)
             .font(font)
             .foregroundStyle(color)
@@ -161,12 +161,12 @@ private struct ResponseInlineMarkdownText: View {
 
 /// Native ordered or unordered Markdown list.
 private struct ResponseMarkdownListView: View {
-    let items: [String]
-    let ordered: Bool
-    let font: Font
+    internal let items: [String]
+    internal let ordered: Bool
+    internal let font: Font
 
     /// Builds aligned list markers and selectable item content.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.small) {
@@ -199,11 +199,11 @@ private struct ResponseMarkdownListView: View {
 
 /// Quoted Markdown with a restrained accent rail.
 private struct ResponseMarkdownQuoteView: View {
-    let text: String
-    let font: Font
+    internal let text: String
+    internal let font: Font
 
     /// Builds a selectable quotation with semantic visual separation.
-    var body: some View {
+    internal var body: some View {
         ResponseInlineMarkdownText(
             text: text,
             font: font.italic(),
@@ -224,11 +224,11 @@ private struct ResponseMarkdownQuoteView: View {
 
 /// Horizontally scrollable native fenced-code presentation.
 private struct ResponseMarkdownCodeView: View {
-    let language: String?
-    let content: String
+    internal let language: String?
+    internal let content: String
 
     /// Builds a labelled code surface that preserves whitespace exactly.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             if let language {
                 Text(language.uppercased())
@@ -264,11 +264,11 @@ private struct ResponseMarkdownCodeView: View {
 
 /// Responsive native pipe-table presentation with a semantic header row.
 private struct ResponseMarkdownTableView: View {
-    let table: ResponseMarkdownTable
-    let font: Font
+    internal let table: ResponseMarkdownTable
+    internal let font: Font
 
     /// Builds a full-width table that scrolls only when its columns cannot fit readably.
-    var body: some View {
+    internal var body: some View {
         ScrollView(.horizontal) {
             VStack(spacing: 0) {
                 row(table.header, isHeader: true, drawsBottomBorder: true)

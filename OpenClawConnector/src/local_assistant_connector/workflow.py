@@ -18,7 +18,15 @@ from .transport import OpenClawTransport
 
 
 def _canonical_uuid(value: object) -> str | None:
-    """Return one validated UUID in the connector's lowercase wire format."""
+    """Validate one UUID in the connector's lowercase wire format.
+
+    Args:
+        value: Untrusted identifier from a request.
+
+    Returns:
+        The lowercase UUID, or ``None`` when the value is not a UUID written
+        in canonical hyphenated form.
+    """
     if not isinstance(value, str):
         return None
     try:
@@ -29,13 +37,21 @@ def _canonical_uuid(value: object) -> str | None:
 
 
 def _validate_common(document: object) -> tuple[str, str, str]:
-    """Validate common connector envelope fields and return routing identity."""
+    """Validate the envelope fields every connector request shares.
+
+    Args:
+        document: Untrusted decoded request.
+
+    Returns:
+        The canonical task identifier, the canonical context identifier
+        (the task's own when none was sent), and the requested skill.
+
+    Raises:
+        ConnectorError: When a field is missing, unknown, mistyped, or names
+            an unsupported skill.
+    """
     if not isinstance(document, dict):
-        raise ConnectorError(
-            constants.ERROR_KIND_INVALID_REQUEST,
-            constants.ERROR_INVALID_REQUEST,
-            False,
-        )
+        raise ConnectorError.invalid_request(constants.ERROR_INVALID_REQUEST)
     fields = frozenset(document)
     task_id = _canonical_uuid(document.get(constants.FIELD_TASK_ID))
     idempotency_key = _canonical_uuid(document.get(constants.FIELD_IDEMPOTENCY_KEY))
@@ -52,29 +68,17 @@ def _validate_common(document: object) -> tuple[str, str, str]:
         or not isinstance(document[constants.FIELD_CONFIRMED], bool)
         or not isinstance(document[constants.FIELD_CALENDAR_POLICY], str)
     ):
-        raise ConnectorError(
-            constants.ERROR_KIND_INVALID_REQUEST,
-            constants.ERROR_INVALID_REQUEST,
-            False,
-        )
+        raise ConnectorError.invalid_request(constants.ERROR_INVALID_REQUEST)
     context_id = document.get(constants.FIELD_CONTEXT_ID)
     canonical_context_id = task_id if context_id is None else _canonical_uuid(context_id)
     if canonical_context_id is None:
-        raise ConnectorError(
-            constants.ERROR_KIND_INVALID_REQUEST,
-            constants.ERROR_INVALID_REQUEST,
-            False,
-        )
+        raise ConnectorError.invalid_request(constants.ERROR_INVALID_REQUEST)
     skill = document[constants.FIELD_SKILL]
     if not isinstance(skill, str) or skill not in {
         constants.REMINDER_SKILL,
         constants.AGENT_SKILL,
     }:
-        raise ConnectorError(
-            constants.ERROR_KIND_INVALID_REQUEST,
-            constants.ERROR_UNSUPPORTED_SKILL,
-            False,
-        )
+        raise ConnectorError.invalid_request(constants.ERROR_UNSUPPORTED_SKILL)
     return task_id, canonical_context_id, skill
 
 
@@ -86,7 +90,16 @@ class ConnectorWorkflow:
         transport: OpenClawTransport,
         checkpoint_file: Path,
     ) -> None:
-        """Create and compile the workflow with SQLite checkpoint persistence."""
+        """Create and compile the workflow with SQLite checkpoint persistence.
+
+        Args:
+            transport: Transport both lanes send through.
+            checkpoint_file: Owner-only SQLite database holding graph state.
+
+        Raises:
+            ConnectorError: When the checkpoint file or its directory is a
+                link or not the expected kind of file.
+        """
         self._transport = transport
         checkpoint_file.parent.mkdir(
             parents=True,
@@ -98,26 +111,14 @@ class ConnectorWorkflow:
             not stat.S_ISDIR(parent_metadata.st_mode)
             or stat.S_ISLNK(parent_metadata.st_mode)
         ):
-            raise ConnectorError(
-                constants.ERROR_KIND_INVALID_REQUEST,
-                constants.ERROR_FILE_BOUNDARY,
-                False,
-            )
+            raise ConnectorError.invalid_request(constants.ERROR_FILE_BOUNDARY)
         os.chmod(checkpoint_file.parent, constants.OWNER_DIRECTORY_MODE)
         if checkpoint_file.is_symlink():
-            raise ConnectorError(
-                constants.ERROR_KIND_INVALID_REQUEST,
-                constants.ERROR_FILE_BOUNDARY,
-                False,
-            )
+            raise ConnectorError.invalid_request(constants.ERROR_FILE_BOUNDARY)
         if checkpoint_file.exists():
             metadata = checkpoint_file.lstat()
             if not stat.S_ISREG(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
-                raise ConnectorError(
-                    constants.ERROR_KIND_INVALID_REQUEST,
-                    constants.ERROR_FILE_BOUNDARY,
-                    False,
-                )
+                raise ConnectorError.invalid_request(constants.ERROR_FILE_BOUNDARY)
         self._checkpoint_context = SqliteSaver.from_conn_string(
             str(checkpoint_file)
         )
@@ -125,20 +126,20 @@ class ConnectorWorkflow:
         os.chmod(checkpoint_file, constants.OWNER_FILE_MODE)
         self._closed = False
         builder = StateGraph(ConnectorState)
-        builder.add_node("validate", self._validate_node)
-        builder.add_node("reminder", self._reminder_node)
-        builder.add_node("agent", self._agent_node)
-        builder.add_edge(START, "validate")
+        builder.add_node(constants.WORKFLOW_NODE_VALIDATE, self._validate_node)
+        builder.add_node(constants.WORKFLOW_NODE_REMINDER, self._reminder_node)
+        builder.add_node(constants.WORKFLOW_NODE_AGENT, self._agent_node)
+        builder.add_edge(START, constants.WORKFLOW_NODE_VALIDATE)
         builder.add_conditional_edges(
-            "validate",
+            constants.WORKFLOW_NODE_VALIDATE,
             self._route_after_validation,
             {
-                constants.REMINDER_SKILL: "reminder",
-                constants.AGENT_SKILL: "agent",
+                constants.REMINDER_SKILL: constants.WORKFLOW_NODE_REMINDER,
+                constants.AGENT_SKILL: constants.WORKFLOW_NODE_AGENT,
             },
         )
-        builder.add_edge("reminder", END)
-        builder.add_edge("agent", END)
+        builder.add_edge(constants.WORKFLOW_NODE_REMINDER, END)
+        builder.add_edge(constants.WORKFLOW_NODE_AGENT, END)
         self._graph = builder.compile(checkpointer=self._checkpointer)
 
     def close(self) -> None:
@@ -149,7 +150,18 @@ class ConnectorWorkflow:
         self._checkpoint_context.__exit__(None, None, None)
 
     def invoke(self, document: Mapping[str, Any]) -> Mapping[str, Any]:
-        """Run one request under a stable task-or-context checkpoint thread."""
+        """Run one request under a stable task-or-context checkpoint thread.
+
+        Args:
+            document: Untrusted decoded request; validated inside the graph.
+
+        Returns:
+            The response produced by the reminder or agent lane.
+
+        Raises:
+            ConnectorError: When validation or the selected lane fails, or the
+                graph ends without a response.
+        """
         task_id = document.get(constants.FIELD_TASK_ID)
         context_id = document.get(constants.FIELD_CONTEXT_ID)
         thread_id = _canonical_uuid(context_id) or _canonical_uuid(task_id)
@@ -161,15 +173,21 @@ class ConnectorWorkflow:
         )
         response = state.get("response")
         if not isinstance(response, dict):
-            raise ConnectorError(
-                constants.ERROR_KIND_OPERATIONAL,
-                constants.ERROR_INTERNAL,
-                False,
-            )
+            raise ConnectorError.operational(constants.ERROR_INTERNAL, retryable=False)
         return response
 
     def _validate_node(self, state: ConnectorState) -> ConnectorState:
-        """Validate the read-only snapshot lane or authorized OpenClaw lane."""
+        """Validate the read-only snapshot lane or authorized OpenClaw lane.
+
+        Args:
+            state: Graph state holding the untrusted request.
+
+        Returns:
+            State with the normalized request and its routing identity.
+
+        Raises:
+            ConnectorError: When the request is not exactly what its lane allows.
+        """
         document = state["request"]
         task_id, context_id, skill = _validate_common(document)
         normalized_document = dict(document)
@@ -189,11 +207,7 @@ class ConnectorWorkflow:
                 or constants.FIELD_AUTHORIZATION in document
                 or payload
             ):
-                raise ConnectorError(
-                    constants.ERROR_KIND_INVALID_REQUEST,
-                    constants.ERROR_REMINDER_PAYLOAD,
-                    False,
-                )
+                raise ConnectorError.invalid_request(constants.ERROR_REMINDER_PAYLOAD)
         else:
             if (
                 document[constants.FIELD_OPERATION] != constants.OPERATION_CHAT
@@ -202,11 +216,7 @@ class ConnectorWorkflow:
                 or document[constants.FIELD_CONFIRMED] is not True
                 or frozenset(payload) != constants.AGENT_PAYLOAD_FIELDS
             ):
-                raise ConnectorError(
-                    constants.ERROR_KIND_INVALID_REQUEST,
-                    constants.ERROR_AGENT_PAYLOAD,
-                    False,
-                )
+                raise ConnectorError.invalid_request(constants.ERROR_AGENT_PAYLOAD)
             message = payload.get(constants.FIELD_MESSAGE)
             authorization = document.get(constants.FIELD_AUTHORIZATION)
             if (
@@ -218,20 +228,12 @@ class ConnectorWorkflow:
                     constants.AUTHORIZATION_CONFIRMED_REMINDER_MUTATION,
                 }
             ):
-                raise ConnectorError(
-                    constants.ERROR_KIND_INVALID_REQUEST,
-                    constants.ERROR_AGENT_MESSAGE,
-                    False,
-                )
+                raise ConnectorError.invalid_request(constants.ERROR_AGENT_MESSAGE)
             if (
                 authorization == constants.AUTHORIZATION_EXPLICIT_OPENCLAW
                 and re.search(constants.OPENCLAW_INVOCATION_PATTERN, message) is None
             ):
-                raise ConnectorError(
-                    constants.ERROR_KIND_INVALID_REQUEST,
-                    constants.ERROR_OPENCLAW_REQUIRED,
-                    False,
-                )
+                raise ConnectorError.invalid_request(constants.ERROR_OPENCLAW_REQUIRED)
         return {
             "request": normalized_document,
             "task_id": task_id,
@@ -240,15 +242,42 @@ class ConnectorWorkflow:
         }
 
     def _route_after_validation(self, state: ConnectorState) -> str:
-        """Route only to the validated reminder or agent lane."""
+        """Route only to the validated reminder or agent lane.
+
+        Args:
+            state: Graph state produced by validation.
+
+        Returns:
+            The validated skill, which names the lane to run.
+        """
         return state["skill"]
 
     def _reminder_node(self, state: ConnectorState) -> ConnectorState:
-        """Forward the original reminder envelope to the narrow plugin route."""
+        """Forward the original reminder envelope to the narrow plugin route.
+
+        Args:
+            state: Graph state holding the normalized reminder request.
+
+        Returns:
+            State carrying the bridge's response.
+
+        Raises:
+            ConnectorError: When the transport or response validation fails.
+        """
         return {"response": self._transport.send_reminder(state["request"])}
 
     def _agent_node(self, state: ConnectorState) -> ConnectorState:
-        """Send only the exact locally authorized user text to OpenClaw."""
+        """Send only the exact locally authorized user text to OpenClaw.
+
+        Args:
+            state: Graph state holding the normalized agent request.
+
+        Returns:
+            State carrying the connector response with the agent's answer.
+
+        Raises:
+            ConnectorError: When the transport or response validation fails.
+        """
         payload = state["request"][constants.FIELD_PAYLOAD]
         return {
             "response": self._transport.send_agent(

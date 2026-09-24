@@ -18,7 +18,14 @@ from .models import ConnectorConfig, ConnectorError
 
 
 def _safe_ssh_error(stderr: bytes) -> str:
-    """Map bounded OpenSSH diagnostics to credential-free user messages."""
+    """Map bounded OpenSSH diagnostics to credential-free user messages.
+
+    Args:
+        stderr: Bounded raw output captured from the OpenSSH child.
+
+    Returns:
+        One allowlisted message; the raw output is never passed on.
+    """
     normalized = stderr.decode("utf-8", errors="ignore").casefold()
     if "host key verification failed" in normalized \
             or "remote host identification has changed" in normalized:
@@ -37,30 +44,34 @@ def _safe_ssh_error(stderr: bytes) -> str:
 
 
 def _require_owner_file(path: Path) -> None:
-    """Require one non-linked owner-only regular credential file."""
+    """Require one non-linked owner-only regular credential file.
+
+    Args:
+        path: Private key or pinned host-key file handed to OpenSSH.
+
+    Raises:
+        ConnectorError: When the file is missing, linked, owned by another
+            user, or accessible to anyone but its owner.
+    """
     try:
         metadata = path.lstat()
     except OSError as exc:
-        raise ConnectorError(
-            constants.ERROR_KIND_NOT_CONFIGURED,
-            constants.ERROR_SSH_IDENTITY,
-            False,
-        ) from exc
+        raise ConnectorError.not_configured(constants.ERROR_SSH_IDENTITY) from exc
     if (
         not stat.S_ISREG(metadata.st_mode)
         or stat.S_ISLNK(metadata.st_mode)
         or metadata.st_uid != os.getuid()
-        or metadata.st_mode & 0o077
+        or metadata.st_mode & constants.GROUP_AND_OTHER_ACCESS_MASK
     ):
-        raise ConnectorError(
-            constants.ERROR_KIND_INVALID_REQUEST,
-            constants.ERROR_SSH_IDENTITY,
-            False,
-        )
+        raise ConnectorError.invalid_request(constants.ERROR_SSH_IDENTITY)
 
 
 def _available_loopback_port() -> int:
-    """Reserve and release one ephemeral loopback port for the child tunnel."""
+    """Reserve and release one ephemeral loopback port for the child tunnel.
+
+    Returns:
+        A port that was free on the loopback interface a moment ago.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         listener.bind((constants.SSH_LOOPBACK_HOST, 0))
         return int(listener.getsockname()[1])
@@ -70,14 +81,26 @@ class OpenClawSSHTunnel(AbstractContextManager[str]):
     """Starts one forwarding-only SSH child and always closes it after use."""
 
     def __init__(self, config: ConnectorConfig) -> None:
-        """Store validated connection identity without opening a socket."""
+        """Store validated connection identity without opening a socket.
+
+        Args:
+            config: Validated server address, port, and restricted account.
+        """
         self._config = config
         self._process: subprocess.Popen[bytes] | None = None
         self._stderr: BinaryIO | None = None
         self._local_port = 0
 
     def __enter__(self) -> str:
-        """Open the restricted tunnel and return its exact local HTTP origin."""
+        """Open the restricted tunnel for one request.
+
+        Returns:
+            The exact local HTTP origin that forwards to the Gateway.
+
+        Raises:
+            ConnectorError: When the identity files are unsafe or the tunnel
+                cannot be established.
+        """
         private_key = ssh_private_key_path()
         known_hosts = ssh_known_hosts_path()
         _require_owner_file(private_key)
@@ -147,26 +170,26 @@ class OpenClawSSHTunnel(AbstractContextManager[str]):
             raise
         except OSError:
             self.close()
-            raise ConnectorError(
-                constants.ERROR_KIND_OPERATIONAL,
-                constants.ERROR_UNREACHABLE,
-                True,
-            )
+            raise ConnectorError.operational(constants.ERROR_UNREACHABLE, retryable=True)
         return (
             f"{constants.LOOPBACK_URL_SCHEME}://"
             f"{constants.SSH_LOOPBACK_HOST}:{self._local_port}"
         )
 
     def _wait_until_ready(self) -> None:
-        """Wait until OpenSSH owns the local forwarding port or exits."""
-        deadline = time.monotonic() + constants.SSH_CONNECT_TIMEOUT_SECONDS + 2
+        """Wait until OpenSSH owns the local forwarding port or exits.
+
+        Raises:
+            ConnectorError: When the child exits first or the port never opens.
+        """
+        deadline = (
+            time.monotonic()
+            + constants.SSH_CONNECT_TIMEOUT_SECONDS
+            + constants.SSH_READY_GRACE_SECONDS
+        )
         while time.monotonic() < deadline:
             if self._process is None or self._process.poll() is not None:
-                raise ConnectorError(
-                    constants.ERROR_KIND_OPERATIONAL,
-                    self._diagnostic_message(),
-                    True,
-                )
+                raise ConnectorError.operational(self._diagnostic_message(), retryable=True)
             try:
                 with socket.create_connection(
                     (constants.SSH_LOOPBACK_HOST, self._local_port),
@@ -175,14 +198,14 @@ class OpenClawSSHTunnel(AbstractContextManager[str]):
                     return
             except OSError:
                 time.sleep(constants.SSH_READY_POLL_SECONDS)
-        raise ConnectorError(
-            constants.ERROR_KIND_OPERATIONAL,
-            constants.ERROR_UNREACHABLE,
-            True,
-        )
+        raise ConnectorError.operational(constants.ERROR_UNREACHABLE, retryable=True)
 
     def _diagnostic_message(self) -> str:
-        """Return one allowlisted diagnosis without exposing raw OpenSSH output."""
+        """Diagnose a failed tunnel without exposing raw OpenSSH output.
+
+        Returns:
+            One allowlisted message chosen from the child's bounded output.
+        """
         if self._stderr is None:
             return constants.ERROR_UNREACHABLE
         try:
@@ -208,5 +231,11 @@ class OpenClawSSHTunnel(AbstractContextManager[str]):
             self._stderr = None
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """Close the child tunnel even when the HTTP request fails."""
+        """Close the child tunnel even when the HTTP request fails.
+
+        Args:
+            exc_type: Exception class raised inside the context, if any.
+            exc_value: Exception raised inside the context, if any.
+            traceback: Traceback of that exception, if any.
+        """
         self.close()

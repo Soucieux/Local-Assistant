@@ -79,7 +79,7 @@ audit_macho "${EXECUTABLE_PATH}"
 if [[ -d "${FRAMEWORKS_PATH}" ]]; then
   while IFS= read -r bundled; do
     [[ -n "${bundled}" ]] || continue
-    /usr/bin/file -b "${bundled}" | /usr/bin/grep -q "Mach-O" || continue
+    [[ "$(/usr/bin/file -b "${bundled}")" == *"Mach-O"* ]] || continue
     audit_macho "${bundled}"
   done < <(/usr/bin/find "${FRAMEWORKS_PATH}" -type f)
 fi

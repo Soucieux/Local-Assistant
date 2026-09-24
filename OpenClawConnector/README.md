@@ -24,8 +24,8 @@ macOS Keychain, and the private SSH key stays in Connector Application Support.
 
 Current release components:
 
-- Local Assistant and Connector: **v5.6 (build 56)**
-- Connector runtime: **v1.9.0**
+- Local Assistant and Connector: **v5.8 (build 58)**
+- Connector runtime: **v1.9.1**
 - OpenClaw server bridge: **v1.4.0**
 
 ## Terms used in setup
@@ -47,7 +47,7 @@ only a Connector with the same version and build.
 
 For an existing installation:
 
-- create and run a fresh server ZIP once for this release;
+- if the server was set up from an older release, create and run a fresh server ZIP once;
 - choose **Update and Verify Existing Connector**; and
 - reuse the saved SSH settings and Keychain credentials.
 

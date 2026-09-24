@@ -2,7 +2,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 /// Maps local file metadata to the assistant's broad item categories.
-enum FileKindResolver {
+internal enum FileKindResolver {
     /// Resolves a display category for a local URL.
     /// - Parameters:
     ///   - url: Candidate file or directory.

@@ -4,44 +4,44 @@ import Darwin
 import Foundation
 
 /// Top-level presentation selected after credential-free local discovery.
-enum ConnectorSetupMode {
+internal enum ConnectorSetupMode {
     case loading
     case existing
     case setup
 }
 
 /// Non-secret setup facts returned by the bundled Connector runtime.
-struct ExistingConnectorState: Decodable, Sendable {
-    let hasExistingData: Bool
-    let configured: Bool
-    let sshHost: String
-    let sshPort: Int
-    let sshHostKey: String
-    let sshIdentityReady: Bool
-    let reminderTokenSaved: Bool
-    let agentTokenSaved: Bool
-    let readyForUpgrade: Bool
+internal struct ExistingConnectorState: Decodable, Sendable {
+    internal let hasExistingData: Bool
+    internal let configured: Bool
+    internal let sshHost: String
+    internal let sshPort: Int
+    internal let sshHostKey: String
+    internal let sshIdentityReady: Bool
+    internal let reminderTokenSaved: Bool
+    internal let agentTokenSaved: Bool
+    internal let readyForUpgrade: Bool
 }
 
 /// Owns local-only connector configuration, Keychain handoff, and background startup.
 @MainActor
-final class ConnectorSetupModel: ObservableObject {
-    @Published var sshHost = ConnectorSetupConstants.Text.empty
-    @Published var sshPort = ConnectorSetupConstants.Configuration.defaultSSHPort
-    @Published var sshHostKey = ConnectorSetupConstants.Text.empty
-    @Published var reminderToken = ConnectorSetupConstants.Text.empty
-    @Published var agentToken = ConnectorSetupConstants.Text.empty
-    @Published private(set) var mode = ConnectorSetupMode.loading
-    @Published private(set) var existingState: ExistingConnectorState?
-    @Published private(set) var statusMessage = ConnectorSetupConstants.Text.empty
-    @Published private(set) var statusTone = ConnectorSetupStatusTone.neutral
-    @Published private(set) var showsVerificationStatus = false
-    @Published private(set) var isBusy = false
-    @Published private(set) var publicKeyWasExported = false
-    @Published private(set) var serverSetupWasExported = false
-    @Published private(set) var isReplacingCredentials = false
+internal final class ConnectorSetupModel: ObservableObject {
+    @Published internal var sshHost = ConnectorSetupConstants.Text.empty
+    @Published internal var sshPort = ConnectorSetupConstants.Configuration.defaultSSHPort
+    @Published internal var sshHostKey = ConnectorSetupConstants.Text.empty
+    @Published internal var reminderToken = ConnectorSetupConstants.Text.empty
+    @Published internal var agentToken = ConnectorSetupConstants.Text.empty
+    @Published internal private(set) var mode = ConnectorSetupMode.loading
+    @Published internal private(set) var existingState: ExistingConnectorState?
+    @Published internal private(set) var statusMessage = ConnectorSetupConstants.Text.empty
+    @Published internal private(set) var statusTone = ConnectorSetupStatusTone.neutral
+    @Published internal private(set) var showsVerificationStatus = false
+    @Published internal private(set) var isBusy = false
+    @Published internal private(set) var publicKeyWasExported = false
+    @Published internal private(set) var serverSetupWasExported = false
+    @Published internal private(set) var isReplacingCredentials = false
 
-    let spoolPath: String
+    internal let spoolPath: String
     private var didLoadExistingState = false
 
     /// Creates setup state and resolves the installed app's private spool path.
@@ -389,15 +389,12 @@ final class ConnectorSetupModel: ObservableObject {
         guard host.isEmpty == false else {
             throw ConnectorSetupError.message(ConnectorSetupConstants.Text.sshHostRequired)
         }
-        let disallowed = CharacterSet.whitespacesAndNewlines.union(
-            CharacterSet(charactersIn: "/@?#")
-        )
+        // The allowed characters already exclude whitespace, URL punctuation, and a
+        // `user@host` form, so only a leading option dash needs its own check.
         let allowed = CharacterSet(
-            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._:-"
+            charactersIn: ConnectorSetupConstants.Configuration.sshHostAllowedCharacters
         )
-        guard host.rangeOfCharacter(from: disallowed) == nil,
-              host.hasPrefix("-") == false,
-              host.contains("://") == false,
+        guard host.hasPrefix(ConnectorSetupConstants.Configuration.sshOptionPrefix) == false,
               host.unicodeScalars.allSatisfy({ allowed.contains($0) }) else {
             throw ConnectorSetupError.message(ConnectorSetupConstants.Text.sshHostInvalid)
         }
@@ -682,11 +679,10 @@ final class ConnectorSetupModel: ObservableObject {
             throw ConnectorSetupError.message(ConnectorSetupConstants.Text.launchFailed)
         }
     }
-
 }
 
 /// User-safe setup failure whose text contains no credential or remote response body.
-enum ConnectorSetupError: LocalizedError, Sendable {
+internal enum ConnectorSetupError: LocalizedError, Sendable {
     case message(String)
 
     /// Returns the exact user-safe setup failure.

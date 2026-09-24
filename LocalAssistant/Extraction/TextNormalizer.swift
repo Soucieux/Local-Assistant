@@ -1,7 +1,7 @@
 import Foundation
 
 /// Normalizes extracted text while preserving paragraph boundaries.
-enum TextNormalizer {
+internal enum TextNormalizer {
     /// Removes noisy horizontal spacing and excessive blank lines.
     /// - Parameter text: Extracted local text.
     /// - Returns: Trimmed, search-ready text.

@@ -1,17 +1,17 @@
 import Foundation
 
 /// Raw full-text hit before score fusion.
-struct KeywordHit: Hashable, Sendable {
-    let chunkID: UUID
-    let itemID: UUID
-    let text: String
-    let rank: Double
+internal struct KeywordHit: Hashable, Sendable {
+    internal let chunkID: UUID
+    internal let itemID: UUID
+    internal let text: String
+    internal let rank: Double
 }
 
 /// Raw vector hit before score fusion.
-struct SemanticHit: Hashable, Sendable {
-    let chunkID: UUID
-    let itemID: UUID
-    let text: String
-    let distance: Double
+internal struct SemanticHit: Hashable, Sendable {
+    internal let chunkID: UUID
+    internal let itemID: UUID
+    internal let text: String
+    internal let distance: Double
 }

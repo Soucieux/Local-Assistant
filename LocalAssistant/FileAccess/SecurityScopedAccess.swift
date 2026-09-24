@@ -1,8 +1,8 @@
 import Foundation
 
 /// Keeps one security-scoped read session alive without granting write access.
-final class SecurityScopedAccess: @unchecked Sendable {
-    let url: URL
+internal final class SecurityScopedAccess: @unchecked Sendable {
+    internal let url: URL
     private let didStart: Bool
 
     /// Starts access to a resolved read-only security-scoped URL.

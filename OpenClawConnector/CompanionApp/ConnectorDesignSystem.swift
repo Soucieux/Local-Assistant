@@ -1,28 +1,33 @@
 import SwiftUI
 
 /// Semantic visual roles for the light-only Connector workbench.
-enum ConnectorDesignSystem {
-    static let canvas = Color(red: 0.965, green: 0.975, blue: 0.985)
-    static let surface = Color.white
-    static let text = Color(red: 0.105, green: 0.135, blue: 0.18)
-    static let secondaryText = Color(red: 0.32, green: 0.37, blue: 0.44)
-    static let border = Color(red: 0.82, green: 0.85, blue: 0.89)
-    static let serverBlue = Color(red: 0.12, green: 0.38, blue: 0.82)
-    static let fileCyan = Color(red: 0.00, green: 0.57, blue: 0.72)
-    static let actionOrange = Color(red: 0.86, green: 0.38, blue: 0.08)
-    static let credentialTeal = Color(red: 0.00, green: 0.48, blue: 0.43)
-    static let successGreen = Color(red: 0.08, green: 0.48, blue: 0.25)
-    static let dangerRed = Color(red: 0.72, green: 0.12, blue: 0.16)
-    static let cornerRadius: CGFloat = 16
-    static let compactCornerRadius: CGFloat = 10
-    static let cardPadding: CGFloat = 20
+internal enum ConnectorDesignSystem {
+    internal static let canvas = Color(red: 0.965, green: 0.975, blue: 0.985)
+    internal static let surface = Color.white
+    internal static let text = Color(red: 0.105, green: 0.135, blue: 0.18)
+    internal static let secondaryText = Color(red: 0.32, green: 0.37, blue: 0.44)
+    internal static let border = Color(red: 0.82, green: 0.85, blue: 0.89)
+    internal static let serverBlue = Color(red: 0.12, green: 0.38, blue: 0.82)
+    internal static let fileCyan = Color(red: 0.00, green: 0.57, blue: 0.72)
+    internal static let actionOrange = Color(red: 0.86, green: 0.38, blue: 0.08)
+    internal static let credentialTeal = Color(red: 0.00, green: 0.48, blue: 0.43)
+    internal static let successGreen = Color(red: 0.08, green: 0.48, blue: 0.25)
+    internal static let dangerRed = Color(red: 0.72, green: 0.12, blue: 0.16)
+    internal static let cornerRadius: CGFloat = 16
+    internal static let compactCornerRadius: CGFloat = 10
+    internal static let cardPadding: CGFloat = 20
     internal static let contentMaximumWidth: CGFloat = 1_440
     internal static let actionMinimumWidth: CGFloat = 260
     internal static let locationBannerIconSize: CGFloat = 34
+    internal static let actionHorizontalPadding: CGFloat = 16
+    internal static let actionMinimumHeight: CGFloat = 44
+    internal static let disabledOpacity = 0.45
+    internal static let pressedScale: CGFloat = 0.985
+    internal static let pressDuration = 0.12
 }
 
 /// One distinct setup stage with a stable semantic accent and symbol.
-enum ConnectorStepTheme {
+internal enum ConnectorStepTheme {
     case server
     case files
     case actions
@@ -56,7 +61,7 @@ enum ConnectorStepTheme {
 internal struct ConnectorPrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let accent: Color
+    internal let accent: Color
 
     /// Creates a required-action style with the owning step color.
     /// - Parameter accent: Semantic step color used by the button surface.
@@ -71,16 +76,16 @@ internal struct ConnectorPrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.callout.weight(.semibold))
             .foregroundStyle(.white)
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, ConnectorDesignSystem.actionHorizontalPadding)
+            .frame(maxWidth: .infinity, minHeight: ConnectorDesignSystem.actionMinimumHeight)
             .background(
                 RoundedRectangle(cornerRadius: ConnectorDesignSystem.compactCornerRadius)
                     .fill(configuration.isPressed ? accent.opacity(0.78) : accent)
             )
-            .opacity(isEnabled ? 1 : 0.45)
-            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(isEnabled ? 1 : ConnectorDesignSystem.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? ConnectorDesignSystem.pressedScale : 1)
             .animation(
-                reduceMotion ? nil : .easeOut(duration: 0.12),
+                reduceMotion ? nil : .easeOut(duration: ConnectorDesignSystem.pressDuration),
                 value: configuration.isPressed
             )
     }
@@ -90,7 +95,7 @@ internal struct ConnectorPrimaryButtonStyle: ButtonStyle {
 internal struct ConnectorSecondaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let accent: Color
+    internal let accent: Color
 
     /// Creates a supporting-action style with the owning step color.
     /// - Parameter accent: Semantic step color used by the border and label.
@@ -105,8 +110,8 @@ internal struct ConnectorSecondaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.callout.weight(.semibold))
             .foregroundStyle(accent)
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, ConnectorDesignSystem.actionHorizontalPadding)
+            .frame(maxWidth: .infinity, minHeight: ConnectorDesignSystem.actionMinimumHeight)
             .background(
                 RoundedRectangle(cornerRadius: ConnectorDesignSystem.compactCornerRadius)
                     .fill(
@@ -119,10 +124,10 @@ internal struct ConnectorSecondaryButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: ConnectorDesignSystem.compactCornerRadius)
                     .stroke(accent.opacity(0.48), lineWidth: 1)
             }
-            .opacity(isEnabled ? 1 : 0.45)
-            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(isEnabled ? 1 : ConnectorDesignSystem.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? ConnectorDesignSystem.pressedScale : 1)
             .animation(
-                reduceMotion ? nil : .easeOut(duration: 0.12),
+                reduceMotion ? nil : .easeOut(duration: ConnectorDesignSystem.pressDuration),
                 value: configuration.isPressed
             )
     }
@@ -140,8 +145,8 @@ internal struct ConnectorDestructiveButtonStyle: ButtonStyle {
         configuration.label
             .font(.callout.weight(.semibold))
             .foregroundStyle(ConnectorDesignSystem.dangerRed)
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, ConnectorDesignSystem.actionHorizontalPadding)
+            .frame(maxWidth: .infinity, minHeight: ConnectorDesignSystem.actionMinimumHeight)
             .background(
                 RoundedRectangle(cornerRadius: ConnectorDesignSystem.compactCornerRadius)
                     .fill(
@@ -154,10 +159,10 @@ internal struct ConnectorDestructiveButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: ConnectorDesignSystem.compactCornerRadius)
                     .stroke(ConnectorDesignSystem.dangerRed.opacity(0.42), lineWidth: 1)
             }
-            .opacity(isEnabled ? 1 : 0.45)
-            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(isEnabled ? 1 : ConnectorDesignSystem.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? ConnectorDesignSystem.pressedScale : 1)
             .animation(
-                reduceMotion ? nil : .easeOut(duration: 0.12),
+                reduceMotion ? nil : .easeOut(duration: ConnectorDesignSystem.pressDuration),
                 value: configuration.isPressed
             )
     }

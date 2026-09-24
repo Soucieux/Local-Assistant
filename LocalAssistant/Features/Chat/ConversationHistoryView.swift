@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// Retained conversation interface for reviewing earlier requests and results.
-struct ConversationHistoryView: View {
+internal struct ConversationHistoryView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Builds the history header and complete retained conversation.
-    var body: some View {
+    internal var body: some View {
         ZStack {
             CompanionCanvasBackground()
 
@@ -159,7 +159,7 @@ struct ConversationHistoryView: View {
 
 /// One compact conversation message with explicit role-based alignment.
 private struct MessageBubble: View {
-    let message: ChatMessage
+    internal let message: ChatMessage
 
     /// Whether the message was authored by the person using the app.
     private var isUser: Bool {
@@ -177,7 +177,7 @@ private struct MessageBubble: View {
     }
 
     /// Builds a readable message anchored to the correct side of the conversation.
-    var body: some View {
+    internal var body: some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.small) {
             if isUser == false {
                 ZStack {
@@ -260,25 +260,18 @@ private struct MessageBubble: View {
                 || message.reminderMatches.count > 1 else {
             return message.text
         }
-        let tags = Set(message.reminderMatches.map { result in
-            let tag = result.item.tag?.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ) ?? AppConstants.Text.empty
-            return tag.isEmpty
-                ? ReminderConstants.Presentation.untaggedGroupIdentifier
-                : tag.lowercased()
-        })
+        let groupCount = Set(message.reminderMatches.map(\.item.tagGroupIdentifier)).count
         return ReminderStrings.reminderListSummary(
             count: message.reminderMatches.count,
-            groupCount: tags.count
+            groupCount: groupCount
         )
     }
 }
 
 /// Selectable local rich text for user and assistant conversation content.
 private struct StyledMessageText: View {
-    let text: String
-    let isUser: Bool
+    internal let text: String
+    internal let isUser: Bool
 
     /// Parses user-message inline Markdown while removing active link destinations.
     private var renderedUserText: AttributedString {
@@ -287,7 +280,7 @@ private struct StyledMessageText: View {
 
     /// Builds user inline text or the shared native assistant document renderer.
     @ViewBuilder
-    var body: some View {
+    internal var body: some View {
         if isUser {
             Text(renderedUserText)
                 .font(.body.weight(.medium))

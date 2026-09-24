@@ -1,7 +1,7 @@
 import Foundation
 
 /// Owns the single SQLite connection stored in the app's private container.
-actor AssistantDatabase {
+internal actor AssistantDatabase {
     internal var connection: OpaquePointer?
     internal let encoder = JSONEncoder()
     internal let decoder = JSONDecoder()
@@ -307,6 +307,19 @@ actor AssistantDatabase {
     ///   - statement: Prepared statement receiving the value.
     /// - Throws: A local database error when binding fails.
     internal func bind(_ value: Data, at index: Int32, in statement: OpaquePointer) throws {
+        let result = value.withUnsafeBytes { bytes in
+            sqlite3_bind_blob(statement, index, bytes.baseAddress, Int32(bytes.count), DatabaseConstants.transientDestructor)
+        }
+        guard result == SQLITE_OK else { throw LocalAssistantError.database(databaseErrorMessage()) }
+    }
+
+    /// Binds a float vector as the raw blob sqlite-vec stores and matches against.
+    /// - Parameters:
+    ///   - value: Local embedding copied into SQLite.
+    ///   - index: One-based parameter index.
+    ///   - statement: Prepared statement receiving the value.
+    /// - Throws: A local database error when binding fails.
+    internal func bind(_ value: [Float], at index: Int32, in statement: OpaquePointer) throws {
         let result = value.withUnsafeBytes { bytes in
             sqlite3_bind_blob(statement, index, bytes.baseAddress, Int32(bytes.count), DatabaseConstants.transientDestructor)
         }

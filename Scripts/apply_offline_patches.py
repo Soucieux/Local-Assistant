@@ -22,18 +22,42 @@ def code_only(text: str) -> str:
 
     The patched files explain in comments which network APIs were taken out, so the
     forbidden-pattern check must read code rather than prose.
+
+    Args:
+        text: Complete Swift source of one patched file.
+
+    Returns:
+        The same lines with everything from ``//`` to the end of each line removed.
     """
     return "\n".join(line.split("//", 1)[0] for line in text.splitlines())
 
 
 def load_pinned_revision(project: pathlib.Path, dependency: str) -> str:
-    """Return the revision a dependency is pinned to."""
+    """Read the revision a dependency is pinned to.
+
+    Args:
+        project: Local Assistant project root.
+        dependency: Dependency name as it appears in the pin file.
+
+    Returns:
+        The pinned commit revision.
+    """
     pins = json.loads((project / "Config" / "DependencyPins.json").read_text())
     return str(pins["dependencies"][dependency]["revision"])
 
 
 def apply_patch(project: pathlib.Path, patch_directory: pathlib.Path) -> None:
-    """Install patched sources over one vendored dependency and verify the result."""
+    """Install patched sources over one vendored dependency and verify the result.
+
+    Args:
+        project: Local Assistant project root.
+        patch_directory: Directory holding one dependency's patch description
+            and its stored replacement sources.
+
+    Raises:
+        RuntimeError: When the patch was authored for another revision, a file
+            is missing, or a patched file still contains a forbidden API.
+    """
     patch = json.loads((patch_directory / "offline-patch.json").read_text())
     dependency = str(patch["dependency"])
     pinned = load_pinned_revision(project, dependency)
@@ -73,7 +97,14 @@ def apply_patch(project: pathlib.Path, patch_directory: pathlib.Path) -> None:
 
 
 def main() -> int:
-    """Apply every stored offline patch to its vendored dependency."""
+    """Apply every stored offline patch to its vendored dependency.
+
+    Returns:
+        Zero once every patch is applied and verified.
+
+    Raises:
+        RuntimeError: When no patches are stored or any patch fails.
+    """
     project = pathlib.Path(__file__).resolve().parents[1]
     patches_root = project / "Patches"
     if not patches_root.is_dir():

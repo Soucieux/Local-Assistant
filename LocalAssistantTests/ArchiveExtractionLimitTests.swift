@@ -5,7 +5,7 @@ import ZIPFoundation
 @testable import LocalAssistant
 
 /// A small container must never be allowed to expand without bound during extraction.
-struct ArchiveExtractionLimitTests {
+internal struct ArchiveExtractionLimitTests {
     @Test("A highly compressible oversized entry is refused instead of loaded")
     internal func refusesOversizedArchiveEntry() throws {
         let directoryURL = URL(fileURLWithPath: NSTemporaryDirectory())

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Main-window destinations that preserve one focused application surface.
-enum AppScreen: Hashable {
+internal enum AppScreen: Hashable {
     case assistant
     case history
     case activity
@@ -10,7 +10,7 @@ enum AppScreen: Hashable {
 }
 
 /// Broad categories used to present and filter indexed items.
-enum IndexedItemKind: String, Codable, CaseIterable, Sendable {
+internal enum IndexedItemKind: String, Codable, CaseIterable, Sendable {
     case folder
     case document
     case spreadsheet
@@ -24,7 +24,7 @@ enum IndexedItemKind: String, Codable, CaseIterable, Sendable {
 }
 
 /// Calibrated confidence shown with a grounded result.
-enum ConfidenceLevel: Int, Codable, Comparable, CaseIterable, Sendable {
+internal enum ConfidenceLevel: Int, Codable, Comparable, CaseIterable, Sendable {
     case low = 0
     case medium = 1
     case high = 2
@@ -40,7 +40,7 @@ enum ConfidenceLevel: Int, Codable, Comparable, CaseIterable, Sendable {
 }
 
 /// Current readiness of the deliberately offline runtime.
-enum OfflineStatus: String, Codable, Sendable {
+internal enum OfflineStatus: String, Codable, Sendable {
     case checking
     case ready
     case missingModels
@@ -48,14 +48,14 @@ enum OfflineStatus: String, Codable, Sendable {
 }
 
 /// User-relevant capabilities supplied by the installed local models.
-enum LocalModelCapabilityKind: String, CaseIterable, Sendable {
+internal enum LocalModelCapabilityKind: String, CaseIterable, Sendable {
     case chat
     case fileSearch
     case voiceInput
 }
 
 /// Readiness shown for one local assistant capability.
-enum LocalModelCapabilityState: String, Sendable {
+internal enum LocalModelCapabilityState: String, Sendable {
     case checking
     case ready
     case missing
@@ -63,25 +63,19 @@ enum LocalModelCapabilityState: String, Sendable {
 }
 
 /// User-selected interaction used to start and finish local speech recognition.
-enum VoiceInputMode: String, CaseIterable, Sendable {
+internal enum VoiceInputMode: String, CaseIterable, Sendable {
     case clickToSpeak
     case holdSpace
-
-    /// Whether quiet audio should finish and submit the active capture.
-    var stopsAfterSilence: Bool {
-        true
-    }
 }
 
 /// Author of a conversation message.
-enum MessageRole: String, Codable, Sendable {
+internal enum MessageRole: String, Codable, Sendable {
     case user
     case assistant
-    case system
 }
 
 /// Current state of the local indexing pipeline.
-enum IndexingState: String, Codable, Sendable {
+internal enum IndexingState: String, Codable, Sendable {
     case idle
     case scanning
     case extracting
@@ -93,14 +87,14 @@ enum IndexingState: String, Codable, Sendable {
 }
 
 /// Source that requested one incremental indexing run.
-enum IndexingTrigger: String, Codable, CaseIterable, Sendable {
+internal enum IndexingTrigger: String, Codable, CaseIterable, Sendable {
     case automatic
     case manual
     case startup
 }
 
 /// Final lifecycle state retained for one indexing run.
-enum IndexingRunState: String, Codable, CaseIterable, Sendable {
+internal enum IndexingRunState: String, Codable, CaseIterable, Sendable {
     case running
     case completed
     case stopped
@@ -108,7 +102,7 @@ enum IndexingRunState: String, Codable, CaseIterable, Sendable {
 }
 
 /// File-level state recorded for an indexing run.
-enum IndexingItemState: String, Codable, CaseIterable, Sendable {
+internal enum IndexingItemState: String, Codable, CaseIterable, Sendable {
     case newWaiting
     case newIndexing
     case newIndexed
@@ -122,7 +116,7 @@ enum IndexingItemState: String, Codable, CaseIterable, Sendable {
 }
 
 /// Durable monitoring and indexing events shown in the activity timeline.
-enum IndexActivityEventKind: String, Codable, Sendable {
+internal enum IndexActivityEventKind: String, Codable, Sendable {
     case changesDetected
     case updateScheduled
     case monitoringPaused

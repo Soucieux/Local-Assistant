@@ -5,90 +5,90 @@ import Observation
 /// Main-actor presentation state for the local-only assistant.
 @MainActor
 @Observable
-final class AppModel {
-    var activeScreen: AppScreen = .assistant
-    private(set) var isStarting = true
-    var queryText = AppConstants.Text.empty
-    var messages: [ChatMessage] = []
-    var indexedRoots: [AuthorizedRoot] = []
-    var indexingProgress = IndexingProgress.idle
-    var indexingProgressByRoot: [UUID: IndexingProgress] = [:]
-    var pausedMonitoringRootIDs: Set<UUID> = []
-    var monitoredRootIDs: Set<UUID> = []
-    var indexingRuns: [IndexingRunRecord] = []
-    var indexingItemsByRun: [UUID: [IndexingItemRecord]] = [:]
-    var indexActivityEvents: [IndexActivityEventRecord] = []
-    var offlineStatus: OfflineStatus = .checking
-    var modelCapabilities: [LocalModelCapabilityStatus] = []
-    var modelStorageByteCount: Int64 = 0
-    var indexedFileCount = 0
-    var indexStorageByteCount: Int64 = 0
-    var reminderSyncState: ReminderSyncState = .disabled
-    var openClawConnectorHealth: OpenClawConnectorHealth = .off
-    var openClawConnectorAppAvailability: OpenClawConnectorAppAvailability = .checking
-    var openClawConnectorAppIssue: String?
-    var lastReminderSyncAt: Date?
-    var reminderConnectorEnabled: Bool
-    var reminderSyncIntervalMinutes: Int
-    let openClawContextID: UUID
-    private(set) var voiceInputMode: VoiceInputMode
-    var isBusy = false
-    var isListening = false
-    var isComposingRequest = false
-    private(set) var currentRequestText = AppConstants.Text.empty
-    var currentResponse: ChatMessage?
+internal final class AppModel {
+    internal var activeScreen: AppScreen = .assistant
+    internal private(set) var isStarting = true
+    internal var queryText = AppConstants.Text.empty
+    internal var messages: [ChatMessage] = []
+    internal var indexedRoots: [AuthorizedRoot] = []
+    internal var indexingProgress = IndexingProgress.idle
+    internal var indexingProgressByRoot: [UUID: IndexingProgress] = [:]
+    internal var pausedMonitoringRootIDs: Set<UUID> = []
+    internal var monitoredRootIDs: Set<UUID> = []
+    internal var indexingRuns: [IndexingRunRecord] = []
+    internal var indexingItemsByRun: [UUID: [IndexingItemRecord]] = [:]
+    internal var indexActivityEvents: [IndexActivityEventRecord] = []
+    internal var offlineStatus: OfflineStatus = .checking
+    internal var modelCapabilities: [LocalModelCapabilityStatus] = []
+    internal var modelStorageByteCount: Int64 = 0
+    internal var indexedFileCount = 0
+    internal var indexStorageByteCount: Int64 = 0
+    internal var reminderSyncState: ReminderSyncState = .disabled
+    internal var openClawConnectorHealth: OpenClawConnectorHealth = .off
+    internal var openClawConnectorAppAvailability: OpenClawConnectorAppAvailability = .checking
+    internal var openClawConnectorAppIssue: String?
+    internal var lastReminderSyncAt: Date?
+    internal var reminderConnectorEnabled: Bool
+    internal var reminderSyncIntervalMinutes: Int
+    internal let openClawContextID: UUID
+    internal private(set) var voiceInputMode: VoiceInputMode
+    internal var isBusy = false
+    internal var isListening = false
+    internal var isComposingRequest = false
+    internal private(set) var currentRequestText = AppConstants.Text.empty
+    internal var currentResponse: ChatMessage?
 
     /// Live audio levels and recognized text while the microphone is open.
-    private(set) var voiceCapture: VoiceCaptureState = .preparing
+    internal private(set) var voiceCapture: VoiceCaptureState = .preparing
 
     /// Follows the capture stream and ends the recording when it finishes on its own.
     @ObservationIgnored private var voiceUpdatesTask: Task<Void, Never>?
-    var isShortcutAvailable = false
-    var inputFocusRequest = 0
-    var conversationClearConfirmationIsPresented = false
-    var activityClearConfirmationIsPresented = false
-    var modelRemovalConfirmationIsPresented = false
-    var searchIndexClearConfirmationIsPresented = false
-    private(set) var pendingOpenClawRequest: OpenClawRequestIntent?
-    var presentedError: LocalAssistantError?
-    private(set) var availableFileMatchItemIDs: Set<UUID> = []
+    internal var isShortcutAvailable = false
+    internal var inputFocusRequest = 0
+    internal var conversationClearConfirmationIsPresented = false
+    internal var activityClearConfirmationIsPresented = false
+    internal var modelRemovalConfirmationIsPresented = false
+    internal var searchIndexClearConfirmationIsPresented = false
+    internal private(set) var pendingOpenClawRequest: OpenClawRequestIntent?
+    internal var presentedError: LocalAssistantError?
+    internal private(set) var availableFileMatchItemIDs: Set<UUID> = []
     private var hasStarted = false
 
     @ObservationIgnored
-    var reminderSyncTask: Task<Void, Never>?
+    internal var reminderSyncTask: Task<Void, Never>?
 
     @ObservationIgnored
-    var connectorHealthTask: Task<Void, Never>?
+    internal var connectorHealthTask: Task<Void, Never>?
 
     @ObservationIgnored
-    var indexingQueue: [(
+    internal var indexingQueue: [(
         rootID: UUID,
         trigger: IndexingTrigger,
         batchID: UUID?
     )] = []
 
     @ObservationIgnored
-    var indexingWorker: Task<Void, Never>?
+    internal var indexingWorker: Task<Void, Never>?
 
     @ObservationIgnored
-    var activeIndexingTask: Task<IndexingOutcome, Error>?
+    internal var activeIndexingTask: Task<IndexingOutcome, Error>?
 
-    var activeIndexingRootID: UUID?
-
-    @ObservationIgnored
-    var activeIndexingBatchID: UUID?
+    internal var activeIndexingRootID: UUID?
 
     @ObservationIgnored
-    var dirtyIndexRequests: [UUID: (
+    internal var activeIndexingBatchID: UUID?
+
+    @ObservationIgnored
+    internal var dirtyIndexRequests: [UUID: (
         trigger: IndexingTrigger,
         batchID: UUID?
     )] = [:]
 
     @ObservationIgnored
-    var monitoringDebounceTasks: [UUID: Task<Void, Never>] = [:]
+    internal var monitoringDebounceTasks: [UUID: Task<Void, Never>] = [:]
 
     @ObservationIgnored
-    let services: ServiceContainer
+    internal let services: ServiceContainer
 
     /// Creates app state with a fresh in-process service container.
     /// - Parameter services: Local-only dependencies used by the app.
@@ -338,7 +338,7 @@ final class AppModel {
             authorization: request.authorization,
             connectorEnabled: reminderConnectorEnabled
         )
-        try await appendConnectorMessage(answer)
+        try await appendAssistantMessage(answer)
         Task { [weak self] in
             await self?.syncReminders(presentErrors: false)
         }
@@ -422,9 +422,7 @@ final class AppModel {
         isComposingRequest = true
         currentResponse = nil
         do {
-            let updates = try await services.voice.startRecording(
-                stopsAfterSilence: voiceInputMode.stopsAfterSilence
-            )
+            let updates = try await services.voice.startRecording()
             voiceCapture = .preparing
             isListening = true
             voiceUpdatesTask = Task { [weak self] in

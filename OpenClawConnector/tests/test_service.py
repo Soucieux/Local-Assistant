@@ -18,10 +18,18 @@ class FakeWorkflow:
     """Return a complete reminder snapshot without opening a network route."""
 
     def __init__(self) -> None:
+        """Start with no recorded requests."""
         self.documents = []
 
     def invoke(self, document):
-        """Record the request and return one complete snapshot response."""
+        """Record the request and return one complete snapshot response.
+
+        Args:
+            document: Request the service passed to the workflow.
+
+        Returns:
+            A completed snapshot response for the same task.
+        """
         self.documents.append(document)
         return {
             constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
@@ -36,7 +44,14 @@ class LowercaseTransport:
     """Echo one response only after Swift-style UUIDs are canonicalized."""
 
     def send_reminder(self, document):
-        """Return one response only after both UUIDs arrive canonicalized."""
+        """Return one response only after both UUIDs arrive canonicalized.
+
+        Args:
+            document: Reminder request forwarded by the workflow.
+
+        Returns:
+            A completed snapshot response for the same task.
+        """
         task_id = document[constants.FIELD_TASK_ID]
         idempotency_key = document[constants.FIELD_IDEMPOTENCY_KEY]
         if task_id != task_id.lower() or idempotency_key != idempotency_key.lower():
@@ -48,6 +63,24 @@ class LowercaseTransport:
             constants.FIELD_CALENDAR_CHANGED: False,
             constants.FIELD_PAYLOAD: {constants.FIELD_SUCCESS: True, constants.FIELD_DATA: []},
         }
+
+
+def connector_config(spool_directory: Path) -> ConnectorConfig:
+    """Build one non-secret configuration around a temporary spool.
+
+    Args:
+        spool_directory: Spool the service under test reads and writes.
+
+    Returns:
+        A valid configuration for a server that is never contacted.
+    """
+    return ConnectorConfig(
+        ssh_host="openclaw.example.test",
+        ssh_port=22,
+        ssh_user="local-assistant-tunnel",
+        spool_directory=str(spool_directory),
+        request_timeout_seconds=20,
+    )
 
 
 class ServiceTests(unittest.TestCase):
@@ -70,13 +103,7 @@ class ServiceTests(unittest.TestCase):
             )
             workflow = FakeWorkflow()
             service = ConnectorService(
-                config=ConnectorConfig(
-                    ssh_host="openclaw.example.test",
-                    ssh_port=22,
-                    ssh_user="local-assistant-tunnel",
-                    spool_directory=str(spool_directory),
-                    request_timeout_seconds=20,
-                ),
+                config=connector_config(spool_directory),
                 workflow=workflow,
             )
             try:
@@ -127,13 +154,7 @@ class ServiceTests(unittest.TestCase):
             )
             workflow = ConnectorWorkflow(LowercaseTransport(), root / "checkpoint.sqlite3")
             service = ConnectorService(
-                config=ConnectorConfig(
-                    ssh_host="openclaw.example.test",
-                    ssh_port=22,
-                    ssh_user="local-assistant-tunnel",
-                    spool_directory=str(spool_directory),
-                    request_timeout_seconds=20,
-                ),
+                config=connector_config(spool_directory),
                 workflow=workflow,
             )
             try:

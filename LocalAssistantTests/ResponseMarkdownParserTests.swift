@@ -3,7 +3,7 @@ import Testing
 @testable import LocalAssistant
 
 /// The native parser must preserve semantic response structure without a web renderer.
-struct ResponseMarkdownParserTests {
+internal struct ResponseMarkdownParserTests {
     private let parser = ResponseMarkdownParser()
 
     @Test("Pipe tables become semantic headers and rows")

@@ -1,12 +1,12 @@
 import Foundation
 
 /// Coordinates read-only scanning, extraction, local embedding, and private indexing.
-actor IndexingService {
+internal actor IndexingService {
     private let database: AssistantDatabase
     private let scanner: ReadOnlyFileScanner
     private let extractor: ExtractionCoordinator
     private let chunker: TextChunker
-    let embeddings: DocumentEmbedding
+    internal let embeddings: DocumentEmbedding
     private let folderContextBuilder = FolderContextBuilder()
 
     /// Creates the local indexing pipeline.
@@ -81,10 +81,10 @@ actor IndexingService {
 
     /// Mutable bookkeeping the run's passes share with its interruption handlers.
     private struct RunState {
-        var processedCount = 0
-        var currentItem: IndexingItemRecord?
-        var currentWaitingState: IndexingItemState?
-        var currentItemWasCountedAsSkipped = false
+        internal var processedCount = 0
+        internal var currentItem: IndexingItemRecord?
+        internal var currentWaitingState: IndexingItemState?
+        internal var currentItemWasCountedAsSkipped = false
     }
 
     /// Builds the run summary recorded before any scanning begins.
@@ -454,11 +454,11 @@ actor IndexingService {
 
     /// Read-only facts gathered before any run counters or activity rows are written.
     private struct ScanPreparation {
-        let snapshot: ScanSnapshot
-        let folderChunks: [UUID: ContentChunk]
-        let existingByPath: [String: IndexedItem]
-        let staleItems: [IndexedItem]
-        let orderedFiles: [ScannedFile]
+        internal let snapshot: ScanSnapshot
+        internal let folderChunks: [UUID: ContentChunk]
+        internal let existingByPath: [String: IndexedItem]
+        internal let staleItems: [IndexedItem]
+        internal let orderedFiles: [ScannedFile]
     }
 
     /// Scans the root, loads prior state, and publishes fresh metadata early.

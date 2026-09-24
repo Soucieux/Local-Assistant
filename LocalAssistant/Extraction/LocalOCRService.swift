@@ -4,7 +4,7 @@ import ImageIO
 import Vision
 
 /// Performs accurate Vision text recognition entirely on the Mac.
-struct LocalOCRService: Sendable {
+internal struct LocalOCRService: Sendable {
     /// Recognizes text in an image file.
     /// - Parameter url: Readable local image URL.
     /// - Returns: Normalized recognized text.

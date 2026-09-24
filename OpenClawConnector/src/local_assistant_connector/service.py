@@ -12,20 +12,41 @@ from . import constants
 from .configuration import checkpoint_path, load_config
 from .models import ConnectorConfig, ConnectorError
 from .spool import SpoolStore
-from .transport import OpenClawTransport
+from .transport import OpenClawTransport, reminder_snapshot_request
 from .workflow import ConnectorWorkflow
 
 
 def _timestamp() -> str:
-    """Return one UTC connector status timestamp."""
+    """Format the current time for connector status.
+
+    Returns:
+        The current UTC time in the status file's ISO 8601 form.
+    """
     return datetime.now(timezone.utc).strftime(constants.ISO8601_UTC_FORMAT)
+
+
+def _internal_error() -> ConnectorError:
+    """Build the credential-free failure reported for any unexpected fault.
+
+    Returns:
+        A non-retryable operational error carrying only the generic wording.
+    """
+    return ConnectorError.operational(constants.ERROR_INTERNAL, retryable=False)
 
 
 def _failure_response(
     document: Mapping[str, Any] | None,
     error: ConnectorError,
-) -> Mapping[str, Any]:
-    """Build a typed response without echoing request content."""
+) -> dict[str, Any]:
+    """Build a typed response without echoing request content.
+
+    Args:
+        document: Request being answered, or ``None`` when it could not be read.
+        error: Privacy-safe failure to report.
+
+    Returns:
+        A failed response carrying only the request's identifiers and the error.
+    """
     task_id = document.get(constants.FIELD_TASK_ID) if document else None
     context_id = document.get(constants.FIELD_CONTEXT_ID) if document else None
     response: dict[str, Any] = {
@@ -54,7 +75,18 @@ class ConnectorService:
         workflow: ConnectorWorkflow | None = None,
         checkpoint_file: Path | None = None,
     ) -> None:
-        """Create the spool, exact-origin transport, and durable workflow."""
+        """Create the spool, exact-origin transport, and durable workflow.
+
+        Args:
+            config: Validated configuration; loaded from disk when omitted.
+            workflow: Workflow to run tasks through; a durable one is created
+                and owned by this service when omitted.
+            checkpoint_file: Checkpoint database for a created workflow; the
+                default location when omitted.
+
+        Raises:
+            ConnectorError: When configuration or the spool cannot be prepared.
+        """
         self.config = config or load_config()
         self.spool = SpoolStore(self.config.spool_directory)
         self.spool.recover_claims()
@@ -88,7 +120,11 @@ class ConnectorService:
                 self.workflow.close()
 
     def process_once(self) -> int:
-        """Process every currently queued request once and return the count."""
+        """Process every currently queued request once, then any due snapshot.
+
+        Returns:
+            How many queued requests were claimed and answered.
+        """
         processed = 0
         self._write_status(True)
         for request_path in self.spool.request_paths():
@@ -103,11 +139,7 @@ class ConnectorService:
                 response = self.workflow.invoke(document)
                 response_task_id = response.get(constants.FIELD_TASK_ID)
                 if response_task_id != task_id:
-                    raise ConnectorError(
-                        constants.ERROR_KIND_OPERATIONAL,
-                        constants.ERROR_INTERNAL,
-                        False,
-                    )
+                    raise _internal_error()
                 self._last_success_at = _timestamp()
                 if document.get(constants.FIELD_SKILL) == constants.REMINDER_SKILL:
                     self._last_reminder_success_at = self._last_success_at
@@ -117,12 +149,7 @@ class ConnectorService:
                 response[constants.FIELD_TASK_ID] = task_id
                 self._last_error = str(exc)
             except Exception:
-                safe_error = ConnectorError(
-                    constants.ERROR_KIND_OPERATIONAL,
-                    constants.ERROR_INTERNAL,
-                    False,
-                )
-                response = _failure_response(document, safe_error)
+                response = _failure_response(document, _internal_error())
                 response[constants.FIELD_TASK_ID] = task_id
                 self._last_error = constants.ERROR_INTERNAL
             try:
@@ -156,24 +183,11 @@ class ConnectorService:
                 return
 
         task_id = str(uuid4())
-        document = {
-            constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
-            constants.FIELD_TASK_ID: task_id,
-            constants.FIELD_SKILL: constants.REMINDER_SKILL,
-            constants.FIELD_OPERATION: constants.OPERATION_LIST,
-            constants.FIELD_IDEMPOTENCY_KEY: str(uuid4()),
-            constants.FIELD_CALENDAR_POLICY: constants.CALENDAR_POLICY_NEVER,
-            constants.FIELD_CONFIRMED: False,
-            constants.FIELD_PAYLOAD: {},
-        }
+        document = reminder_snapshot_request(task_id)
         try:
             response = self.workflow.invoke(document)
             if response.get(constants.FIELD_TASK_ID) != task_id:
-                raise ConnectorError(
-                    constants.ERROR_KIND_OPERATIONAL,
-                    constants.ERROR_INTERNAL,
-                    False,
-                )
+                raise _internal_error()
             self._last_success_at = _timestamp()
             self._last_reminder_success_at = self._last_success_at
             self._last_error = None
@@ -181,18 +195,17 @@ class ConnectorService:
             response = _failure_response(document, exc)
             self._last_error = str(exc)
         except Exception:
-            safe_error = ConnectorError(
-                constants.ERROR_KIND_OPERATIONAL,
-                constants.ERROR_INTERNAL,
-                False,
-            )
-            response = _failure_response(document, safe_error)
+            response = _failure_response(document, _internal_error())
             self._last_error = constants.ERROR_INTERNAL
         self.spool.publish_scheduled_snapshot(response)
         self._write_status(True)
 
     def _write_status(self, running: bool) -> None:
-        """Publish connector health without configuration or credentials."""
+        """Publish connector health without configuration or credentials.
+
+        Args:
+            running: Whether this process is still working through its queue.
+        """
         self.spool.write_status(
             {
                 constants.STATUS_KEY_SCHEMA_VERSION: constants.SCHEMA_VERSION,

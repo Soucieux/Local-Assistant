@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 /// Exchanges bounded JSON tasks with the optional connector through local files only.
-actor ReminderSpoolService {
+internal actor ReminderSpoolService {
     private let rootOverride: URL?
     private let encoder: JSONEncoder
     private let decoder = JSONDecoder()
@@ -14,15 +14,6 @@ actor ReminderSpoolService {
         rootOverride = rootURL
         encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-    }
-
-    /// Returns the exact directory the separate connector must be configured to use.
-    /// - Returns: Absolute local spool URL.
-    /// - Throws: A local permission error when the directory cannot be prepared.
-    internal func spoolURL() throws -> URL {
-        let root = try resolvedRootURL()
-        try prepare(root: root)
-        return root
     }
 
     /// Reads and validates the connector heartbeat without following links or opening a network.
@@ -133,7 +124,8 @@ actor ReminderSpoolService {
 
     /// Takes the latest timer-originated snapshot response, if one is waiting.
     /// - Returns: A response published atomically by the one-shot connector.
-    /// - Throws: A local file or decoding error when the waiting response cannot be read.
+    /// - Throws: A local connector error when the waiting response is unsafe or malformed. That
+    ///   response is discarded as well, so one bad file is reported once rather than on every poll.
     internal func takeScheduledSnapshot() throws -> ReminderConnectorResponse? {
         let root = try resolvedRootURL()
         try prepare(root: root)
@@ -142,15 +134,20 @@ actor ReminderSpoolService {
             isDirectory: false
         )
         guard FileManager.default.fileExists(atPath: target.path) else { return nil }
-        let data = try readBoundedRegularFile(
-            at: target,
-            maximumByteCount: ReminderConstants.Connector.maximumResponseBytes
-        )
         let response: ReminderConnectorResponse
         do {
+            let data = try readBoundedRegularFile(
+                at: target,
+                maximumByteCount: ReminderConstants.Connector.maximumResponseBytes
+            )
             response = try decoder.decode(ReminderConnectorResponse.self, from: data)
         } catch {
-            throw LocalAssistantError.connector(ReminderStrings.incompleteSnapshot)
+            // A rejected snapshot is consumed like an accepted one. Left in place it would be
+            // read again on every health poll and keep reporting the same failure, even after
+            // a later manual refresh succeeded.
+            try? FileManager.default.removeItem(at: target)
+            throw (error as? LocalAssistantError)
+                ?? LocalAssistantError.connector(ReminderStrings.incompleteSnapshot)
         }
         try FileManager.default.removeItem(at: target)
         return response

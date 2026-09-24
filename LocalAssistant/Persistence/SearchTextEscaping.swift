@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Escaping decides whether a search finds anything, so it is kept separate from the
 /// database actor to stay directly testable.
-enum SearchTextEscaping {
+internal enum SearchTextEscaping {
     /// Splits a query into whitespace-separated tokens for per-token metadata matching.
     /// - Parameter text: Untrusted local search text.
     /// - Returns: Non-empty tokens in query order.
@@ -32,7 +32,7 @@ enum SearchTextEscaping {
     /// - Parameter text: Untrusted local search text.
     /// - Returns: Quoted tokens joined with an AND operator.
     internal static func ftsQuery(_ text: String) -> String {
-        text.split(whereSeparator: \.isWhitespace).map { token in
+        tokens(text).map { token in
             let escaped = token.replacingOccurrences(
                 of: RetrievalConstants.quote,
                 with: RetrievalConstants.doubledQuote

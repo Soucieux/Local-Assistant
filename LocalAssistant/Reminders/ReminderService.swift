@@ -1,8 +1,7 @@
-import CryptoKit
 import Foundation
 
 /// Owns read-only full-snapshot reconciliation and locally authorized OpenClaw requests.
-actor ReminderService {
+internal actor ReminderService {
     private let database: AssistantDatabase
     private let embeddings: LocalEmbeddingService
     private let spool: ReminderSpoolService
@@ -346,9 +345,7 @@ actor ReminderService {
                 + ReminderConstants.ContentHash.lengthSeparator
                 + value
         }.joined(separator: ReminderConstants.ContentHash.fieldSeparator)
-        return SHA256.hash(data: Data(framed.utf8)).map {
-            String(format: FileConstants.Hash.hexFormat, $0)
-        }.joined()
+        return FileHasher.sha256(of: framed)
     }
 
     /// Enforces explicit connector opt-in before writing any task file.

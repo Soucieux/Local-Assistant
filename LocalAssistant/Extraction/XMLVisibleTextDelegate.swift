@@ -1,7 +1,7 @@
 import Foundation
 
 /// Collects visible textual XML nodes without retaining document structure.
-final class XMLVisibleTextDelegate: NSObject, XMLParserDelegate {
+internal final class XMLVisibleTextDelegate: NSObject, XMLParserDelegate {
     private let textElements: Set<String>
     private let breakElements: Set<String>
     private var activeTextDepth = 0
