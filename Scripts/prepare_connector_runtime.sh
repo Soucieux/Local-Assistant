@@ -1,4 +1,11 @@
 #!/bin/zsh
+# Prepares the pinned Python environment that builds the standalone Connector runtime.
+#
+# Input:  none; LOCAL_ASSISTANT_CONNECTOR_PYTHON may name the interpreter, otherwise the newest
+#         python3.12, 3.11 or 3.10 on PATH is used. Needs a network connection.
+# Reads:  OpenClawConnector/requirements.txt, requirements-build.txt and the package itself
+# Writes: OpenClawConnector/.venv, ignored by Git
+# Run by: Scripts/prepare_offline_bundle.sh, or by hand when the environment is missing
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

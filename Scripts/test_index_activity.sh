@@ -1,4 +1,15 @@
 #!/bin/zsh
+# Checks the index-activity SQL contract the app relies on: an interrupted run's items fall
+# back to waiting states, revoking a root cascades to its items and monitoring state while
+# activity history stays, retention deletes only old runs and events, and clearing runs
+# removes their items. It then compiles and runs IndexingDecisionChecks.swift against the app's
+# own indexing decision policy.
+#
+# Input:  none; requires sqlite3 and the Xcode toolchain
+# Reads:  LocalAssistant/Constants/FileConstants.swift, Indexing/IndexingDecisionPolicy.swift,
+#         Persistence/AssistantDatabase+Activity.swift and Scripts/IndexingDecisionChecks.swift
+# Writes: a temporary directory, removed on exit
+# Run by: hand, as the documented index-activity check
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

@@ -690,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-09-24 | <ul><li><strong>Scripts:</strong> Every build, preparation, installation and check script opens with a header stating its purpose, inputs, what it reads and writes, and who runs it.</li></ul> | [Full record](#script-headers) |
 | v5.8 / build 58 | 2026-09-24 | <ul><li><strong>Fixes:</strong> Reminder summaries, History, and cards now count tag groups the same way, and a malformed scheduled reminder snapshot is reported once instead of on every poll.</li><li><strong>Extraction:</strong> HTML files are read by parsing their markup on the indexing actor rather than through the main-thread WebKit importer.</li><li><strong>Maintenance:</strong> Duplicated logic and unused code removed, repeated values named, and the Connector's parameter and return documentation completed.</li></ul> | [Full record](#v5-8-build-58) |
 | v5.7 / build 57 | 2026-09-23 | <ul><li><strong>Server kit:</strong> Ships the shared configuration the reminder bridge imports, so installing the kit onto an older server no longer fails at import.</li><li><strong>Setup:</strong> Carries bridge v1.5.1, whose installer names a missing CloudBase endpoint up front instead of timing out.</li></ul> | [Full record](#openclaw-kit-shared-config) |
 | v5.6 / build 56 | 2026-09-21 | <ul><li><strong>Identity:</strong> A private conversation core now connects visibly to local documents, voice input, and reminders.</li><li><strong>Delivery:</strong> The matching main app and Connector, plus the clean-Mac disk image, were rebuilt and validated.</li></ul> | [Full record](#private-local-capabilities-icon) |
@@ -729,6 +730,25 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="script-headers"></a>
+
+### Documentation
+
+- **Recorded date:** 2026-09-24.
+- **Scripts:** The ten zsh scripts under `Scripts/` now open with a header comment stating what the
+  script does, its inputs, what it reads and writes, and who runs it, the same documentation the
+  project's Swift declarations and Python functions carry. A reader can learn a script's purpose and
+  prerequisites from its first lines instead of working them out from its variable block.
+- **Scope:** Comments only. No script changes behavior, and the delivered v5.8/build 58 applications
+  and disk image at the project root remain current.
+
+**Evidence and delivery status**
+
+Every script passes `zsh -n`, and the documented index-activity check ran to completion with its
+header in place. Documentation only; delivered uncommitted and recorded in this documentation commit.
+
+[Back to change history](#change-history)
 
 <a id="v5-8-build-58"></a>
 

@@ -1,4 +1,13 @@
 #!/bin/zsh
+# Embeds the user-exportable OpenClaw server setup kit into the Connector app bundle: the bridge
+# plugin, the reminder bridge and store manager with the runtime_support package and shared
+# configuration they import, and the server installer.
+#
+# Input:  $1  path to the OpenClaw Connector.app bundle (default: the copy at the project root)
+# Reads:  ../OpenClaw/plugins/local-assistant-bridge and ../OpenClaw/scripts, so it runs only
+#         from the full repository, not from the public mirror
+# Writes: <bundle>/Contents/Resources/OpenClaw Server Setup/, replaced on every run
+# Run by: Scripts/build_connector_app.sh
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

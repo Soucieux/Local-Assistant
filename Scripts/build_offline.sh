@@ -1,4 +1,14 @@
 #!/bin/zsh
+# Produces the release set from the prepared local dependencies, with package resolution
+# disabled: the Release Local Assistant.app signed ad hoc with the hardened runtime and its
+# entitlements, the separate OpenClaw Connector.app, and the clean-Mac disk image.
+#
+# Input:  none; LOCAL_ASSISTANT_SOURCE names the project when the script runs from the offline
+#         kit. Requires Vendor/ prepared by Scripts/prepare_offline_bundle.sh.
+# Reads:  LocalAssistant.xcodeproj, Vendor/ResolvedPackages and the app entitlements file
+# Writes: Local Assistant.app, OpenClaw Connector.app and Local Assistant Release.dmg at the
+#         project root, replacing the previous set; DerivedData is removed afterwards
+# Run by: hand (README, Build from source, step 5)
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

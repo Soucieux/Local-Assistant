@@ -1,4 +1,12 @@
 #!/bin/zsh
+# Prepares, on a connected Mac, everything the offline build needs: the pinned dependencies,
+# the Connector build environment, the static llama.cpp library, the verified models, the
+# resolved Swift packages, and the transferable kit with its checksums and scripts.
+#
+# Input:  none; needs a network connection, Xcode, CMake and Python 3.10 or newer
+# Reads:  the manifests under Config/ through prepare_dependencies.py and download_models.py
+# Writes: Vendor/ and outputs/LocalAssistant-OfflineKit/, both ignored by Git
+# Run by: hand (README, Build from source, step 2)
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

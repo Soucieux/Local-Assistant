@@ -1,4 +1,12 @@
 #!/bin/zsh
+# Audits a built Local Assistant.app for the offline boundary: exactly the four approved
+# sandbox entitlements, no networking library linked and no Network symbol imported by the
+# executable or any bundled Mach-O, and no network-related text in the packaged resources.
+#
+# Input:  $1  absolute path to the built Local Assistant.app (required)
+# Writes: nothing; a temporary entitlement dump is removed on exit
+# Run by: hand after Scripts/build_offline.sh (README, Build from source, step 6); a copy ships
+#         in the offline kit so the disconnected Mac can run it too
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
