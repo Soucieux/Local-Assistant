@@ -355,13 +355,14 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 RAG means **Retrieval-Augmented Generation**. The app first finds relevant local evidence, then gives only that evidence to the local language model for the answer.
 
 ```text
+Answer a question
 Your question
-   ├─→ FTS5 finds matching words
-   └─→ sqlite-vec finds similar meaning
-              ↓
-       combined local evidence
-              ↓
-       local model writes the answer
+  ├─→ FTS5 finds matching words
+  └─→ sqlite-vec finds similar meaning
+  ↓
+combined local evidence
+  ↓
+local model writes the answer
 ```
 
 The pieces have separate jobs:
@@ -465,11 +466,40 @@ SQLite is an in-process library rather than a database server. See [ARCHITECTURE
 
 Every request is classified locally:
 
-- **Conversation:** embedded model → local answer.
-- **File request:** private index → grounded answer and result cards.
-- **Reminder read:** local reminder cache/RAG → answer or reminder cards.
-- **Reminder change:** local confirmation → one-shot Connector → A2A → OpenClaw.
-- **Other OpenClaw task:** explicit `OpenClaw` wording → one-shot Connector → A2A → OpenClaw.
+```text
+Conversation
+embedded model
+  ↓
+local answer
+
+File request
+private index
+  ↓
+grounded answer and result cards
+
+Reminder read
+local reminder cache/RAG
+  ↓
+answer or reminder cards
+
+Reminder change
+local confirmation
+  ↓
+one-shot Connector
+  ↓
+A2A
+  ↓
+OpenClaw
+
+Other OpenClaw task
+explicit OpenClaw wording
+  ↓
+one-shot Connector
+  ↓
+A2A
+  ↓
+OpenClaw
+```
 
 ### How A2A is used
 
