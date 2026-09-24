@@ -2,10 +2,11 @@ import AppKit
 import Foundation
 
 /// Selects the safest local extractor for a supported file type.
-struct ExtractionCoordinator: Sendable {
+internal struct ExtractionCoordinator: Sendable {
     private let pdfExtractor = PDFTextExtractor()
     private let officeExtractor = OfficeTextExtractor()
     private let pagesExtractor = PagesPreviewExtractor()
+    private let htmlExtractor = HTMLTextExtractor()
     private let ocrService = LocalOCRService()
 
     /// Extracts searchable text from one read-only file.
@@ -52,17 +53,20 @@ struct ExtractionCoordinator: Sendable {
         }
         do {
             let text: String
-            if pathExtension == ExtractionConstants.richTextExtension
-                || pathExtension == ExtractionConstants.htmlExtension
-                || pathExtension == ExtractionConstants.htmExtension {
+            if pathExtension == ExtractionConstants.richTextExtension {
+                // Naming the type keeps content sniffing from ever routing a mislabeled file
+                // to the WebKit-backed HTML importer, which must not run off the main thread.
                 text = try NSAttributedString(
                     url: item.url,
-                    options: [:],
+                    options: [.documentType: NSAttributedString.DocumentType.rtf],
                     documentAttributes: nil
                 ).string
             } else {
                 let data = try Data(contentsOf: item.url, options: [.mappedIfSafe])
-                text = try decodedText(from: data, at: item.url)
+                let decoded = try decodedText(from: data, at: item.url)
+                let isHTML = pathExtension == ExtractionConstants.htmlExtension
+                    || pathExtension == ExtractionConstants.htmExtension
+                text = isHTML ? try htmlExtractor.text(fromMarkup: decoded) : decoded
             }
             return ExtractedDocument(
                 segments: [

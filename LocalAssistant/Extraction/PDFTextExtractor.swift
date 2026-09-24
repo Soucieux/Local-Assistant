@@ -3,7 +3,7 @@ import Foundation
 import PDFKit
 
 /// Extracts PDF text and falls back to local OCR for image-only pages.
-struct PDFTextExtractor: Sendable {
+internal struct PDFTextExtractor: Sendable {
     private let ocrService = LocalOCRService()
 
     /// Extracts source-aligned text from a PDF.

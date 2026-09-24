@@ -224,7 +224,7 @@ CloudBase exposes neither an `updatedAt > lastSync` feed nor deletion tombstones
 
 Every cached reminder is read-only in Local Assistant regardless of ownership markers. The cache is not exposed as a browser or management screen. It is refreshed at launch when stale, on manual request, after a successful confirmed reminder mutation, and by the selected multi-hour launchd schedule. A scheduled result waits locally when the application is closed and is transactionally consumed at the next launch. The read-only plugin rejects exact reads and every create, update, or delete shape.
 
-The database schema still contains selected prototype-era tables so an upgrade does not need a destructive migration. The current interface does not present collections, saved searches, aliases, file relationships, summaries, duplicates, or versions, and no runtime path reads them. Retrieval previously queried the empty alias table on every search, which cost a round trip and could never contribute to a score; the table is retained, the query is not.
+The schema declares only the tables the app uses. Four prototype-era tables (saved searches, collections, personal aliases, and app metadata) were removed from it in v5.8; a database created earlier keeps its empty copies, because nothing drops them and nothing reads them. The current interface does not present collections, saved searches, aliases, file relationships, summaries, duplicates, or versions, and no runtime path reads them. Retrieval once queried the empty alias table on every search, which cost a round trip and could never contribute to a score; that query was removed first, and the table declaration followed.
 
 ### Ranking
 
@@ -280,6 +280,8 @@ If content extraction fails, metadata can remain searchable by name or path. A s
 An extractable file saved without a content hash after an earlier extraction failure is retried on the next scan even when its metadata is unchanged. Existing index rows under a temporarily unreadable path are retained rather than mistaken for deleted files.
 
 `ExtractionConstants.extractionVersion` identifies the behavior of the extraction pipeline and is folded into every file's metadata hash. Raising it changes each stored fingerprint, so a correction that changes the text produced for an unchanged file re-extracts already-indexed files once instead of leaving them on superseded results. It needs no schema migration because the fingerprint is already stored per file.
+
+HTML is decoded with the same encoding detection as plain text and then parsed directly by `HTMLTextExtractor`, with external entities never loaded. It is deliberately not imported through `NSAttributedString`: that importer is backed by WebKit and must run on the main thread, so from the indexing actor it would wait on the main run loop for every file. Scripts, styles, and templates are left out, block elements stay on their own lines, and unclosed fragments are still read. Rich-text files name their document type explicitly, so a mislabeled file can never be routed to that importer.
 
 ## Voice lifecycle
 

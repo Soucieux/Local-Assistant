@@ -1,11 +1,11 @@
 import Foundation
 
 /// Opens private storage and verified local model runtimes during launch.
-struct ApplicationBootstrapper: Sendable {
-    let database: AssistantDatabase
-    let modelStore: ModelStore
-    let runtime: LlamaCppRuntime
-    let voice: LocalVoiceService
+internal struct ApplicationBootstrapper: Sendable {
+    internal let database: AssistantDatabase
+    internal let modelStore: ModelStore
+    internal let runtime: LlamaCppRuntime
+    internal let voice: LocalVoiceService
 
     /// Prepares writable app-container directories and local-only runtimes.
     /// - Returns: Verified offline model status.

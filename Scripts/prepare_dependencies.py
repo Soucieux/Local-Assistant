@@ -15,11 +15,22 @@ import urllib.request
 
 
 ARCHIVE_SOCKET_TIMEOUT_SECONDS = 120
+REVISION_MARKER_NAME = ".local-assistant-revision"
 
 
 def checkout(repository: str, revision: str, destination: pathlib.Path) -> None:
-    """Create or reuse one immutable dependency source archive."""
-    revision_file = destination / ".local-assistant-revision"
+    """Create or reuse one immutable dependency source archive.
+
+    Args:
+        repository: HTTPS address of the dependency's GitHub repository.
+        revision: Pinned commit revision.
+        destination: Vendor directory that holds the dependency.
+
+    Raises:
+        RuntimeError: When the directory already holds another revision or
+            content this script did not create.
+    """
+    revision_file = destination / REVISION_MARKER_NAME
     if destination.exists() and (destination / ".git").exists():
         try:
             actual = subprocess.check_output(
@@ -43,7 +54,17 @@ def checkout(repository: str, revision: str, destination: pathlib.Path) -> None:
 
 
 def download_archive(repository: str, revision: str, destination: pathlib.Path) -> None:
-    """Download and safely unpack an immutable GitHub commit archive."""
+    """Download and safely unpack an immutable GitHub commit archive.
+
+    Args:
+        repository: HTTPS address of the dependency's GitHub repository.
+        revision: Pinned commit revision.
+        destination: Vendor directory to create.
+
+    Raises:
+        RuntimeError: When the repository is not on GitHub over HTTPS or the
+            archive has an unexpected or unsafe layout.
+    """
     parsed = urllib.parse.urlparse(repository)
     if parsed.scheme != "https" or parsed.netloc != "github.com":
         raise RuntimeError(f"Archive fallback only supports GitHub HTTPS repositories: {repository}")
@@ -71,11 +92,19 @@ def download_archive(repository: str, revision: str, destination: pathlib.Path) 
         if len(extracted) != 1:
             raise RuntimeError(f"Unexpected archive layout for {repository}")
         shutil.move(str(extracted[0]), destination)
-    (destination / ".local-assistant-revision").write_text(revision + "\n")
+    (destination / REVISION_MARKER_NAME).write_text(revision + "\n")
 
 
 def safe_extract(archive: tarfile.TarFile, destination: pathlib.Path) -> None:
-    """Extract a trusted-source archive while preventing path traversal."""
+    """Extract a trusted-source archive while preventing path traversal.
+
+    Args:
+        archive: Open commit archive.
+        destination: Empty directory that receives the archive's content.
+
+    Raises:
+        RuntimeError: When a member would be written outside the destination.
+    """
     destination_resolved = destination.resolve()
     for member in archive.getmembers():
         member_path = (destination / member.name).resolve()
@@ -89,7 +118,15 @@ def safe_extract(archive: tarfile.TarFile, destination: pathlib.Path) -> None:
 
 
 def validate_legacy_tar_members(archive: tarfile.TarFile) -> None:
-    """Validate paths and link targets before extraction on older Python versions."""
+    """Validate paths and link targets before extraction on older Python versions.
+
+    Args:
+        archive: Open commit archive whose members have not been extracted.
+
+    Raises:
+        RuntimeError: When a member is a device or FIFO, or a path or link
+            target leaves the archive root.
+    """
     for member in archive.getmembers():
         member_path = pathlib.PurePosixPath(member.name)
         validated_archive_path(member_path, member.name)
@@ -102,7 +139,15 @@ def validate_legacy_tar_members(archive: tarfile.TarFile) -> None:
 
 
 def validated_archive_path(path: pathlib.PurePosixPath, member_name: str) -> None:
-    """Reject absolute paths and any parent traversal that leaves the archive root."""
+    """Reject absolute paths and any parent traversal that leaves the archive root.
+
+    Args:
+        path: Member path or resolved link target to check.
+        member_name: Archive member named in the error.
+
+    Raises:
+        RuntimeError: When the path is absolute or climbs above the root.
+    """
     if path.is_absolute():
         raise RuntimeError(f"Unsafe archive path: {member_name}")
     depth = 0
@@ -118,7 +163,11 @@ def validated_archive_path(path: pathlib.PurePosixPath, member_name: str) -> Non
 
 
 def main() -> int:
-    """Fetch dependency pins and generate the sqlite-vec amalgamation."""
+    """Fetch dependency pins and generate the sqlite-vec amalgamation.
+
+    Returns:
+        Zero once every dependency is present, patched, and generated.
+    """
     project = pathlib.Path(__file__).resolve().parents[1]
     manifest = json.loads((project / "Config" / "DependencyPins.json").read_text())
     vendor = project / "Vendor"

@@ -1,26 +1,26 @@
 import Foundation
 
 /// Readiness and installed storage for one user-visible assistant capability.
-struct LocalModelCapabilityStatus: Identifiable, Sendable {
-    var id: LocalModelCapabilityKind { kind }
-    let kind: LocalModelCapabilityKind
-    let state: LocalModelCapabilityState
-    let byteCount: Int64
+internal struct LocalModelCapabilityStatus: Identifiable, Sendable {
+    internal var id: LocalModelCapabilityKind { kind }
+    internal let kind: LocalModelCapabilityKind
+    internal let state: LocalModelCapabilityState
+    internal let byteCount: Int64
 }
 
 /// Verified paths and readiness for all locally installed model assets.
-struct LocalModelStatus: Sendable {
-    let state: OfflineStatus
-    let chatURL: URL?
-    let embeddingURL: URL?
-    let speechURL: URL?
-    let capabilities: [LocalModelCapabilityStatus]
-    let totalByteCount: Int64
+internal struct LocalModelStatus: Sendable {
+    internal let state: OfflineStatus
+    internal let chatURL: URL?
+    internal let embeddingURL: URL?
+    internal let speechURL: URL?
+    internal let capabilities: [LocalModelCapabilityStatus]
+    internal let totalByteCount: Int64
 }
 
 /// Locates and verifies models only inside the app's private container.
-actor ModelStore {
-    private(set) var status = LocalModelStatus(
+internal actor ModelStore {
+    internal private(set) var status = LocalModelStatus(
         state: .checking,
         chatURL: nil,
         embeddingURL: nil,
@@ -33,10 +33,10 @@ actor ModelStore {
 
     /// One cached integrity result, trusted only while its file identity is unchanged.
     private struct VerifiedAsset: Codable {
-        let size: Int64
-        let modifiedAt: Double
-        let digest: String
-        let verifiedAt: Double
+        internal let size: Int64
+        internal let modifiedAt: Double
+        internal let digest: String
+        internal let verifiedAt: Double
     }
 
     private var verifiedAssets: [String: VerifiedAsset] = [:]

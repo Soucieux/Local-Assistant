@@ -1,22 +1,22 @@
 import Foundation
 
 /// User-facing explanations generated deterministically by retrieval.
-enum RetrievalStrings {
-    static let fileTypeMatch = "Matches the requested file type."
-    static let fallbackMatch = "Best available match from the current index."
-    static let exactNameEvidence = "The filename exactly matches the search."
-    static let nameEvidence = "The filename contains the search terms."
-    static let pathEvidence = "The folder path contains the search terms."
-    static let folderScopeEvidenceFormat = "Inside the “%@” folder."
-    static let keywordEvidenceFormat = "Indexed text contains the search terms: “%@”"
-    static let semanticEvidenceFormat = "Indexed text is semantically related to the description: “%@”"
-    static let possibleSemanticEvidenceFormat = "Possible semantic relation in indexed text: “%@”"
-    static let savedReference = "Referenced by this saved answer."
-    static let insufficientEvidence = "I could not find enough indexed evidence to answer that."
-    static let visualContentUnavailable = "I cannot verify visual subjects or embedded images inside files yet. I can search filenames, readable document text, and words recognized in standalone images."
-    static let ambiguousFileRequest = "Which file do you mean? Add a topic, filename, folder, or date so I do not guess."
-    static let singleFileCardReady = "I found one match. It is shown below."
-    static let multipleFileCardsReadyFormat = "I found %d matches. They are shown below."
+internal enum RetrievalStrings {
+    internal static let fileTypeMatch = "Matches the requested file type."
+    internal static let fallbackMatch = "Best available match from the current index."
+    internal static let exactNameEvidence = "The filename exactly matches the search."
+    internal static let nameEvidence = "The filename contains the search terms."
+    internal static let pathEvidence = "The folder path contains the search terms."
+    internal static let folderScopeEvidenceFormat = "Inside the “%@” folder."
+    internal static let keywordEvidenceFormat = "Indexed text contains the search terms: “%@”"
+    internal static let semanticEvidenceFormat = "Indexed text is semantically related to the description: “%@”"
+    internal static let possibleSemanticEvidenceFormat = "Possible semantic relation in indexed text: “%@”"
+    internal static let savedReference = "Referenced by this saved answer."
+    internal static let insufficientEvidence = "I could not find enough indexed evidence to answer that."
+    internal static let visualContentUnavailable = "I cannot verify visual subjects or embedded images inside files yet. I can search filenames, readable document text, and words recognized in standalone images."
+    internal static let ambiguousFileRequest = "Which file do you mean? Add a topic, filename, folder, or date so I do not guess."
+    internal static let singleFileCardReady = "I found one match. It is shown below."
+    internal static let multipleFileCardsReadyFormat = "I found %d matches. They are shown below."
     private static let countPlaceholder = "%d"
 
     /// Creates a concise acknowledgement for results already represented by file cards.
@@ -69,5 +69,4 @@ enum RetrievalStrings {
     internal static func folderScopeEvidence(_ folderName: String) -> String {
         String(format: folderScopeEvidenceFormat, folderName)
     }
-
 }

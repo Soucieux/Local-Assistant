@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 /// Applies conservative default exclusions before any content is opened.
-struct ExclusionPolicy: Sendable {
+internal struct ExclusionPolicy: Sendable {
     /// Absolute system directories, resolved once for the life of the process.
     private static let systemDirectoryPaths: Set<String> = makeSystemDirectoryPaths()
 

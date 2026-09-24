@@ -1,7 +1,7 @@
 import Foundation
 
 /// Applies the Qwen embedding instructions before invoking embedded llama.cpp.
-actor LocalEmbeddingService: DocumentEmbedding {
+internal actor LocalEmbeddingService: DocumentEmbedding {
     private let runtime: LlamaCppRuntime
 
     /// Creates a local embedding adapter over the shared runtime.

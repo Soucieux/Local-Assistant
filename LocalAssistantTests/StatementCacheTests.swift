@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// A statement checked out from the cache must behave exactly like a freshly prepared one.
-struct StatementCacheTests {
+internal struct StatementCacheTests {
     @Test("Reopening a closed database serves working statements again")
     internal func servesWorkingStatementsAfterReopening() async throws {
         let fixture = try DatabaseFixture()
@@ -43,8 +43,8 @@ struct StatementCacheTests {
         #expect(second?.displayName == StatementCacheTestConstants.secondName)
     }
 
-    @Test("Batched lookups of different widths keep their own cached statement")
-    internal func keepsOneCachedStatementPerBatchWidth() async throws {
+    @Test("Batched lookups of different widths each return their own rows")
+    internal func servesBatchedLookupsOfDifferentWidths() async throws {
         let fixture = try DatabaseFixture()
         defer { fixture.remove() }
         let database = AssistantDatabase(databaseURL: fixture.databaseURL)

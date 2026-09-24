@@ -4,20 +4,20 @@ import UniformTypeIdentifiers
 
 /// Exact companion release discovered at one bounded application location.
 private struct ConnectorAppRelease: Equatable {
-    let version: String
-    let build: String
+    internal let version: String
+    internal let build: String
 
     /// Names this release the way every setup message refers to it.
-    var displayName: String {
+    internal var displayName: String {
         ReminderStrings.connectorReleaseDisplayName(version: version, build: build)
     }
 }
 
 /// Best compatible companion plus any installed-version recovery notice.
 private struct ConnectorAppResolution {
-    let url: URL?
-    let availability: OpenClawConnectorAppAvailability
-    let issue: String?
+    internal let url: URL?
+    internal let availability: OpenClawConnectorAppAvailability
+    internal let issue: String?
 }
 
 extension AppModel {
@@ -160,7 +160,8 @@ extension AppModel {
     }
 
     /// Resolves the best available connector copy without searching unrelated user files.
-    /// - Returns: Launchable URL and its user-visible location, or nil when unavailable.
+    /// - Returns: Launchable URL with its user-visible location, or the unavailable state with
+    ///   the issue that explains it.
     private func connectorAppResolution() -> ConnectorAppResolution {
         let fileManager = FileManager.default
         let applicationsURL = URL(
@@ -327,13 +328,6 @@ extension AppModel {
         try await services.database.insertChatMessage(message)
         messages.append(message)
         currentResponse = message
-    }
-
-    /// Adds one connector-originated answer through the shared assistant-message path.
-    /// - Parameter text: OpenClaw's answer to the authorized user request.
-    /// - Throws: A local database error when the message cannot be saved.
-    internal func appendConnectorMessage(_ text: String) async throws {
-        try await appendAssistantMessage(text)
     }
 
     /// Replaces hidden reminder knowledge only after a successful complete snapshot.

@@ -1,150 +1,149 @@
 import SwiftUI
 
 /// Shared layout, color, motion, and depth tokens for the native macOS interface.
-enum DesignTokens {
-    enum Window {
-        static let minimumWidth: CGFloat = 680
-        static let minimumHeight: CGFloat = 540
-        static let defaultWidth: CGFloat = 820
-        static let defaultHeight: CGFloat = 720
-        static let adaptiveColumnMinimumWidth: CGFloat = 340
-        static let startupDetailMaximumWidth: CGFloat = 440
+internal enum DesignTokens {
+    internal enum Window {
+        internal static let minimumWidth: CGFloat = 680
+        internal static let minimumHeight: CGFloat = 540
+        internal static let defaultWidth: CGFloat = 820
+        internal static let defaultHeight: CGFloat = 720
+        internal static let adaptiveColumnMinimumWidth: CGFloat = 340
+        internal static let startupDetailMaximumWidth: CGFloat = 440
     }
 
-    enum Message {
-        static let maximumWidth: CGFloat = 540
-        static let avatarSize: CGFloat = 32
-        static let lineSpacing: CGFloat = 3
+    internal enum Message {
+        internal static let maximumWidth: CGFloat = 540
+        internal static let avatarSize: CGFloat = 32
+        internal static let lineSpacing: CGFloat = 3
     }
 
-    enum Control {
-        static let iconButtonSize: CGFloat = 38
-        static let compactIconButtonSize: CGFloat = 32
-        static let appIconSize: CGFloat = 40
-        static let iconTileSize: CGFloat = 34
-        static let compactIconTileSize: CGFloat = 28
-        static let glyphSlotSize: CGFloat = 28
-        static let shortcutKeyMinimumWidth: CGFloat = 26
-        static let shortcutKeyHeight: CGFloat = 24
+    internal enum Control {
+        internal static let iconButtonSize: CGFloat = 38
+        internal static let compactIconButtonSize: CGFloat = 32
+        internal static let appIconSize: CGFloat = 40
+        internal static let iconTileSize: CGFloat = 34
+        internal static let compactIconTileSize: CGFloat = 28
+        internal static let glyphSlotSize: CGFloat = 28
+        internal static let shortcutKeyMinimumWidth: CGFloat = 26
+        internal static let shortcutKeyHeight: CGFloat = 24
+        internal static let disabledOpacity = 0.46
+        internal static let pressedScale: CGFloat = 0.98
     }
 
-    enum Spacing {
-        static let xxSmall: CGFloat = 2
-        static let xSmall: CGFloat = 4
-        static let small: CGFloat = 8
-        static let medium: CGFloat = 12
-        static let large: CGFloat = 16
-        static let xLarge: CGFloat = 24
-        static let xxLarge: CGFloat = 32
+    internal enum Spacing {
+        internal static let xxSmall: CGFloat = 2
+        internal static let xSmall: CGFloat = 4
+        internal static let small: CGFloat = 8
+        internal static let medium: CGFloat = 12
+        internal static let large: CGFloat = 16
+        internal static let xLarge: CGFloat = 24
+        internal static let xxLarge: CGFloat = 32
     }
 
-    enum Radius {
-        static let small: CGFloat = 3
-        static let medium: CGFloat = 5
-        static let large: CGFloat = 7
-        static let xLarge: CGFloat = 10
-        static let xxLarge: CGFloat = 14
+    internal enum Radius {
+        internal static let small: CGFloat = 3
+        internal static let medium: CGFloat = 5
+        internal static let large: CGFloat = 7
+        internal static let xLarge: CGFloat = 10
+        internal static let xxLarge: CGFloat = 14
     }
 
-    enum Motion {
-        static let scrollDuration = 0.22
-        static let controlDuration = 0.12
-        static let waveformDuration = 0.1
-        static let commandRelocationDuration = 0.34
-        static let responseTransitionDuration = 0.24
-        static let screenTransitionDuration = 0.20
-        static let trianglePulseDuration = 1.40
-        static let triangleDimOpacity = 0.22
+    internal enum Motion {
+        internal static let scrollDuration = 0.22
+        internal static let controlDuration = 0.12
+        internal static let waveformDuration = 0.1
+        internal static let commandRelocationDuration = 0.34
+        internal static let responseTransitionDuration = 0.24
+        internal static let screenTransitionDuration = 0.20
+        internal static let trianglePulseDuration = 1.40
+        internal static let triangleDimOpacity = 0.22
     }
 
-    enum Command {
-        static let inputMaximumWidth: CGFloat = 560
-        static let findingMinimumWidth: CGFloat = 228
-        static let historyFindingMinimumWidth: CGFloat = 300
-        static let responseTextColumnCount = 12
-        static let responseTextColumnSpan = 11
-        static let responseBodyFontSize: CGFloat = 18
-        static let responseHistoryBodyFontSize: CGFloat = 15
-        static let responseHeadingOneFontSize: CGFloat = 25
-        static let responseHeadingTwoFontSize: CGFloat = 21
-        static let responseHeadingThreeFontSize: CGFloat = 18
-        static let responseCodeFontSize: CGFloat = 14
-        static let responseTableMinimumColumnWidth: CGFloat = 150
-        static let responseTableCornerRadius: CGFloat = 8
-        static let responseTableBorderWidth: CGFloat = 1
-        static let responseQuoteRailWidth: CGFloat = 3
-        static let responseInlineCodeOpacity = 0.075
-        static let responseQuoteOpacity = 0.05
-        static let responseTableHeaderOpacity = 0.085
-        static let reminderSummaryCardHeight: CGFloat = 176
-        static let reminderFocusedCardHeight: CGFloat = 216
-        static let triangleWidth: CGFloat = 42
-        static let triangleHeight: CGFloat = 36
-        static let headerHeight: CGFloat = 68
-        static let headerControlHeight: CGFloat = 30
-        static let headerControlHorizontalPadding: CGFloat = 7
-        static let sectionRuleWidth: CGFloat = 142
-        static let acquisitionCornerLength: CGFloat = 17
-        static let acquisitionCornerWidth: CGFloat = 3
-        static let scanlineSpacing: CGFloat = 4
-        static let scanlineOpacity = 0.026
+    internal enum Command {
+        internal static let inputMaximumWidth: CGFloat = 560
+        internal static let findingMinimumWidth: CGFloat = 228
+        internal static let historyFindingMinimumWidth: CGFloat = 300
+        internal static let responseTextColumnCount = 12
+        internal static let responseTextColumnSpan = 11
+        internal static let responseBodyFontSize: CGFloat = 18
+        internal static let responseHistoryBodyFontSize: CGFloat = 15
+        internal static let responseHeadingOneFontSize: CGFloat = 25
+        internal static let responseHeadingTwoFontSize: CGFloat = 21
+        internal static let responseHeadingThreeFontSize: CGFloat = 18
+        internal static let responseCodeFontSize: CGFloat = 14
+        internal static let responseTableMinimumColumnWidth: CGFloat = 150
+        internal static let responseTableCornerRadius: CGFloat = 8
+        internal static let responseTableBorderWidth: CGFloat = 1
+        internal static let responseQuoteRailWidth: CGFloat = 3
+        internal static let responseInlineCodeOpacity = 0.075
+        internal static let responseQuoteOpacity = 0.05
+        internal static let responseTableHeaderOpacity = 0.085
+        internal static let reminderSummaryCardHeight: CGFloat = 176
+        internal static let reminderFocusedCardHeight: CGFloat = 216
+        internal static let triangleWidth: CGFloat = 42
+        internal static let triangleHeight: CGFloat = 36
+        internal static let headerHeight: CGFloat = 68
+        internal static let headerControlHeight: CGFloat = 30
+        internal static let headerControlHorizontalPadding: CGFloat = 7
+        internal static let sectionRuleWidth: CGFloat = 142
+        internal static let acquisitionCornerLength: CGFloat = 17
+        internal static let acquisitionCornerWidth: CGFloat = 3
+        internal static let scanlineSpacing: CGFloat = 4
+        internal static let scanlineOpacity = 0.026
     }
 
     /// Geometry for the live microphone level meter shown in place of the composer field.
-    enum Waveform {
+    internal enum Waveform {
         /// Most the live indicator grows at full volume, as a fraction of its resting size.
-        static let indicatorScaleRange: CGFloat = 0.18
+        internal static let indicatorScaleRange: CGFloat = 0.18
 
         /// Newest level samples the indicator reacts to.
-        static let indicatorSampleCount = 3
+        internal static let indicatorSampleCount = 3
 
-        static let height: CGFloat = 30
+        internal static let height: CGFloat = 30
     }
 
-    enum Color {
-        static let primaryAction = SwiftUI.Color(
-            red: 0.082,
-            green: 0.082,
-            blue: 0.082
-        )
-        static let primaryActionPressed = SwiftUI.Color(
+    internal enum Color {
+        internal static let primaryAction = graphite
+        internal static let primaryActionPressed = SwiftUI.Color(
             red: 0.18,
             green: 0.18,
             blue: 0.18
         )
-        static let primaryAccent = SwiftUI.Color(
+        internal static let primaryAccent = SwiftUI.Color(
             red: 0.84,
             green: 0.10,
             blue: 0.13
         )
-        static let verifiedLocal = SwiftUI.Color(nsColor: .systemTeal)
-        static let voice = SwiftUI.Color(nsColor: .systemPurple)
-        static let processing = SwiftUI.Color(nsColor: .systemOrange)
-        static let destructive = SwiftUI.Color(nsColor: .systemRed)
-        static let graphite = SwiftUI.Color(
+        internal static let verifiedLocal = SwiftUI.Color(nsColor: .systemTeal)
+        internal static let voice = SwiftUI.Color(nsColor: .systemPurple)
+        internal static let processing = SwiftUI.Color(nsColor: .systemOrange)
+        internal static let destructive = SwiftUI.Color(nsColor: .systemRed)
+        internal static let newContent = SwiftUI.Color(nsColor: .systemBlue)
+        internal static let graphite = SwiftUI.Color(
             red: 0.082,
             green: 0.082,
             blue: 0.082
         )
-        static let hairline = graphite.opacity(0.18)
-        static let selectedSurface = primaryAccent.opacity(0.11)
-        static let canvas = SwiftUI.Color(
+        internal static let hairline = graphite.opacity(0.18)
+        internal static let selectedSurface = primaryAccent.opacity(0.11)
+        internal static let canvas = SwiftUI.Color(
             red: 0.945,
             green: 0.941,
             blue: 0.925
         )
-        static let elevatedSurface = SwiftUI.Color.white.opacity(0.72)
-        static let assistantSurface = SwiftUI.Color.white.opacity(0.68)
-        static let userSurface = primaryAction
-        static let subtleFill = SwiftUI.Color.primary.opacity(0.055)
-        static let processingSurface = processing.opacity(0.13)
-        static let destructiveSurface = destructive.opacity(0.10)
+        internal static let elevatedSurface = SwiftUI.Color.white.opacity(0.72)
+        internal static let assistantSurface = SwiftUI.Color.white.opacity(0.68)
+        internal static let userSurface = primaryAction
+        internal static let subtleFill = SwiftUI.Color.primary.opacity(0.055)
+        internal static let processingSurface = processing.opacity(0.13)
+        internal static let destructiveSurface = destructive.opacity(0.10)
         /// Same color as `primaryAccent`; aliased so the command surface can be retinted
         /// independently if its visual language ever diverges from the rest of the app.
-        static let commandAccent = primaryAccent
-        static let commandLightCanvas = canvas
-        static let commandInk = graphite
-        static let commandMutedInk = SwiftUI.Color(
+        internal static let commandAccent = primaryAccent
+        internal static let commandLightCanvas = canvas
+        internal static let commandInk = graphite
+        internal static let commandMutedInk = SwiftUI.Color(
             red: 0.34,
             green: 0.34,
             blue: 0.33
@@ -195,7 +194,7 @@ enum DesignTokens {
 }
 
 /// Filled style for the most important action in a local workflow.
-struct PrimaryActionButtonStyle: ButtonStyle {
+internal struct PrimaryActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -216,8 +215,8 @@ struct PrimaryActionButtonStyle: ButtonStyle {
                             : DesignTokens.Color.primaryAction
                     )
             )
-            .opacity(isEnabled ? 1 : 0.46)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(isEnabled ? 1 : DesignTokens.Control.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? DesignTokens.Control.pressedScale : 1)
             .animation(
                 reduceMotion
                     ? nil
@@ -229,7 +228,7 @@ struct PrimaryActionButtonStyle: ButtonStyle {
 }
 
 /// Outlined style for supporting actions that should remain visually secondary.
-struct SecondaryActionButtonStyle: ButtonStyle {
+internal struct SecondaryActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -254,8 +253,8 @@ struct SecondaryActionButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
                     .stroke(DesignTokens.Color.hairline)
             )
-            .opacity(isEnabled ? 1 : 0.46)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(isEnabled ? 1 : DesignTokens.Control.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? DesignTokens.Control.pressedScale : 1)
             .animation(
                 reduceMotion
                     ? nil
@@ -267,10 +266,10 @@ struct SecondaryActionButtonStyle: ButtonStyle {
 }
 
 /// Tinted outlined style for a reversible stateful action such as monitoring or pausing work.
-struct TintedActionButtonStyle: ButtonStyle {
+internal struct TintedActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let tint: Color
+    internal let tint: Color
 
     /// Builds a semantic action appearance without implying destructive behavior.
     /// - Parameter configuration: SwiftUI button state and label.
@@ -289,8 +288,8 @@ struct TintedActionButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
                     .stroke(tint.opacity(configuration.isPressed ? 0.32 : 0.20))
             )
-            .opacity(isEnabled ? 1 : 0.46)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(isEnabled ? 1 : DesignTokens.Control.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? DesignTokens.Control.pressedScale : 1)
             .animation(
                 reduceMotion
                     ? nil
@@ -302,12 +301,12 @@ struct TintedActionButtonStyle: ButtonStyle {
 }
 
 /// Tinted icon-only button style for compact toolbar and composer controls.
-struct IconActionButtonStyle: ButtonStyle {
+internal struct IconActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let tint: Color
-    let fill: Color
-    let size: CGFloat
+    internal let tint: Color
+    internal let fill: Color
+    internal let size: CGFloat
 
     /// Creates a reusable compact icon action style.
     /// - Parameters:
@@ -349,7 +348,7 @@ struct IconActionButtonStyle: ButtonStyle {
 }
 
 /// Outlined destructive style for explicit, recoverability-sensitive actions.
-struct DestructiveActionButtonStyle: ButtonStyle {
+internal struct DestructiveActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     /// Builds the destructive action appearance for the current interaction state.
@@ -373,7 +372,7 @@ struct DestructiveActionButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
                     .stroke(DesignTokens.Color.destructive.opacity(0.20))
             )
-            .opacity(isEnabled ? 1 : 0.46)
+            .opacity(isEnabled ? 1 : DesignTokens.Control.disabledOpacity)
             .buttonHoverFeedback(tint: DesignTokens.Color.destructive)
     }
 }
@@ -383,7 +382,7 @@ private struct ButtonHoverFeedbackModifier: ViewModifier {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isHovered = false
-    let tint: Color
+    internal let tint: Color
 
     /// Adds visible pointer feedback without shifting the surrounding layout.
     /// - Parameter content: Styled button content receiving hover feedback.
@@ -410,10 +409,10 @@ private struct ButtonHoverFeedbackModifier: ViewModifier {
 }
 
 /// Compact, non-color-only status label shared by the assistant and Settings.
-struct StatusPill: View {
-    let title: String
-    let systemImage: String
-    let tint: Color
+internal struct StatusPill: View {
+    internal let title: String
+    internal let systemImage: String
+    internal let tint: Color
 
     /// Creates a status label with text, symbol, and semantic tint.
     /// - Parameters:
@@ -427,7 +426,7 @@ struct StatusPill: View {
     }
 
     /// Builds the compact labeled status surface.
-    var body: some View {
+    internal var body: some View {
         Label(title, systemImage: systemImage)
             .font(.caption.weight(.semibold))
             .foregroundStyle(tint)
@@ -446,7 +445,7 @@ struct StatusPill: View {
 
 /// Reusable elevated card treatment for related local information and controls.
 private struct CardSurfaceModifier: ViewModifier {
-    let tint: Color?
+    internal let tint: Color?
 
     /// Wraps content in an adaptive surface with restrained depth.
     /// - Parameter content: View content receiving the card treatment.
@@ -476,9 +475,9 @@ private struct CardSurfaceModifier: ViewModifier {
 }
 
 /// Fixed light application canvas with a restrained analogue scan texture.
-struct CompanionCanvasBackground: View {
+internal struct CompanionCanvasBackground: View {
     /// Builds the shared background for the command, history, activity, and Settings screens.
-    var body: some View {
+    internal var body: some View {
         ZStack {
             DesignTokens.Color.commandLightCanvas
 

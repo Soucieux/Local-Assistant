@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.6%20build%2056-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.8%20build%2058-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 <!-- project-control:section=overview -->
 ## Overview
@@ -184,6 +184,7 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
 | Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
+
 ## Build from source
 
 <details>
@@ -454,6 +455,7 @@ On the current Mac, the app's existing sandbox filenames are **hard links to the
 - This storage arrangement does not change the app's sandbox or offline runtime boundary.
 
 SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
+
 ## Architecture and project structure
 
 - The category-grouped Local architecture tables above list each technology, concept, and model on its own row.
@@ -567,8 +569,8 @@ These boundaries are product requirements rather than optional settings:
   folder picker and allowed by the operating system.
 - **Revocable access.** Revoking a folder removes its bookmark and dependent private index records
   without changing the source folder.
-- **Private writes only.** The database, model assets, conversation history, and temporary voice
-  recordings remain inside the application sandbox.
+- **Private writes only.** The database, model assets, and conversation history remain inside the
+  application sandbox. Microphone audio is processed in memory and is never written to disk.
 - **No source-file mutation.** The application does not create, edit, rename, move, or delete files
   in authorized folders.
 - **Explicit external actions.** A result opens or appears in Finder only after the corresponding
@@ -663,7 +665,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v5.7 (build 57)**. [Release details and delivery evidence](#openclaw-kit-shared-config).
+**v5.8 (build 58)**. [Release details and delivery evidence](#v5-8-build-58).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -688,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v5.8 / build 58 | 2026-09-24 | <ul><li><strong>Fixes:</strong> Reminder summaries, History, and cards now count tag groups the same way, and a malformed scheduled reminder snapshot is reported once instead of on every poll.</li><li><strong>Extraction:</strong> HTML files are read by parsing their markup on the indexing actor rather than through the main-thread WebKit importer.</li><li><strong>Maintenance:</strong> Duplicated logic and unused code removed, repeated values named, and the Connector's parameter and return documentation completed.</li></ul> | [Full record](#v5-8-build-58) |
 | v5.7 / build 57 | 2026-09-23 | <ul><li><strong>Server kit:</strong> Ships the shared configuration the reminder bridge imports, so installing the kit onto an older server no longer fails at import.</li><li><strong>Setup:</strong> Carries bridge v1.5.1, whose installer names a missing CloudBase endpoint up front instead of timing out.</li></ul> | [Full record](#openclaw-kit-shared-config) |
 | v5.6 / build 56 | 2026-09-21 | <ul><li><strong>Identity:</strong> A private conversation core now connects visibly to local documents, voice input, and reminders.</li><li><strong>Delivery:</strong> The matching main app and Connector, plus the clean-Mac disk image, were rebuilt and validated.</li></ul> | [Full record](#private-local-capabilities-icon) |
 | Documentation | 2026-09-21 | <ul><li><strong>Contributor guide:</strong> The two llama.cpp links now address upstream, because the prepared vendor tree is not part of the repository and neither link resolved for a reader of it.</li><li><strong>Label:</strong> The second link now names the upstream agent instruction document it actually opens.</li></ul> | [Full record](#upstream-llama-cpp-links) |
@@ -727,6 +730,47 @@ One record per change; complete details and evidence are below. Older work dates
 <details>
 <summary>Full records for this table</summary>
 
+<a id="v5-8-build-58"></a>
+
+### v5.8 / build 58
+
+- **Recorded date:** 2026-09-24.
+
+One batch of corrections across every first-party file. Local Assistant and OpenClaw Connector advance to v5.8/build 58 and the Connector runtime to v1.9.1; the server bridge v1.4.0 and runtime contract v3 are unchanged because no wire contract changed.
+
+**Corrected behavior**
+
+- **Reminder tag groups.** The spoken summary, the History bubble, and the reminder cards each derived a tag group their own way, so a reminder tagged with the words "No tag" was counted together with untagged reminders in the summary while the cards showed two sections. All three now use one rule on the reminder itself: a blank tag is untagged, and tags that differ only by capitalization or surrounding spaces form one group that keeps its displayed spelling.
+- **Malformed scheduled snapshot.** A scheduled reminder snapshot that could not be read was left in place, so the one-second health poll rejected it again on every pass and kept reporting a failed refresh, even after **Refresh Now** succeeded, until the Connector's next scheduled run. A rejected snapshot is now discarded like an accepted one and reported once.
+- **HTML files.** HTML was imported through `NSAttributedString`, whose HTML importer is backed by WebKit and documented as unsupported away from the main thread. Called from the indexing actor it had to synchronize with the main run loop for each file, measured here at about 0.7 seconds against under 0.01 seconds for direct parsing. HTML is now decoded with the same encoding detection as plain text and parsed directly, with external entities never loaded: scripts, styles, and templates are left out, block elements stay on their own lines, the page title is indexed, and unclosed fragments are still read. Rich-text files name their type explicitly so a mislabeled file can never be routed to that importer. A local probe observed no network request from the old importer, so this is a threading and speed correction rather than a privacy one.
+- **One re-extraction.** Because the text produced for unchanged HTML files changes, the extraction version rises to 3 and every indexed file is re-extracted once on the next indexing run.
+- **Offline audit.** The last `file | grep -q` pipeline in the offline-boundary audit is replaced by the shell match the rest of the script uses. Under `pipefail` that pipeline could skip a bundled binary instead of auditing it, which is the failure the script's own comment warns about.
+- **Setup wording.** The existing-installation screen said every release needs one server update for A2A. It now says a fresh server setup ZIP is needed only when the server was set up from an older release.
+
+**Simplified without changing behavior**
+
+- **Shared logic.** One implementation now serves each of these: SHA-256 hex rendering, the indexing progress fraction, the stored-passage identifier, copying an indexed item with a new content hash, embedding blob binding, the item column list used by six queries, the ZIP entry size guard shared by the Office and Pages extractors, route-parser tokenizing, search-kind ordering, and the installed version label shown in About and Settings.
+- **Less work.** An empty reminder query no longer reads the reminder cache twice.
+- **Named values.** Repeated button-state numbers in both design systems, the Activity screen's status colors, the llama sequence capacity, and the Connector's permission masks, SSH patterns, and workflow node names now have names. Connector host validation keeps its allow-list and leading-dash check and drops three checks the allow-list already implied, identically in Python and Swift.
+- **Connector errors.** Sixty-three five-line error constructions became three named constructors, and the reminder snapshot request is built in one place for both verification and the scheduled refresh.
+- **Unused code removed.** `ReminderSpoolService.spoolURL()`, `SearchFilter.none`, and the `system` message role had no callers, and no release ever stored a `system` message.
+- **Removed what only had one value.** The voice input modes both ended capture after a pause, so the flag that said so, its parameter and its test are gone; the hand-written conversation encoder was identical to the compiler's and would have silently dropped any field added later; and the app no longer creates the Connector spool folders itself, because the spool service creates and protects them on every use.
+- **Schema.** Four prototype-era tables that no code reads or writes are no longer declared; a database created before this release keeps its empty copies untouched.
+- **Documentation in code.** Every Python callable in the Connector, its tests, and the staging scripts now documents its parameters, return value, and raised errors. Stale comments about speech output and the capture limit were corrected, and the one remaining compiler warning — handing the speech library's non-Sendable components to its streaming actor — is explained where it occurs and left visible rather than silenced.
+- **Tests.** Eleven cases were added for tag grouping, the discarded snapshot, and HTML extraction. Repeated fixtures in the reminder spool, folder indexing, and Connector service tests became helpers, and one statement-cache test was renamed because batched lookups are deliberately not cached.
+
+**Documentation corrected**
+
+- The release badge still named v5.4/build 54.
+- The privacy summary listed temporary voice recordings, although microphone audio is processed in memory and never written to disk.
+- The v5.5 record still described its source as uncommitted.
+- Four archived August 2026 rows used a descriptive label in the **Record** column.
+
+**Evidence and delivery status**
+
+Source change only. 155 macOS test cases and all 40 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings.
+
+Not established: no Release build, signing, disk image, installation, or launch was performed, so the v5.7/build 57 applications at the project root remain the delivered artifacts and do not contain these changes. The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23. The source is **uncommitted**.
 <a id="openclaw-kit-shared-config"></a>
 
 ### v5.7 / build 57

@@ -181,10 +181,7 @@ extension AssistantDatabase {
         let statement = try preparedStatement(SQLStatements.insertVector)
         defer { recycle(statement) }
         try bind(rowID, at: 1, in: statement)
-        let result = embedding.withUnsafeBytes { bytes in
-            sqlite3_bind_blob(statement, 2, bytes.baseAddress, Int32(bytes.count), DatabaseConstants.transientDestructor)
-        }
-        guard result == SQLITE_OK else { throw LocalAssistantError.database(databaseErrorMessage()) }
+        try bind(embedding, at: 2, in: statement)
         try stepDone(statement)
     }
 

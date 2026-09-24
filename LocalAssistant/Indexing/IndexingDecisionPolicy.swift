@@ -1,7 +1,7 @@
 import Foundation
 
 /// Pure indexing decisions shared by the live pipeline and focused native checks.
-enum IndexingDecisionPolicy {
+internal enum IndexingDecisionPolicy {
     /// Returns whether a scanned item can safely skip extraction and embedding.
     /// - Parameters:
     ///   - metadataMatches: Whether the current and retained metadata hashes match.

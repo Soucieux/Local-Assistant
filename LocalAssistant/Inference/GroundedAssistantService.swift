@@ -1,7 +1,7 @@
 import Foundation
 
 /// Answers ordinary conversation locally and retrieves file evidence only when requested.
-actor GroundedAssistantService {
+internal actor GroundedAssistantService {
     private let database: AssistantDatabase
     private let retrieval: HybridRetrievalService
     private let reminderRetrieval: ReminderRetrievalService
@@ -205,17 +205,7 @@ actor GroundedAssistantService {
     /// - Parameter matches: Reminder cards selected for one list response.
     /// - Returns: Number of normalized tag groups, including the untagged group.
     private func reminderGroupCount(_ matches: [ReminderSearchResult]) -> Int {
-        var groups: Set<String> = []
-        for match in matches {
-            let tag = match.item.tag?.trimmingCharacters(in: .whitespacesAndNewlines)
-                ?? AppConstants.Text.empty
-            groups.insert(
-                tag.isEmpty
-                    ? ReminderStrings.noTag.lowercased()
-                    : tag.lowercased()
-            )
-        }
-        return groups.count
+        Set(matches.map(\.item.tagGroupIdentifier)).count
     }
 
     /// Selects one exact or clearly top-ranked reminder without guessing.

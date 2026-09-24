@@ -1,21 +1,26 @@
 import SwiftUI
 
 /// Compact summary badges shared by live and retained indexing activity.
-struct IndexingSummaryBadges: View {
-    let newItems: Int
-    let updatedItems: Int
-    let unchangedItems: Int
-    let removedItems: Int
-    let skippedItems: Int
+internal struct IndexingSummaryBadges: View {
+    internal let newItems: Int
+    internal let updatedItems: Int
+    internal let unchangedItems: Int
+    internal let removedItems: Int
+    internal let skippedItems: Int
 
     /// Builds adaptive file-state badges for narrow and wide surfaces.
-    var body: some View {
+    internal var body: some View {
         LazyVGrid(
             columns: [GridItem(.adaptive(minimum: 118), spacing: DesignTokens.Spacing.small)],
             alignment: .leading,
             spacing: DesignTokens.Spacing.small
         ) {
-            badge(UIStrings.newStatus, count: newItems, systemImage: SystemImages.add, tint: .blue)
+            badge(
+                UIStrings.newStatus,
+                count: newItems,
+                systemImage: SystemImages.add,
+                tint: DesignTokens.Color.newContent
+            )
             badge(
                 UIStrings.updatedStatus,
                 count: updatedItems,
@@ -97,11 +102,11 @@ struct IndexingSummaryBadges: View {
 }
 
 /// Informative assistant-screen banner for background indexing.
-struct BackgroundIndexingBanner: View {
+internal struct BackgroundIndexingBanner: View {
     @Environment(AppModel.self) private var model
 
     /// Builds live progress, activity navigation, and a safe pause control.
-    var body: some View {
+    internal var body: some View {
         let progress = model.indexingProgress
         HStack(spacing: DesignTokens.Spacing.medium) {
             Image(systemName: SystemImages.monitoring)

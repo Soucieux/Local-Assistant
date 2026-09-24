@@ -3,7 +3,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Retrieval must never present a type constraint as evidence for a content description.
-struct RetrievalEvidenceTests {
+internal struct RetrievalEvidenceTests {
     @Test("File type and recency alone do not satisfy a content query")
     internal func rejectsTypeOnlyContentEvidence() {
         let score = ScoreBreakdown(

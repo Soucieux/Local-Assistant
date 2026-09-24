@@ -14,7 +14,11 @@ from local_assistant_connector.ssh_tunnel import OpenClawSSHTunnel, _safe_ssh_er
 
 
 def connector_config() -> ConnectorConfig:
-    """Build one non-secret restricted SSH configuration."""
+    """Build one non-secret restricted SSH configuration.
+
+    Returns:
+        A valid configuration for a server that is never contacted.
+    """
     return ConnectorConfig(
         ssh_host="openclaw.example.test",
         ssh_port=22,

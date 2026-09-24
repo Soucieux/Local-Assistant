@@ -5,7 +5,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Exercised against real files so the resource values are the ones a live scan sees.
-final class ExclusionPolicyTests {
+internal final class ExclusionPolicyTests {
     private let policy = ExclusionPolicy()
     private let root: URL
     private static let resourceKeys: Set<URLResourceKey> = [

@@ -19,7 +19,7 @@ private let quickCallEventHandler: EventHandlerUPP = { _, _, userData in
 
 /// Registers one system-wide shortcut while the normal application process is running.
 @MainActor
-final class GlobalShortcutService {
+internal final class GlobalShortcutService {
     private let action: @MainActor () -> Void
     private var eventHandlerReference: EventHandlerRef?
     private var hotKeyReference: EventHotKeyRef?

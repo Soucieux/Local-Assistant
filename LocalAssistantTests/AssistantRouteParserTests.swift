@@ -5,7 +5,7 @@ import Testing
 
 /// The parser decides whether local files are searched at all, and it reads text produced
 /// by a model, so malformed and adversarial payloads are covered alongside the happy path.
-struct AssistantRouteParserTests {
+internal struct AssistantRouteParserTests {
     private let parser = AssistantRouteParser()
 
     /// Returns the reply text, or `nil` when the parser chose to search.

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Builds bounded semantic context for folders without reading or changing their contents.
-struct FolderContextBuilder: Sendable {
+internal struct FolderContextBuilder: Sendable {
     /// Creates one synthetic searchable passage for every scanned folder.
     /// - Parameter files: Current read-only scan, including the authorized root.
     /// - Returns: Folder passages keyed by their indexed item identifiers.

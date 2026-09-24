@@ -6,11 +6,11 @@ import SwiftUI
 // private members, so they live apart from its input-handling logic.
 
 /// Compact live-indexing strip that preserves pause and activity controls.
-struct CommandIndexingStrip: View {
+internal struct CommandIndexingStrip: View {
     @Environment(AppModel.self) private var model
 
     /// Builds the background-indexing state in the command visual language.
-    var body: some View {
+    internal var body: some View {
         let progress = model.indexingProgress
         HStack(spacing: DesignTokens.Spacing.medium) {
             Label(
@@ -85,9 +85,9 @@ struct CommandIndexingStrip: View {
 }
 
 /// Minimal local-processing state shown while the latest answer is prepared.
-struct ProcessingIndicator: View {
+internal struct ProcessingIndicator: View {
     /// Builds a centered acquisition signal using the command visual language.
-    var body: some View {
+    internal var body: some View {
         VStack(spacing: DesignTokens.Spacing.medium) {
             Text(UIStrings.commandProcessing)
                 .font(.caption.monospaced().weight(.bold))
@@ -104,11 +104,11 @@ struct ProcessingIndicator: View {
 }
 
 /// Responsive latest answer without a conversational bubble.
-struct CommandResponseView: View {
-    let message: ChatMessage
+internal struct CommandResponseView: View {
+    internal let message: ChatMessage
 
     /// Builds the current response label and native block-Markdown document.
-    var body: some View {
+    internal var body: some View {
         VStack(spacing: DesignTokens.Spacing.large) {
             Text(UIStrings.commandResponse)
                 .font(.caption2.monospaced().weight(.bold))
@@ -124,12 +124,12 @@ struct CommandResponseView: View {
 }
 
 /// Adaptive grid of reminder matches from the latest local snapshot.
-struct CommandReminderFindingsGrid: View {
-    let results: [ReminderSearchResult]
-    let presentation: ReminderCardPresentation
+internal struct CommandReminderFindingsGrid: View {
+    internal let results: [ReminderSearchResult]
+    internal let presentation: ReminderCardPresentation
 
     /// Builds a focused or tag-grouped reminder result surface.
-    var body: some View {
+    internal var body: some View {
         VStack(spacing: DesignTokens.Spacing.large) {
             CommandSectionLabel(
                 title: ReminderStrings.reminderCount(results.count).uppercased()
@@ -186,14 +186,7 @@ struct CommandReminderFindingsGrid: View {
         var groups: [ReminderCardGroup] = []
         var groupIndices: [String: Int] = [:]
         for result in results {
-            let suppliedTag = result.item.tag?.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ) ?? AppConstants.Text.empty
-            let isUntagged = suppliedTag.isEmpty
-            let normalizedTag = suppliedTag.lowercased()
-            let identifier = isUntagged
-                ? ReminderConstants.Presentation.untaggedGroupIdentifier
-                : ReminderConstants.Presentation.tagGroupPrefix + normalizedTag
+            let identifier = result.item.tagGroupIdentifier
             if let index = groupIndices[identifier] {
                 groups[index].results.append(result)
             } else {
@@ -201,8 +194,8 @@ struct CommandReminderFindingsGrid: View {
                 groups.append(
                     ReminderCardGroup(
                         id: identifier,
-                        title: isUntagged ? ReminderStrings.noTag : suppliedTag,
-                        isUntagged: isUntagged,
+                        title: result.item.trimmedTag ?? ReminderStrings.noTag,
+                        isUntagged: result.item.trimmedTag == nil,
                         results: [result]
                     )
                 )
@@ -214,23 +207,23 @@ struct CommandReminderFindingsGrid: View {
 
 /// Stable tag section derived from the existing reminder result order.
 private struct ReminderCardGroup: Identifiable {
-    let id: String
-    let title: String
-    let isUntagged: Bool
-    var results: [ReminderSearchResult]
+    internal let id: String
+    internal let title: String
+    internal let isUntagged: Bool
+    internal var results: [ReminderSearchResult]
 
     /// Deterministic section accent that never acts as the only tag identifier.
-    var tint: Color {
+    internal var tint: Color {
         DesignTokens.Color.reminderTag(id, isUntagged: isUntagged)
     }
 }
 
 /// Full-width tag identity above one adaptive reminder grid.
 private struct ReminderTagSectionHeader: View {
-    let group: ReminderCardGroup
+    internal let group: ReminderCardGroup
 
     /// Builds tag name, semantic accent, and item count.
-    var body: some View {
+    internal var body: some View {
         HStack(spacing: DesignTokens.Spacing.small) {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.small)
                 .fill(group.tint)
@@ -249,11 +242,11 @@ private struct ReminderTagSectionHeader: View {
 
 /// Compact reminder used when a list already supplies tag context in its section header.
 private struct CommandReminderSummaryCard: View {
-    let result: ReminderSearchResult
-    let tint: Color
+    internal let result: ReminderSearchResult
+    internal let tint: Color
 
     /// Builds reminder text, deadline status, timing, and optional-link signal.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             HStack(spacing: DesignTokens.Spacing.small) {
                 ZStack {
@@ -399,7 +392,7 @@ private enum ReminderUrgency {
     case undated
 
     /// Plain-language urgency label.
-    var title: String {
+    internal var title: String {
         switch self {
         case .overdue: return ReminderStrings.overdue
         case .today: return ReminderStrings.dueToday
@@ -410,7 +403,7 @@ private enum ReminderUrgency {
     }
 
     /// Semantic status color paired with the visible urgency label.
-    var tint: Color {
+    internal var tint: Color {
         switch self {
         case .overdue: return DesignTokens.Color.destructive
         case .today: return DesignTokens.Color.commandAccent
@@ -422,12 +415,12 @@ private enum ReminderUrgency {
 }
 
 /// One square-edged reminder match with time and ownership evidence.
-struct CommandReminderCard: View {
-    let result: ReminderSearchResult
-    let index: Int
+internal struct CommandReminderCard: View {
+    internal let result: ReminderSearchResult
+    internal let index: Int
 
     /// Builds reminder identity, deadline, ownership, and rank explanation.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             Text(UIStrings.commandFindingNumber(index))
                 .font(.title3.monospaced().weight(.bold))
@@ -506,11 +499,11 @@ struct CommandReminderCard: View {
 }
 
 /// Hairline label separating the answer from acquired file findings.
-struct CommandSectionLabel: View {
-    let title: String
+internal struct CommandSectionLabel: View {
+    internal let title: String
 
     /// Builds a tracked label between two horizontal rules.
-    var body: some View {
+    internal var body: some View {
         HStack(spacing: DesignTokens.Spacing.medium) {
             Rectangle()
                 .fill(DesignTokens.Color.commandInk.opacity(0.64))
@@ -530,8 +523,8 @@ struct CommandSectionLabel: View {
 }
 
 /// Right-angle marker indicating one acquired result module.
-struct CommandAcquisitionCorner: View {
-    let tint: Color
+internal struct CommandAcquisitionCorner: View {
+    internal let tint: Color
 
     /// Creates a corner with the command accent by default or a semantic card tint.
     /// - Parameter tint: Visible acquisition-marker color.
@@ -540,7 +533,7 @@ struct CommandAcquisitionCorner: View {
     }
 
     /// Builds a square corner from two tinted rules.
-    var body: some View {
+    internal var body: some View {
         ZStack(alignment: .topLeading) {
             Rectangle()
                 .fill(tint)
@@ -563,7 +556,7 @@ struct CommandAcquisitionCorner: View {
 }
 
 /// Plain telemetry-rail style for header navigation.
-struct CommandHeaderButtonStyle: ButtonStyle {
+internal struct CommandHeaderButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     /// Builds a restrained header control with a square pressed state.
@@ -588,9 +581,9 @@ struct CommandHeaderButtonStyle: ButtonStyle {
 }
 
 /// Small square-edged action used by the live-indexing rail.
-struct CommandRailButtonStyle: ButtonStyle {
+internal struct CommandRailButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
-    let tint: Color
+    internal let tint: Color
 
     /// Creates a rail action with an optional semantic tint.
     /// - Parameter tint: Foreground and border color for the action.
@@ -621,7 +614,7 @@ struct CommandRailButtonStyle: ButtonStyle {
 }
 
 /// Triangular voice and submit marker adapted from the supplied visual reference.
-struct CommandTriangle: Shape {
+internal struct CommandTriangle: Shape {
     /// Draws a centered triangle inside the offered rectangle.
     /// - Parameter rect: Bounds available for the marker.
     /// - Returns: Closed triangular path.

@@ -3,7 +3,7 @@ import Foundation
 
 /// Creates and resolves app-scoped, read-only bookmarks selected by the user.
 @MainActor
-final class ReadOnlyAuthorizationService {
+internal final class ReadOnlyAuthorizationService {
     /// Presents a directory picker and returns a persistable read-only root.
     /// - Returns: Newly authorized root, or `nil` when the user cancels.
     /// - Throws: A local permission error when bookmark creation fails.

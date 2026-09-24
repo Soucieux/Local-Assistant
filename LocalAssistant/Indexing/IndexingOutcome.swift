@@ -1,5 +1,5 @@
 /// Summary of one completed read-only indexing run.
-struct IndexingOutcome: Sendable {
-    let newItems: Int
-    let removedItems: Int
+internal struct IndexingOutcome: Sendable {
+    internal let newItems: Int
+    internal let removedItems: Int
 }

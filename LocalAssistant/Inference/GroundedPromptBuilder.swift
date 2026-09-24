@@ -1,7 +1,7 @@
 import Foundation
 
 /// Builds bounded prompts that contain only explicit local evidence.
-struct GroundedPromptBuilder: Sendable {
+internal struct GroundedPromptBuilder: Sendable {
     /// Creates a Qwen prompt that either answers ordinary conversation or requests local retrieval.
     /// - Parameters:
     ///   - question: Current user request.

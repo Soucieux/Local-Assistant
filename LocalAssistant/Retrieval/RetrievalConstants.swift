@@ -1,42 +1,42 @@
 import Foundation
 
 /// Search syntax and score calibration values.
-enum RetrievalConstants {
-    static let matchAllSeparator = " AND "
-    static let quote = "\""
-    static let doubledQuote = "\"\""
-    static let wildcard = "%"
-    static let likeEscape = "\\"
-    static let escapedLikeEscape = "\\\\"
-    static let escapedWildcard = "\\%"
-    static let singleCharacterWildcard = "_"
-    static let escapedSingleCharacterWildcard = "\\_"
-    static let reciprocalRankConstant = 60.0
-    static let exactNameWeight = 4.0
-    static let pathWeight = 5.0
-    static let keywordWeight = 2.5
-    static let semanticWeight = 3.0
-    static let fileTypeWeight = 4.0
-    static let recencyWeight = 0.5
-    static let highConfidenceThreshold = 0.72
-    static let mediumConfidenceThreshold = 0.42
-    static let maximumExcerptCharacters = 480
-    static let minimumSemanticSimilarity = 0.18
-    static let minimumFolderScopeSemanticSimilarity = 0.50
-    static let metadataExactNameMatch = 1.00
-    static let metadataNameMatch = 0.65
-    static let metadataTokenMatch = 0.35
-    static let metadataPathMatch = 1.20
-    static let metadataPathTokenMatch = 0.80
-    static let exactFolderScopeMatch = 1.25
-    static let nameFolderScopeMatch = 1.10
-    static let pathFolderScopeMatch = 1.00
-    static let maximumFolderScopeCount = 3
-    static let maximumExplanationEvidenceCharacters = 180
-    static let scoreNormalizationDivisor = 10.0
-    static let recencyDecayDays = 365.0
-    static let secondsPerDay = 86_400.0
-    static let fileTypeTerms: [IndexedItemKind: Set<String>] = [
+internal enum RetrievalConstants {
+    internal static let matchAllSeparator = " AND "
+    internal static let quote = "\""
+    internal static let doubledQuote = "\"\""
+    internal static let wildcard = "%"
+    internal static let likeEscape = "\\"
+    internal static let escapedLikeEscape = "\\\\"
+    internal static let escapedWildcard = "\\%"
+    internal static let singleCharacterWildcard = "_"
+    internal static let escapedSingleCharacterWildcard = "\\_"
+    internal static let reciprocalRankConstant = 60.0
+    internal static let exactNameWeight = 4.0
+    internal static let pathWeight = 5.0
+    internal static let keywordWeight = 2.5
+    internal static let semanticWeight = 3.0
+    internal static let fileTypeWeight = 4.0
+    internal static let recencyWeight = 0.5
+    internal static let highConfidenceThreshold = 0.72
+    internal static let mediumConfidenceThreshold = 0.42
+    internal static let maximumExcerptCharacters = 480
+    internal static let minimumSemanticSimilarity = 0.18
+    internal static let minimumFolderScopeSemanticSimilarity = 0.50
+    internal static let metadataExactNameMatch = 1.00
+    internal static let metadataNameMatch = 0.65
+    internal static let metadataTokenMatch = 0.35
+    internal static let metadataPathMatch = 1.20
+    internal static let metadataPathTokenMatch = 0.80
+    internal static let exactFolderScopeMatch = 1.25
+    internal static let nameFolderScopeMatch = 1.10
+    internal static let pathFolderScopeMatch = 1.00
+    internal static let maximumFolderScopeCount = 3
+    internal static let maximumExplanationEvidenceCharacters = 180
+    internal static let scoreNormalizationDivisor = 10.0
+    internal static let recencyDecayDays = 365.0
+    internal static let secondsPerDay = 86_400.0
+    internal static let fileTypeTerms: [IndexedItemKind: Set<String>] = [
         .folder: ["folder", "folders", "directory", "directories"],
         .document: ["document", "documents", "doc", "docx", "word"],
         .spreadsheet: ["spreadsheet", "spreadsheets", "xlsx", "excel"],
@@ -47,42 +47,42 @@ enum RetrievalConstants {
         .text: ["text", "txt", "markdown", "md"],
         .archive: ["archive", "archives", "zip", "compressed"]
     ]
-    static let searchFillerTerms: Set<String> = [
+    internal static let searchFillerTerms: Set<String> = [
         "a", "about", "all", "an", "any", "are", "available", "compare", "do", "file",
         "files", "find", "for", "give", "have", "i", "if", "is", "know", "list", "locate", "me", "my", "of",
         "open", "please", "reveal", "show", "summarize", "that", "the", "there", "to", "what",
         "want", "which", "you"
     ]
-    static let singularFileTypeTerms: Set<String> = [
+    internal static let singularFileTypeTerms: Set<String> = [
         "archive", "code", "directory", "doc", "docx", "document", "excel", "folder",
         "image", "markdown", "md", "pdf", "photo", "picture", "powerpoint", "presentation",
         "script", "source", "spreadsheet", "text", "txt", "word", "xlsx", "zip"
     ]
-    static let listIntentTerms: Set<String> = ["all", "list", "show"]
-    static let localSearchIntentTerms: Set<String> = [
+    internal static let listIntentTerms: Set<String> = ["all", "list", "show"]
+    internal static let localSearchIntentTerms: Set<String> = [
         "any", "available", "find", "have", "list", "locate", "open", "reveal", "show"
     ]
-    static let definitionQuestionMinimumTokenCount = 3
-    static let definitionQuestionPrefixLength = 2
-    static let definitionQuestionFirstToken = "what"
-    static let definitionQuestionSecondToken = "is"
-    static let singularFileToken = "file"
-    static let pluralFileToken = "files"
-    static let containerTerms: Set<String> = [
+    internal static let definitionQuestionMinimumTokenCount = 3
+    internal static let definitionQuestionPrefixLength = 2
+    internal static let definitionQuestionFirstToken = "what"
+    internal static let definitionQuestionSecondToken = "is"
+    internal static let singularFileToken = "file"
+    internal static let pluralFileToken = "files"
+    internal static let containerTerms: Set<String> = [
         "document", "documents", "file", "files", "pdf", "pdfs", "presentation",
         "presentations", "spreadsheet", "spreadsheets"
     ]
-    static let embeddedContentRelationTerms: Set<String> = [
+    internal static let embeddedContentRelationTerms: Set<String> = [
         "contain", "containing", "contains", "embedded", "has", "include", "includes",
         "including", "inside", "with"
     ]
-    static let visualSubjectRelationTerms: Set<String> = [
+    internal static let visualSubjectRelationTerms: Set<String> = [
         "depicting", "of", "showing"
     ]
-    static let visualItemTerms: Set<String> = [
+    internal static let visualItemTerms: Set<String> = [
         "image", "images", "photo", "photos", "picture", "pictures"
     ]
-    static let definitionArticles: Set<String> = ["a", "an", "the"]
+    internal static let definitionArticles: Set<String> = ["a", "an", "the"]
 
     /// Wraps text in SQLite wildcard markers.
     /// - Parameter text: Escaped LIKE text.

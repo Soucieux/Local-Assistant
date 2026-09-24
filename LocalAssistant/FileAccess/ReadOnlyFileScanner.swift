@@ -1,7 +1,7 @@
 import Foundation
 
 /// Traverses an authorized root without requesting or performing mutations.
-struct ReadOnlyFileScanner: Sendable {
+internal struct ReadOnlyFileScanner: Sendable {
     private let exclusionPolicy = ExclusionPolicy()
     private let resourceKeys: Set<URLResourceKey> = [
         .isDirectoryKey,

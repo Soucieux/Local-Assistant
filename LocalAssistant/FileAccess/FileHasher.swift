@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 /// Computes streaming hashes while holding files read-only.
-enum FileHasher {
+internal enum FileHasher {
     /// Computes a SHA-256 digest without loading the full file into memory.
     /// - Parameter url: Readable local file URL.
     /// - Returns: Lowercase hexadecimal digest.
@@ -15,7 +15,7 @@ enum FileHasher {
             while let data = try handle.read(upToCount: FileConstants.Hash.bufferBytes), data.isEmpty == false {
                 hasher.update(data: data)
             }
-            return hasher.finalize().map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
+            return hexadecimal(hasher.finalize())
         } catch {
             throw LocalAssistantError.extraction(error.localizedDescription)
         }
@@ -25,8 +25,7 @@ enum FileHasher {
     /// - Parameter text: Private synthesized text that will be embedded locally.
     /// - Returns: Lowercase hexadecimal digest.
     internal static func sha256(of text: String) -> String {
-        let digest = SHA256.hash(data: Data(text.utf8))
-        return digest.map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
+        hexadecimal(SHA256.hash(data: Data(text.utf8)))
     }
 
     /// Computes a stable hash for cheap file metadata comparisons.
@@ -55,8 +54,13 @@ enum FileHasher {
         if kind == .folder {
             fields.append(String(FileConstants.FolderIndex.version))
         }
-        let value = fields.joined(separator: FileConstants.Hash.fieldSeparator)
-        let digest = SHA256.hash(data: Data(value.utf8))
-        return digest.map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
+        return sha256(of: fields.joined(separator: FileConstants.Hash.fieldSeparator))
+    }
+
+    /// Renders digest bytes as the lowercase hexadecimal text every stored hash uses.
+    /// - Parameter digest: Finished SHA-256 digest.
+    /// - Returns: Lowercase hexadecimal digest.
+    private static func hexadecimal(_ digest: SHA256.Digest) -> String {
+        digest.map { String(format: FileConstants.Hash.hexFormat, $0) }.joined()
     }
 }

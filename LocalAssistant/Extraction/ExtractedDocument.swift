@@ -1,13 +1,13 @@
 import Foundation
 
 /// A source-aligned text segment produced entirely on device.
-struct ExtractedSegment: Hashable, Sendable {
-    let text: String
-    let pageNumber: Int?
-    let sectionName: String?
+internal struct ExtractedSegment: Hashable, Sendable {
+    internal let text: String
+    internal let pageNumber: Int?
+    internal let sectionName: String?
 }
 
 /// Local extraction result for one readable file.
-struct ExtractedDocument: Sendable {
-    let segments: [ExtractedSegment]
+internal struct ExtractedDocument: Sendable {
+    internal let segments: [ExtractedSegment]
 }

@@ -2,7 +2,7 @@ import Foundation
 import ZIPFoundation
 
 /// Reads visible text from modern Office ZIP containers without executing macros.
-struct OfficeTextExtractor: Sendable {
+internal struct OfficeTextExtractor: Sendable {
     /// Extracts text from DOCX, XLSX, or PPTX files.
     /// - Parameter url: Readable local Office document URL.
     /// - Returns: Source-ordered text segments.
@@ -55,7 +55,7 @@ struct OfficeTextExtractor: Sendable {
         }.sorted { $0.path < $1.path }
         let segments = try entries.compactMap { entry -> ExtractedSegment? in
             let text = try parse(
-                data: try data(for: entry, in: archive),
+                data: try archive.boundedData(for: entry),
                 textElements: ExtractionConstants.spreadsheetTextElements,
                 breakElements: ExtractionConstants.spreadsheetBreakElements
             )
@@ -76,7 +76,7 @@ struct OfficeTextExtractor: Sendable {
         }.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
         let segments = try entries.enumerated().compactMap { offset, entry -> ExtractedSegment? in
             let text = try parse(
-                data: try data(for: entry, in: archive),
+                data: try archive.boundedData(for: entry),
                 textElements: ExtractionConstants.presentationTextElements,
                 breakElements: ExtractionConstants.presentationBreakElements
             )
@@ -94,27 +94,7 @@ struct OfficeTextExtractor: Sendable {
     /// - Throws: A local extraction error when the entry is missing.
     private func data(at path: String, in archive: Archive) throws -> Data {
         guard let entry = archive[path] else { throw LocalAssistantError.extraction(path) }
-        return try data(for: entry, in: archive)
-    }
-
-    /// Loads one archive entry into memory under a fixed decompressed size limit.
-    ///
-    /// A small container can declare an enormous entry, so the copy is bounded while it is
-    /// being written rather than trusting the archive's own size fields.
-    /// - Parameters:
-    ///   - entry: Archive entry to extract.
-    ///   - archive: Open read-only archive.
-    /// - Returns: Copied entry bytes.
-    /// - Throws: A local unsupported error past the limit, or an archive extraction error.
-    private func data(for entry: Entry, in archive: Archive) throws -> Data {
-        var result = Data()
-        _ = try archive.extract(entry) { chunk in
-            guard result.count + chunk.count <= AppConstants.Indexing.maximumArchiveEntryBytes else {
-                throw LocalAssistantError.unsupported(entry.path)
-            }
-            result.append(chunk)
-        }
-        return result
+        return try archive.boundedData(for: entry)
     }
 
     /// Parses visible text from a known XML vocabulary.

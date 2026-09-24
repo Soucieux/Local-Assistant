@@ -1,7 +1,7 @@
 import Foundation
 
 /// Interprets local-model output as conversation, file search, or reminder intent.
-struct AssistantRouteParser: Sendable {
+internal struct AssistantRouteParser: Sendable {
     /// Accepts clear standalone confirmation language or one exact local-model label.
     /// - Parameters:
     ///   - reply: User's newest conversational confirmation reply.
@@ -396,16 +396,13 @@ struct AssistantRouteParser: Sendable {
     /// - Parameter question: Original user request.
     /// - Returns: `true` when searching would require an arbitrary guess.
     private func requiresClarification(question: String) -> Bool {
-        let components = question.lowercased().components(
-            separatedBy: CharacterSet.alphanumerics.inverted
-        )
-        let orderedTokens = components.filter { $0.isEmpty == false }
-        let tokens = Set(orderedTokens)
+        let questionTokens = orderedTokens(question)
+        let tokens = Set(questionTokens)
         guard tokens.isDisjoint(with: RetrievalConstants.singularFileTypeTerms) == false,
               tokens.isDisjoint(with: RetrievalConstants.listIntentTerms) else {
             return false
         }
-        if isDefinitionQuestion(tokens: orderedTokens) { return false }
+        if isDefinitionQuestion(tokens: questionTokens) { return false }
         let excludedTerms = RetrievalConstants.searchFillerTerms.union(
             RetrievalConstants.fileTypeTerms.values.reduce(into: Set<String>()) { result, terms in
                 result.formUnion(terms)
@@ -449,26 +446,26 @@ struct AssistantRouteParser: Sendable {
 }
 
 /// Action selected by the embedded local chat model.
-enum AssistantRoute: Sendable {
+internal enum AssistantRoute: Sendable {
     case reply(String)
     case search(LocalSearchPlan)
     case reminder(ReminderAssistantPlan)
 }
 
 /// Normalized retrieval request produced before local search begins.
-struct LocalSearchPlan: Sendable {
-    let text: String
-    let filter: SearchFilter
+internal struct LocalSearchPlan: Sendable {
+    internal let text: String
+    internal let filter: SearchFilter
 }
 
 /// Codable payload emitted after the local-search routing marker.
 private struct EncodedSearchPlan: Decodable {
-    let query: String
+    internal let query: String
 }
 
 /// Field-limited JSON emitted for one reminder intent.
 private struct EncodedReminderPlan: Decodable {
-    let operation: String
-    let query: String?
-    let id: String?
+    internal let operation: String
+    internal let query: String?
+    internal let id: String?
 }

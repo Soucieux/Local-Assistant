@@ -2,16 +2,16 @@ import Foundation
 
 /// Stable values used by the standalone indexing-decision harness.
 private enum CheckValues {
-    static let contentHash = "content-hash"
-    static let unreadableRoot = "/Authorized/Unreadable"
-    static let unreadableChild = "/Authorized/Unreadable/Child/file.txt"
-    static let unrelatedPath = "/Authorized/Available/file.txt"
-    static let completionFailure = "Progress fraction was not bounded correctly."
-    static let retryFailure = "Failed indexable content was not scheduled for retry."
-    static let unchangedFailure = "Successfully indexed content was not left unchanged."
-    static let metadataFailure = "Changed metadata was incorrectly treated as unchanged."
-    static let subtreeFailure = "Unreadable subtree containment was not preserved."
-    static let success = "Indexing decision checks passed."
+    internal static let contentHash = "content-hash"
+    internal static let unreadableRoot = "/Authorized/Unreadable"
+    internal static let unreadableChild = "/Authorized/Unreadable/Child/file.txt"
+    internal static let unrelatedPath = "/Authorized/Available/file.txt"
+    internal static let completionFailure = "Progress fraction was not bounded correctly."
+    internal static let retryFailure = "Failed indexable content was not scheduled for retry."
+    internal static let unchangedFailure = "Successfully indexed content was not left unchanged."
+    internal static let metadataFailure = "Changed metadata was incorrectly treated as unchanged."
+    internal static let subtreeFailure = "Unreadable subtree containment was not preserved."
+    internal static let success = "Indexing decision checks passed."
 }
 
 /// Standalone deterministic checks for pure incremental-indexing decisions.

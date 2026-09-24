@@ -1,28 +1,28 @@
 import Foundation
 
 /// Stored ownership domains that keep CloudBase-only and paired reminders separate.
-enum ReminderOwnership: String, Codable, CaseIterable, Sendable {
+internal enum ReminderOwnership: String, Codable, CaseIterable, Sendable {
     case localAssistant
     case openClaw
     case unknown
 }
 
 /// User-facing reminder cached from one complete CloudBase snapshot.
-struct ReminderItem: Identifiable, Codable, Hashable, Sendable {
-    let id: String
-    let text: String
-    let date: String?
-    let startTime: String?
-    let endTime: String?
-    let tag: String?
-    let link: String?
-    let managedBy: String?
-    let clientRequestId: String?
-    let syncPairId: String?
-    let sourceMessageId: String?
-    let ownership: ReminderOwnership
-    let contentHash: String
-    let lastSyncedAt: Date
+internal struct ReminderItem: Identifiable, Codable, Hashable, Sendable {
+    internal let id: String
+    internal let text: String
+    internal let date: String?
+    internal let startTime: String?
+    internal let endTime: String?
+    internal let tag: String?
+    internal let link: String?
+    internal let managedBy: String?
+    internal let clientRequestId: String?
+    internal let syncPairId: String?
+    internal let sourceMessageId: String?
+    internal let ownership: ReminderOwnership
+    internal let contentHash: String
+    internal let lastSyncedAt: Date
 
     /// Creates a normalized cache item from an untrusted connector record.
     /// - Parameters:
@@ -105,21 +105,45 @@ struct ReminderItem: Identifiable, Codable, Hashable, Sendable {
         self.contentHash = contentHash
         self.lastSyncedAt = lastSyncedAt
     }
+
+    /// The tag as it should be shown, or `nil` when the reminder carries no usable tag.
+    ///
+    /// A tag made only of whitespace counts as absent, so it never opens a blank section.
+    internal var trimmedTag: String? {
+        guard let trimmed = tag?.trimmingCharacters(in: .whitespacesAndNewlines),
+              trimmed.isEmpty == false else {
+            return nil
+        }
+        return trimmed
+    }
+
+    /// Stable identifier of the tag section this reminder is presented under.
+    ///
+    /// Tags compare case-insensitively, and a reminder without a usable tag joins the
+    /// untagged section. The list summary and the card grid both group by this value, so the
+    /// number of groups a summary states always equals the number of sections shown. The
+    /// prefix keeps a tag that happens to spell the untagged identifier in its own section.
+    internal var tagGroupIdentifier: String {
+        guard let trimmedTag else {
+            return ReminderConstants.Presentation.untaggedGroupIdentifier
+        }
+        return ReminderConstants.Presentation.tagGroupPrefix + trimmedTag.lowercased()
+    }
 }
 
 /// Flat reminder document returned by the CloudBase list endpoint.
-struct RemoteReminderItem: Decodable, Hashable, Sendable {
-    let id: String
-    let text: String
-    let date: String?
-    let startTime: String?
-    let endTime: String?
-    let tag: String?
-    let link: String?
-    let managedBy: String?
-    let clientRequestId: String?
-    let syncPairId: String?
-    let sourceMessageId: String?
+internal struct RemoteReminderItem: Decodable, Hashable, Sendable {
+    internal let id: String
+    internal let text: String
+    internal let date: String?
+    internal let startTime: String?
+    internal let endTime: String?
+    internal let tag: String?
+    internal let link: String?
+    internal let managedBy: String?
+    internal let clientRequestId: String?
+    internal let syncPairId: String?
+    internal let sourceMessageId: String?
 
     private enum CodingKeys: String, CodingKey {
         case id = "_id"
@@ -137,17 +161,17 @@ struct RemoteReminderItem: Decodable, Hashable, Sendable {
 }
 
 /// Ranked reminder returned by deterministic, lexical, vector, and temporal retrieval.
-struct ReminderSearchResult: Identifiable, Codable, Hashable, Sendable {
-    let item: ReminderItem
-    let score: Double
-    let explanation: String
+internal struct ReminderSearchResult: Identifiable, Codable, Hashable, Sendable {
+    internal let item: ReminderItem
+    internal let score: Double
+    internal let explanation: String
 
     /// Uses the reminder record identifier for stable SwiftUI cards.
-    var id: String { item.id }
+    internal var id: String { item.id }
 }
 
 /// Current connector and full-snapshot synchronization state.
-enum ReminderSyncState: String, Sendable {
+internal enum ReminderSyncState: String, Sendable {
     case disabled
     case idle
     case syncing
@@ -155,7 +179,7 @@ enum ReminderSyncState: String, Sendable {
 }
 
 /// Live health derived only from the separate connector's local status document.
-enum OpenClawConnectorHealth: String, Sendable {
+internal enum OpenClawConnectorHealth: String, Sendable {
     case off
     case checking
     case notDetected
@@ -167,7 +191,7 @@ enum OpenClawConnectorHealth: String, Sendable {
 }
 
 /// Current place from which macOS can launch the separate setup app.
-enum OpenClawConnectorAppAvailability: String, Sendable {
+internal enum OpenClawConnectorAppAvailability: String, Sendable {
     case checking
     case installed
     case nearby
@@ -177,96 +201,96 @@ enum OpenClawConnectorAppAvailability: String, Sendable {
 }
 
 /// Non-secret heartbeat written into the owner-only connector spool.
-struct OpenClawConnectorStatusDocument: Codable, Hashable, Sendable {
-    let schemaVersion: Int
-    let runtimeContractVersion: Int?
-    let running: Bool
-    let lastSeenAt: String
-    let lastSuccessAt: String?
-    let lastError: String?
-    let pid: Int
+internal struct OpenClawConnectorStatusDocument: Codable, Hashable, Sendable {
+    internal let schemaVersion: Int
+    internal let runtimeContractVersion: Int?
+    internal let running: Bool
+    internal let lastSeenAt: String
+    internal let lastSuccessAt: String?
+    internal let lastError: String?
+    internal let pid: Int
 }
 
 /// Exact A2A message routed to OpenClaw after the required local authorization.
-struct OpenClawRequestDraft: Hashable, Sendable {
-    let message: String
-    let contextID: UUID
+internal struct OpenClawRequestDraft: Hashable, Sendable {
+    internal let message: String
+    internal let contextID: UUID
 }
 
 /// Local authorization proving why one exact request may cross the Connector boundary.
-enum OpenClawRequestAuthorization: Hashable, Sendable {
+internal enum OpenClawRequestAuthorization: Hashable, Sendable {
     case explicitInvocation
     case confirmedReminderMutation(ReminderMutationKind)
 }
 
 /// Outbound request selected by local inference before presentation applies its safety gate.
-struct OpenClawRequestIntent: Hashable, Sendable {
-    let message: String
-    let authorization: OpenClawRequestAuthorization
+internal struct OpenClawRequestIntent: Hashable, Sendable {
+    internal let message: String
+    internal let authorization: OpenClawRequestAuthorization
 }
 
 /// Reminder changes that require an explicit confirmation before OpenClaw is contacted.
-enum ReminderMutationKind: String, Codable, Hashable, Sendable {
+internal enum ReminderMutationKind: String, Codable, Hashable, Sendable {
     case create
     case update
     case remove
 }
 
 /// Local-model interpretation of the user's conversational confirmation reply.
-enum ReminderConfirmationDecision: String, Hashable, Sendable {
+internal enum ReminderConfirmationDecision: String, Hashable, Sendable {
     case confirm
     case decline
     case unclear
 }
 
 /// Card treatment retained with a reminder answer in private conversation history.
-enum ReminderCardPresentation: String, Codable, Hashable, Sendable {
+internal enum ReminderCardPresentation: String, Codable, Hashable, Sendable {
     case focused
     case grouped
 }
 
 /// Read or confirmation-gated write intent selected by local inference.
-enum ReminderAssistantPlan: Hashable, Sendable {
+internal enum ReminderAssistantPlan: Hashable, Sendable {
     case list(query: String)
     case get(query: String)
     case mutate(kind: ReminderMutationKind, request: String)
 }
 
 /// JSON payload union used only by the local connector spool.
-struct ReminderTaskPayload: Codable, Hashable, Sendable {
-    var message: String? = nil
+internal struct ReminderTaskPayload: Codable, Hashable, Sendable {
+    internal var message: String? = nil
 
     /// Empty payload used for a complete snapshot request.
-    static let empty = ReminderTaskPayload()
+    internal static let empty = ReminderTaskPayload()
 }
 
 /// Task written by the sandboxed app for the separate connector process.
-struct ReminderConnectorRequest: Codable, Hashable, Sendable {
-    let schemaVersion: Int
-    let taskId: UUID
-    let contextId: UUID?
-    let skill: String
-    let operation: String
-    let idempotencyKey: UUID
-    let calendarPolicy: String
-    let confirmed: Bool
-    let authorization: String?
-    let payload: ReminderTaskPayload
+internal struct ReminderConnectorRequest: Codable, Hashable, Sendable {
+    internal let schemaVersion: Int
+    internal let taskId: UUID
+    internal let contextId: UUID?
+    internal let skill: String
+    internal let operation: String
+    internal let idempotencyKey: UUID
+    internal let calendarPolicy: String
+    internal let confirmed: Bool
+    internal let authorization: String?
+    internal let payload: ReminderTaskPayload
 }
 
 /// Typed failure returned by the OpenClaw bridge or local connector.
-struct ReminderConnectorError: Codable, Hashable, Sendable {
-    let kind: String
-    let message: String
-    let retryable: Bool
+internal struct ReminderConnectorError: Codable, Hashable, Sendable {
+    internal let kind: String
+    internal let message: String
+    internal let retryable: Bool
 }
 
 /// Payload returned by reminder snapshot or OpenClaw agent chat.
-struct ReminderConnectorPayload: Decodable, Hashable, Sendable {
-    let success: Bool?
-    let data: [RemoteReminderItem]?
-    let dataIsArray: Bool
-    let message: String?
+internal struct ReminderConnectorPayload: Decodable, Hashable, Sendable {
+    internal let success: Bool?
+    internal let data: [RemoteReminderItem]?
+    internal let dataIsArray: Bool
+    internal let message: String?
 
     private enum CodingKeys: String, CodingKey {
         case success
@@ -295,12 +319,12 @@ struct ReminderConnectorPayload: Decodable, Hashable, Sendable {
 }
 
 /// Response read back from the connector's owner-only spool.
-struct ReminderConnectorResponse: Decodable, Hashable, Sendable {
-    let schemaVersion: Int
-    let taskId: UUID
-    let contextId: UUID?
-    let status: String
-    let calendarChanged: Bool?
-    let payload: ReminderConnectorPayload?
-    let error: ReminderConnectorError?
+internal struct ReminderConnectorResponse: Decodable, Hashable, Sendable {
+    internal let schemaVersion: Int
+    internal let taskId: UUID
+    internal let contextId: UUID?
+    internal let status: String
+    internal let calendarChanged: Bool?
+    internal let payload: ReminderConnectorPayload?
+    internal let error: ReminderConnectorError?
 }

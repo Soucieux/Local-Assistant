@@ -1,7 +1,7 @@
 import Foundation
 
 /// Errors that can safely be shown without exposing indexed content.
-enum LocalAssistantError: LocalizedError, Sendable {
+internal enum LocalAssistantError: LocalizedError, Sendable {
     case database(String)
     case permission(String)
     case modelMissing(String)
@@ -16,7 +16,7 @@ enum LocalAssistantError: LocalizedError, Sendable {
     case unexpected(String)
 
     /// Returns a local, human-readable failure reason.
-    var errorDescription: String? {
+    internal var errorDescription: String? {
         switch self {
         case .database(let detail): ErrorStrings.database + detail
         case .permission(let detail): ErrorStrings.permission + detail

@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// Short same-window entry point for the standalone OpenClaw Connector setup.
-struct OpenClawSetupView: View {
+internal struct OpenClawSetupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
 
     /// Keeps Local Assistant focused on status while the Connector owns setup actions.
-    var body: some View {
+    internal var body: some View {
         ZStack {
             CompanionCanvasBackground()
 
@@ -248,11 +248,11 @@ struct OpenClawSetupView: View {
 }
 
 /// Reusable, non-color-only summary of the locally observed connector heartbeat.
-struct OpenClawHealthSummary: View {
-    let health: OpenClawConnectorHealth
+internal struct OpenClawHealthSummary: View {
+    internal let health: OpenClawConnectorHealth
 
     /// Builds one live status tile shared by Settings and the setup guide.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             HStack(alignment: .center, spacing: DesignTokens.Spacing.small) {
                 Text(ReminderStrings.connectorHealthTitle)

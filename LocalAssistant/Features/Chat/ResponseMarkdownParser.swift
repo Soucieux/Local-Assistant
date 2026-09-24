@@ -1,7 +1,7 @@
 import Foundation
 
 /// One semantic block extracted from an assistant Markdown response.
-enum ResponseMarkdownBlock: Hashable, Sendable {
+internal enum ResponseMarkdownBlock: Hashable, Sendable {
     case heading(level: Int, text: String)
     case paragraph(String)
     case unorderedList([String])
@@ -13,18 +13,18 @@ enum ResponseMarkdownBlock: Hashable, Sendable {
 }
 
 /// A normalized pipe table with one header row and zero or more body rows.
-struct ResponseMarkdownTable: Hashable, Sendable {
-    let header: [String]
-    let rows: [[String]]
+internal struct ResponseMarkdownTable: Hashable, Sendable {
+    internal let header: [String]
+    internal let rows: [[String]]
 }
 
 /// Parsed native response document displayed without a web-rendering surface.
-struct ResponseMarkdownDocument: Hashable, Sendable {
-    let blocks: [ResponseMarkdownBlock]
+internal struct ResponseMarkdownDocument: Hashable, Sendable {
+    internal let blocks: [ResponseMarkdownBlock]
 }
 
 /// Converts the bounded Markdown commonly returned by local and OpenClaw models into native blocks.
-struct ResponseMarkdownParser {
+internal struct ResponseMarkdownParser {
     /// Parses headings, paragraphs, lists, quotes, code fences, dividers, and pipe tables.
     /// - Parameter source: Raw assistant response text.
     /// - Returns: Ordered semantic blocks suitable for native SwiftUI rendering.

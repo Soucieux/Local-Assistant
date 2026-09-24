@@ -10,7 +10,7 @@ extension AssistantDatabase {
     internal func items(kinds: Set<IndexedItemKind>, limit: Int) throws -> [IndexedItem] {
         guard kinds.isEmpty == false, limit > 0 else { return [] }
         var items: [IndexedItem] = []
-        for kind in kinds.sorted(by: { $0.rawValue < $1.rawValue }) {
+        for kind in orderedKinds(kinds) {
             let statement = try preparedStatement(SQLStatements.fetchItemsByKind)
             defer { recycle(statement) }
             try bind(kind.rawValue, at: 1, in: statement)
@@ -211,16 +211,7 @@ extension AssistantDatabase {
         )
         defer { recycle(statement) }
         var bindingIndex = try bindKinds(orderedKinds, in: statement)
-        let result = embedding.withUnsafeBytes { bytes in
-            sqlite3_bind_blob(
-                statement,
-                bindingIndex,
-                bytes.baseAddress,
-                Int32(bytes.count),
-                DatabaseConstants.transientDestructor
-            )
-        }
-        guard result == SQLITE_OK else { throw LocalAssistantError.database(databaseErrorMessage()) }
+        try bind(embedding, at: bindingIndex, in: statement)
         bindingIndex += 1
         try bind(boundedNeighborLimit, at: bindingIndex, in: statement)
         var hits: [SemanticHit] = []

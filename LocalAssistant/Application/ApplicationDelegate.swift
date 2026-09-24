@@ -2,7 +2,7 @@ import AppKit
 
 /// Owns process-lifetime shortcut registration for the normal macOS application.
 @MainActor
-final class ApplicationDelegate: NSObject, NSApplicationDelegate {
+internal final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     private weak var model: AppModel?
     private var shortcutService: GlobalShortcutService?
     private var terminationIsPending = false

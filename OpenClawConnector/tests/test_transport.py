@@ -18,7 +18,15 @@ class FakeJsonClient:
         self.document = None
 
     def get(self, route, token):
-        """Return the private A2A v1.0 Agent Card."""
+        """Return the private A2A v1.0 Agent Card.
+
+        Args:
+            route: Requested path, ignored by this fake.
+            token: Bearer credential, ignored by this fake.
+
+        Returns:
+            A compatible Agent Card for the loopback agent route.
+        """
         return {
             constants.FIELD_NAME: "OpenClaw",
             constants.FIELD_VERSION: "1.0.0",
@@ -35,7 +43,17 @@ class FakeJsonClient:
         }
 
     def post(self, route, token, document, content_type=constants.CONTENT_TYPE_JSON):
-        """Record the outbound document without using a network."""
+        """Record the outbound document without using a network.
+
+        Args:
+            route: Requested path, ignored by this fake.
+            token: Bearer credential, ignored by this fake.
+            document: A2A request to capture.
+            content_type: Media type, ignored by this fake.
+
+        Returns:
+            A matching A2A response carrying one short agent answer.
+        """
         self.document = document
         return {
             constants.FIELD_JSONRPC: constants.A2A_JSONRPC_VERSION,
@@ -63,7 +81,16 @@ class FakeTunnel:
         return "http://127.0.0.1:49000"
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Close the fake tunnel without suppressing an error."""
+        """Close the fake tunnel without suppressing an error.
+
+        Args:
+            exc_type: Exception class raised inside the context, if any.
+            exc_value: Exception raised inside the context, if any.
+            traceback: Traceback of that exception, if any.
+
+        Returns:
+            ``False``, so an error raised inside the context propagates.
+        """
         return False
 
 
@@ -71,11 +98,24 @@ class FakeSnapshotClient:
     """Returns one configurable reminder snapshot without using a network."""
 
     def __init__(self, complete=True) -> None:
-        """Store whether the response should satisfy complete-snapshot checks."""
+        """Store whether the response should satisfy complete-snapshot checks.
+
+        Args:
+            complete: Whether the returned snapshot reports success with data.
+        """
         self.complete = complete
 
     def post(self, route, token, document):
-        """Return a task-bound read-only snapshot response."""
+        """Return a task-bound read-only snapshot response.
+
+        Args:
+            route: Requested path, ignored by this fake.
+            token: Bearer credential, ignored by this fake.
+            document: Snapshot request whose task identifier is echoed.
+
+        Returns:
+            A completed response that is complete or incomplete as configured.
+        """
         return {
             constants.FIELD_SCHEMA_VERSION: constants.SCHEMA_VERSION,
             constants.FIELD_TASK_ID: document[constants.FIELD_TASK_ID],
@@ -89,7 +129,11 @@ class FakeSnapshotClient:
 
 
 def connector_config() -> ConnectorConfig:
-    """Build one exact-origin connector configuration without credentials."""
+    """Build one exact-origin connector configuration without credentials.
+
+    Returns:
+        A valid configuration for a server that is never contacted.
+    """
     return ConnectorConfig(
         ssh_host="openclaw.example.test",
         ssh_port=22,
@@ -137,6 +181,17 @@ class TransportTests(unittest.TestCase):
         original_post = capture.post
 
         def oversized(route, token, document, content_type=constants.CONTENT_TYPE_JSON):
+            """Answer like the fake client, with text one character over the bound.
+
+            Args:
+                route: Requested path, passed through.
+                token: Bearer credential, passed through.
+                document: A2A request, passed through.
+                content_type: Media type, passed through.
+
+            Returns:
+                The fake client's response with an oversized answer part.
+            """
             response = original_post(route, token, document, content_type)
             response[constants.FIELD_RESULT][constants.FIELD_MESSAGE][
                 constants.FIELD_PARTS

@@ -3,7 +3,7 @@ import Foundation
 @testable import LocalAssistant
 
 /// Builders for the value types the tests need, keeping each test to its own subject.
-enum TestFixtures {
+internal enum TestFixtures {
     /// Creates one indexed item with only the fields a test cares about.
     /// - Parameters:
     ///   - name: Visible file or folder name.

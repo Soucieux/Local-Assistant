@@ -4,13 +4,10 @@ import Testing
 @testable import LocalAssistant
 
 /// The app-side connector transport is file-only and task-identity bound.
-struct ReminderSpoolTests {
+internal struct ReminderSpoolTests {
     @Test("An absent connector heartbeat is reported as not detected")
     internal func reportsMissingHeartbeat() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let spool = ReminderSpoolService(rootURL: root)
 
@@ -21,10 +18,7 @@ struct ReminderSpoolTests {
 
     @Test("A live connector without a successful request is not yet verified")
     internal func reportsRunningUnverifiedHeartbeat() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         try writeStatus(
@@ -43,10 +37,7 @@ struct ReminderSpoolTests {
 
     @Test("A completed one-shot connector with a successful request is ready")
     internal func reportsReadyHeartbeat() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         try writeStatus(
@@ -65,10 +56,7 @@ struct ReminderSpoolTests {
 
     @Test("A heartbeat from an older runtime requires a Connector update")
     internal func reportsOutdatedRuntimeHeartbeat() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         try writeStatus(
@@ -88,10 +76,7 @@ struct ReminderSpoolTests {
 
     @Test("A completed success remains ready while active and completed failures differ")
     internal func reportsUnhealthyHeartbeats() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let earlierSeenAt = now.addingTimeInterval(-86_400)
@@ -129,25 +114,11 @@ struct ReminderSpoolTests {
 
     @Test("One atomically published response is returned only to its matching task")
     internal func exchangesMatchingTaskFiles() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let spool = ReminderSpoolService(rootURL: root)
         let taskID = UUID()
-        let request = ReminderConnectorRequest(
-            schemaVersion: ReminderConstants.Connector.schemaVersion,
-            taskId: taskID,
-            contextId: nil,
-            skill: ReminderConstants.Identity.reminderSkill,
-            operation: ReminderConstants.Routing.operationList,
-            idempotencyKey: UUID(),
-            calendarPolicy: ReminderConstants.Identity.calendarPolicyNever,
-            confirmed: false,
-            authorization: nil,
-            payload: .empty
-        )
+        let request = snapshotRequest(taskID: taskID)
 
         async let response = spool.perform(request)
         let filename = taskID.uuidString.lowercased() + ".json"
@@ -184,25 +155,11 @@ struct ReminderSpoolTests {
 
     @Test("A connector response symbolic link is rejected without reading its target")
     internal func rejectsSymbolicLinkResponse() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let spool = ReminderSpoolService(rootURL: root)
         let taskID = UUID()
-        let request = ReminderConnectorRequest(
-            schemaVersion: ReminderConstants.Connector.schemaVersion,
-            taskId: taskID,
-            contextId: nil,
-            skill: ReminderConstants.Identity.reminderSkill,
-            operation: ReminderConstants.Routing.operationList,
-            idempotencyKey: UUID(),
-            calendarPolicy: ReminderConstants.Identity.calendarPolicyNever,
-            confirmed: false,
-            authorization: nil,
-            payload: .empty
-        )
+        let request = snapshotRequest(taskID: taskID)
 
         async let result = spool.perform(request)
         let filename = taskID.uuidString.lowercased() + ".json"
@@ -237,10 +194,7 @@ struct ReminderSpoolTests {
 
     @Test("Schedule publication is owner-only and scheduled snapshots are one-shot")
     internal func exchangesScheduledSnapshot() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let spool = ReminderSpoolService(rootURL: root)
         try await spool.updateSchedule(enabled: true, intervalMinutes: 240)
@@ -277,6 +231,62 @@ struct ReminderSpoolTests {
         #expect(response?.taskId == taskID)
         #expect(response?.payload?.data?.isEmpty == true)
         #expect(secondRead == nil)
+    }
+
+    @Test("A malformed scheduled snapshot is rejected once and then discarded")
+    internal func discardsMalformedScheduledSnapshot() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let spool = ReminderSpoolService(rootURL: root)
+        try await spool.updateSchedule(enabled: true, intervalMinutes: 240)
+        let scheduledURL = root
+            .appendingPathComponent(
+                ReminderConstants.Identity.responseDirectory,
+                isDirectory: true
+            )
+            .appendingPathComponent(ReminderConstants.Identity.scheduledSnapshotFilename)
+        try Data("not json".utf8).write(to: scheduledURL, options: .atomic)
+
+        var rejected = false
+        do {
+            _ = try await spool.takeScheduledSnapshot()
+        } catch {
+            rejected = true
+        }
+        // Left in place, the same file would be rejected again on every one-second health
+        // poll and keep the reminder state failed even after a successful manual refresh.
+        let secondRead = try await spool.takeScheduledSnapshot()
+
+        #expect(rejected)
+        #expect(FileManager.default.fileExists(atPath: scheduledURL.path) == false)
+        #expect(secondRead == nil)
+    }
+
+    /// Names an isolated spool root that does not exist yet.
+    /// - Returns: Unique directory URL inside the system temporary directory.
+    private func temporaryRoot() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(
+            UUID().uuidString,
+            isDirectory: true
+        )
+    }
+
+    /// Builds the read-only snapshot request the app publishes for a refresh.
+    /// - Parameter taskID: Task identity the matching response must echo.
+    /// - Returns: Unconfirmed reminder list request that never touches Calendar.
+    private func snapshotRequest(taskID: UUID) -> ReminderConnectorRequest {
+        ReminderConnectorRequest(
+            schemaVersion: ReminderConstants.Connector.schemaVersion,
+            taskId: taskID,
+            contextId: nil,
+            skill: ReminderConstants.Identity.reminderSkill,
+            operation: ReminderConstants.Routing.operationList,
+            idempotencyKey: UUID(),
+            calendarPolicy: ReminderConstants.Identity.calendarPolicyNever,
+            confirmed: false,
+            authorization: nil,
+            payload: .empty
+        )
     }
 
     /// Writes one connector-owned status document into an isolated test spool.

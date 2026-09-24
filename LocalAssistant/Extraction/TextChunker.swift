@@ -1,7 +1,7 @@
 import Foundation
 
 /// Splits source-aligned text into overlapping retrieval passages.
-struct TextChunker: Sendable {
+internal struct TextChunker: Sendable {
     /// Creates stable chunks for one indexed file.
     /// - Parameters:
     ///   - document: Extracted source-aligned document.
@@ -51,9 +51,9 @@ struct TextChunker: Sendable {
 
     /// One word range paired with its character offsets inside the segment.
     private struct WordPosition {
-        let range: Range<String.Index>
-        let characterStart: Int
-        let characterEnd: Int
+        internal let range: Range<String.Index>
+        internal let characterStart: Int
+        internal let characterEnd: Int
     }
 
     /// Enumerates language-aware words and their offsets in a single pass.
@@ -97,11 +97,8 @@ struct TextChunker: Sendable {
         characterEnd: Int,
         segment: ExtractedSegment
     ) -> ContentChunk {
-        let identity = [itemID.uuidString, String(ordinal), text].joined(
-            separator: ExtractionConstants.indexingSeparator
-        )
-        return ContentChunk(
-            id: StableIdentifier.uuid(for: identity),
+        ContentChunk(
+            id: StableIdentifier.chunkID(itemID: itemID, ordinal: ordinal, text: text),
             itemID: itemID,
             ordinal: ordinal,
             text: text,

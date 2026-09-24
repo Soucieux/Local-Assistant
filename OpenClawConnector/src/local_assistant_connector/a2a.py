@@ -10,7 +10,15 @@ from .models import ConnectorError
 
 
 def validate_agent_card(document: Mapping[str, Any]) -> None:
-    """Require the private OpenClaw Agent Card and its exact JSON-RPC interface."""
+    """Require the private OpenClaw Agent Card and its exact JSON-RPC interface.
+
+    Args:
+        document: Decoded Agent Card returned by the Gateway.
+
+    Raises:
+        ConnectorError: When the card is not OpenClaw's or offers no interface
+            on the expected loopback route, binding, and protocol version.
+    """
     interfaces = document.get(constants.FIELD_SUPPORTED_INTERFACES)
     if (
         document.get(constants.FIELD_NAME) != constants.A2A_AGENT_NAME
@@ -45,7 +53,16 @@ def validate_agent_card(document: Mapping[str, Any]) -> None:
 
 
 def send_message_request(message_id: str, context_id: str, text: str) -> Mapping[str, Any]:
-    """Build one A2A v1.0 SendMessage request from exact authorized user text."""
+    """Build one A2A v1.0 SendMessage request from exact authorized user text.
+
+    Args:
+        message_id: Identifier used for both the JSON-RPC call and its message.
+        context_id: Conversation the message continues.
+        text: Exact text the user authorized, sent as the only part.
+
+    Returns:
+        The JSON-RPC request document.
+    """
     return {
         constants.FIELD_JSONRPC: constants.A2A_JSONRPC_VERSION,
         constants.FIELD_ID: message_id,
@@ -71,7 +88,21 @@ def parse_send_message_response(
     request_id: str,
     context_id: str,
 ) -> tuple[str, str]:
-    """Return validated text and connector status from an A2A response."""
+    """Validate one A2A response against the request that produced it.
+
+    Args:
+        document: Decoded JSON-RPC response.
+        request_id: Identifier the request was sent with.
+        context_id: Conversation the request belonged to.
+
+    Returns:
+        The agent's answer text, and the connector status: completed, or
+        input-required when the agent asks a follow-up question.
+
+    Raises:
+        ConnectorError: When the response does not match the request or
+            carries no usable agent text.
+    """
     if (
         document.get(constants.FIELD_JSONRPC) != constants.A2A_JSONRPC_VERSION
         or document.get(constants.FIELD_ID) != request_id
@@ -101,7 +132,19 @@ def parse_send_message_response(
 
 
 def _message_text(document: object, context_id: str) -> str:
-    """Extract bounded text from one server-authored A2A Message."""
+    """Extract bounded text from one server-authored A2A Message.
+
+    Args:
+        document: Untrusted message value from the response.
+        context_id: Conversation the message must belong to.
+
+    Returns:
+        The non-empty text parts joined in order.
+
+    Raises:
+        ConnectorError: When the message is not the agent's, belongs to
+            another conversation, or has no text within the size bound.
+    """
     if (
         not isinstance(document, dict)
         or document.get(constants.FIELD_CONTEXT_ID) != context_id
@@ -126,18 +169,21 @@ def _message_text(document: object, context_id: str) -> str:
 
 
 def _raise_card_error() -> NoReturn:
-    """Reject one OpenClaw Agent Card that is missing its exact JSON-RPC interface."""
-    raise ConnectorError(
-        constants.ERROR_KIND_OPERATIONAL,
+    """Reject one OpenClaw Agent Card that is missing its exact JSON-RPC interface.
+
+    Raises:
+        ConnectorError: Always, as a non-retryable verification failure.
+    """
+    raise ConnectorError.operational(
         constants.ERROR_A2A_CARD_VERIFICATION,
-        False,
+        retryable=False,
     )
 
 
 def _raise_response_error() -> NoReturn:
-    """Reject one A2A response that does not match the sent request exactly."""
-    raise ConnectorError(
-        constants.ERROR_KIND_OPERATIONAL,
-        constants.ERROR_REMOTE_RESPONSE,
-        True,
-    )
+    """Reject one A2A response that does not match the sent request exactly.
+
+    Raises:
+        ConnectorError: Always, as a retryable remote-response failure.
+    """
+    raise ConnectorError.operational(constants.ERROR_REMOTE_RESPONSE, retryable=True)

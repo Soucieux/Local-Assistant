@@ -5,7 +5,7 @@ import Testing
 
 /// The formatter replaces prose that merely repeats a visible card. Replacing prose that
 /// does not repeat a card silently deletes the answer, so both directions are pinned.
-struct FileCardAnswerFormatterTests {
+internal struct FileCardAnswerFormatterTests {
     @Test("An answer is kept when there are no cards to duplicate")
     internal func keepsAnswerWithoutResults() {
         let answer = "There is nothing indexed yet."

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// `LocalEmbeddingService` is the only shipping conformer; the protocol exists so indexing can be
 /// exercised without loading the multi-gigabyte local model.
-protocol DocumentEmbedding: Sendable {
+internal protocol DocumentEmbedding: Sendable {
     /// Embeds an extracted file passage using the document instruction.
     /// - Parameter text: Local extracted passage.
     /// - Returns: Normalized document vector.

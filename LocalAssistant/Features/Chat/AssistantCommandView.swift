@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Voice-first command surface that presents only the latest request and result.
-struct AssistantCommandView: View {
+internal struct AssistantCommandView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -9,7 +9,7 @@ struct AssistantCommandView: View {
     @State private var spaceIsHeld = false
 
     /// Builds the command canvas, current response, findings, and movable input control.
-    var body: some View {
+    internal var body: some View {
         ZStack {
             CompanionCanvasBackground()
 

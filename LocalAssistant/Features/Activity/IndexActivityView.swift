@@ -1,14 +1,14 @@
 import SwiftUI
 
 /// In-window history of automatic monitoring and incremental indexing work.
-struct IndexActivityView: View {
+internal struct IndexActivityView: View {
     @Environment(AppModel.self) private var model
     @State private var selectedTrigger: IndexingTrigger?
     @State private var selectedRootID: UUID?
     @State private var selectedRunState: IndexingRunState?
 
     /// Builds the activity header, live banner, summary metrics, filters, and history.
-    var body: some View {
+    internal var body: some View {
         ZStack {
             CompanionCanvasBackground()
 
@@ -131,7 +131,7 @@ struct IndexActivityView: View {
                 title: UIStrings.newStatus,
                 value: String(todayRuns.reduce(0) { $0 + $1.newItems }),
                 systemImage: SystemImages.add,
-                tint: .blue
+                tint: DesignTokens.Color.newContent
             )
             activityMetric(
                 title: UIStrings.updatedStatus,
@@ -143,7 +143,7 @@ struct IndexActivityView: View {
                 title: UIStrings.skippedStatus,
                 value: String(todayRuns.reduce(0) { $0 + $1.skippedItems }),
                 systemImage: SystemImages.stale,
-                tint: .red
+                tint: DesignTokens.Color.destructive
             )
         }
     }
@@ -445,7 +445,8 @@ struct IndexActivityView: View {
     /// - Returns: Accessible event tint paired with text and a symbol.
     private func eventColor(_ kind: IndexActivityEventKind) -> Color {
         switch kind {
-        case .monitoringPaused, .indexingFailed, .monitoringUnavailable: return .red
+        case .monitoringPaused, .indexingFailed, .monitoringUnavailable:
+            return DesignTokens.Color.destructive
         case .indexingStopped: return DesignTokens.Color.processing
         case .monitoringResumed: return DesignTokens.Color.verifiedLocal
         case .changesDetected, .updateScheduled: return DesignTokens.Color.primaryAccent
@@ -456,11 +457,11 @@ struct IndexActivityView: View {
 /// Expandable retained summary for one indexing run.
 private struct IndexingRunRow: View {
     @Environment(AppModel.self) private var model
-    let run: IndexingRunRecord
+    internal let run: IndexingRunRecord
     @State private var isExpanded = false
 
     /// Builds one retained run summary that expands into its file-level results.
-    var body: some View {
+    internal var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
             LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
                 if let items = model.indexingItemsByRun[run.id] {
@@ -553,7 +554,7 @@ private struct IndexingRunRow: View {
         case .completed: return DesignTokens.Color.verifiedLocal
         case .running: return DesignTokens.Color.processing
         case .stopped: return .secondary
-        case .failed: return .red
+        case .failed: return DesignTokens.Color.destructive
         }
     }
 
@@ -562,11 +563,12 @@ private struct IndexingRunRow: View {
     /// - Returns: Accessible tint paired with the visible state label.
     private func itemColor(_ state: IndexingItemState) -> Color {
         switch state {
-        case .newWaiting, .newIndexing, .newIndexed: return .blue
-        case .modifiedWaiting, .modifiedUpdating, .modifiedUpdated: return .orange
+        case .newWaiting, .newIndexing, .newIndexed: return DesignTokens.Color.newContent
+        case .modifiedWaiting, .modifiedUpdating, .modifiedUpdated:
+            return DesignTokens.Color.processing
         case .unchanged: return .secondary
-        case .missingPendingRemoval, .removedFromIndex: return .purple
-        case .skipped: return .red
+        case .missingPendingRemoval, .removedFromIndex: return DesignTokens.Color.voice
+        case .skipped: return DesignTokens.Color.destructive
         }
     }
 }

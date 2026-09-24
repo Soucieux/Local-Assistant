@@ -1,7 +1,7 @@
 import Foundation
 
 /// Resolves explicit file actions without allowing a stale path to escape its root.
-enum ReadOnlyActionPolicy {
+internal enum ReadOnlyActionPolicy {
     /// Resolves current symlink targets and validates the result against an authorized root.
     /// - Parameters:
     ///   - itemURL: Previously indexed file or folder URL.

@@ -5,7 +5,7 @@ import Testing
 
 /// Chunk character offsets are what later highlight an excerpt inside its source file, so
 /// they are checked against the real text rather than only counted.
-struct TextChunkerTests {
+internal struct TextChunkerTests {
     private let chunker = TextChunker()
 
     @Test("A document with no segments produces no chunks")

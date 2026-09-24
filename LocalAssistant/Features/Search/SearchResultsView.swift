@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// Compact ranked matches with direct, explicit file actions.
-struct SearchResultsView: View {
-    let results: [SearchResult]
+internal struct SearchResultsView: View {
+    internal let results: [SearchResult]
 
     /// Builds the best match followed by a short alternatives list.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
             HStack(spacing: DesignTokens.Spacing.small) {
                 ZStack {
@@ -64,8 +64,8 @@ struct SearchResultsView: View {
 /// One actionable local file or folder match.
 private struct ResultRow: View {
     @Environment(AppModel.self) private var model
-    let result: SearchResult
-    let isTopResult: Bool
+    internal let result: SearchResult
+    internal let isTopResult: Bool
 
     /// Semantic accent identifying this match's indexed item category.
     private var typeTint: Color {
@@ -92,7 +92,7 @@ private struct ResultRow: View {
     }
 
     /// Builds the match name, path, concise reason, and explicit actions.
-    var body: some View {
+    internal var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.medium) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.medium) {
                 ZStack {

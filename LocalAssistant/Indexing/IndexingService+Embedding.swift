@@ -42,15 +42,20 @@ extension IndexingService {
                     updatedItems: 0,
                     unchangedItems: 0,
                     removedItems: 0,
-                    fractionCompleted: totalItems == 0
-                        ? 0
-                        : Double(processedItems) / Double(totalItems)
+                    fractionCompleted: IndexingDecisionPolicy.progressFraction(
+                        processed: processedItems,
+                        total: totalItems
+                    )
                 )
             )
             let vector = try await embeddings.embedDocument(chunk.text)
             embedded.append(
                 ContentChunk(
-                    id: chunkIdentifier(itemID: chunk.itemID, ordinal: ordinal, text: chunk.text),
+                    id: StableIdentifier.chunkID(
+                        itemID: chunk.itemID,
+                        ordinal: ordinal,
+                        text: chunk.text
+                    ),
                     itemID: chunk.itemID,
                     ordinal: ordinal,
                     text: chunk.text,
@@ -107,18 +112,5 @@ extension IndexingService {
         let leftChunks = try await embeddingSafeChunks(from: left)
         let rightChunks = try await embeddingSafeChunks(from: right)
         return leftChunks + rightChunks
-    }
-
-    /// Creates a stable identifier for a final embedding-safe passage.
-    /// - Parameters:
-    ///   - itemID: Parent item identifier.
-    ///   - ordinal: Final passage order within the item.
-    ///   - text: Passage content.
-    /// - Returns: Deterministic passage identifier.
-    private func chunkIdentifier(itemID: UUID, ordinal: Int, text: String) -> UUID {
-        let identity = [itemID.uuidString, String(ordinal), text].joined(
-            separator: ExtractionConstants.indexingSeparator
-        )
-        return StableIdentifier.uuid(for: identity)
     }
 }

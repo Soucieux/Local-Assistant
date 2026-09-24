@@ -11,7 +11,14 @@ from local_assistant_connector.models import ConnectorError
 
 
 def config_document(**overrides):
-    """Build one minimal non-secret connector configuration."""
+    """Build one minimal non-secret connector configuration.
+
+    Args:
+        overrides: Fields that replace or extend the valid defaults.
+
+    Returns:
+        A configuration document ready for ``parse_config``.
+    """
     document = {
         constants.CONFIG_SSH_HOST: "openclaw.example.test",
         constants.CONFIG_SSH_PORT: 22,
@@ -61,7 +68,13 @@ class ConfigurationTests(unittest.TestCase):
         save_token,
         save_config,
     ) -> None:
-        """The one-shot job cannot observe new config before both tokens exist."""
+        """The one-shot job cannot observe new config before both tokens exist.
+
+        Args:
+            save_ssh_host_key: Replacement that records the host-key save.
+            save_token: Replacement that records each Keychain save.
+            save_config: Replacement that records the configuration save.
+        """
         manager = unittest.mock.Mock()
         manager.attach_mock(save_ssh_host_key, "host_key")
         manager.attach_mock(save_token, "token")
@@ -91,7 +104,13 @@ class ConfigurationTests(unittest.TestCase):
         save_token,
         save_config,
     ) -> None:
-        """The companion cannot widen the packaged setup contract."""
+        """The companion cannot widen the packaged setup contract.
+
+        Args:
+            save_ssh_host_key: Replacement that must never be called.
+            save_token: Replacement that must never be called.
+            save_config: Replacement that must never be called.
+        """
         with self.assertRaises(ValueError):
             cli._save_setup_document(
                 {
@@ -116,7 +135,12 @@ class ConfigurationTests(unittest.TestCase):
         save_ssh_host_key,
         save_config,
     ) -> None:
-        """Editing public server values never reads or replaces saved tokens."""
+        """Editing public server values never reads or replaces saved tokens.
+
+        Args:
+            save_ssh_host_key: Replacement that records the host-key save.
+            save_config: Replacement that records the configuration save.
+        """
         cli._save_reconfigure_document(
             {
                 constants.CONFIG_SSH_HOST: "new.example.test",

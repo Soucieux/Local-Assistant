@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// Folder authorization, shortcut, model, and privacy controls.
-struct SettingsView: View {
-    @Environment(AppModel.self) var model
-    @State var rootPendingRevocation: AuthorizedRoot?
+internal struct SettingsView: View {
+    @Environment(AppModel.self) internal var model
+    @State internal var rootPendingRevocation: AuthorizedRoot?
 
     /// Builds same-window Settings with stable navigation and adaptive content.
-    var body: some View {
+    internal var body: some View {
         ZStack {
             CompanionCanvasBackground()
 
@@ -290,7 +290,7 @@ struct SettingsView: View {
 
             Spacer()
 
-            Text(UIStrings.displayVersion(settingsVersion))
+            Text(UIStrings.installedVersionLabel)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(DesignTokens.Color.commandAccent)
                 .padding(.horizontal, DesignTokens.Spacing.small)
@@ -312,13 +312,6 @@ struct SettingsView: View {
                 .fill(DesignTokens.Color.commandInk.opacity(0.28))
                 .frame(height: 1)
         }
-    }
-
-    /// Returns the installed marketing version for the Settings identity.
-    private var settingsVersion: String {
-        Bundle.main.object(
-            forInfoDictionaryKey: AppConstants.Identity.bundleShortVersionKey
-        ) as? String ?? AppConstants.Identity.fallbackVersion
     }
 
     /// Presents the fixed global shortcut without duplicating model readiness.

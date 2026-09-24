@@ -4,7 +4,7 @@ import Testing
 @testable import LocalAssistant
 
 /// Covers the decisions that end a recording and the text the interface shows while capturing.
-struct VoiceCaptureStateTests {
+internal struct VoiceCaptureStateTests {
     /// Builds a capture state with the given levels and text.
     /// - Parameters:
     ///   - levels: Relative audio levels, oldest first.
@@ -72,11 +72,5 @@ struct VoiceCaptureStateTests {
         #expect(VoiceCaptureState.preparing.phase == .preparing)
         #expect(VoiceCaptureState.preparing.hasTranscript == false)
         #expect(VoiceCaptureState.preparing.levels.isEmpty)
-    }
-
-    @Test("both voice modes end after silence")
-    internal func selectsVoiceCompletionPolicy() {
-        #expect(VoiceInputMode.clickToSpeak.stopsAfterSilence)
-        #expect(VoiceInputMode.holdSpace.stopsAfterSilence)
     }
 }

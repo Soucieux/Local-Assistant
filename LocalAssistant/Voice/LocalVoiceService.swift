@@ -5,7 +5,7 @@ import Foundation
 ///
 /// Audio is never written to disk. Samples pass from the microphone into the speech model in
 /// memory, so a recording cannot outlive the request that produced it.
-actor LocalVoiceService {
+internal actor LocalVoiceService {
     private var whisperKit: WhisperKit?
     private var loadTask: Task<Void, Error>?
     private var modelURL: URL?
@@ -16,7 +16,6 @@ actor LocalVoiceService {
     private var lastVoiceActivityAt: Date?
     private var hasHeardSpeech = false
     private var captureStartedAt: Date?
-    private var stopsAfterSilence = true
     private var captureFailure: Error?
 
     /// Stores the verified local model location without loading it during app startup.
@@ -81,12 +80,9 @@ actor LocalVoiceService {
     ///
     /// The stream finishes when the speaker pauses long enough to end the recording, when
     /// capture is stopped explicitly, or when capture cannot start.
-    /// - Parameter stopsAfterSilence: Whether two seconds of quiet should finish capture.
     /// - Returns: Capture states in order, beginning with the preparing state.
     /// - Throws: A local model error when no speech model is installed.
-    internal func startRecording(
-        stopsAfterSilence: Bool
-    ) async throws -> AsyncStream<VoiceCaptureState> {
+    internal func startRecording() async throws -> AsyncStream<VoiceCaptureState> {
         guard captureTask == nil else {
             throw LocalAssistantError.voice(VoiceConstants.missingRecording)
         }
@@ -99,7 +95,6 @@ actor LocalVoiceService {
         lastVoiceActivityAt = nil
         hasHeardSpeech = false
         captureStartedAt = Date()
-        self.stopsAfterSilence = stopsAfterSilence
         captureFailure = nil
         continuation.yield(.preparing)
         beginLoadingModel()
@@ -118,6 +113,11 @@ actor LocalVoiceService {
             guard let tokenizer = whisperKit.tokenizer else {
                 throw LocalAssistantError.modelMissing(VoiceConstants.missingTokenizer)
             }
+            // The library's components are not Sendable, so the compiler warns about handing
+            // them to the transcriber actor. They are never used concurrently: this actor
+            // touches them again only in `stopAndTranscribe()`, after the stream has stopped
+            // and `captureTask` has finished. The warning is left visible rather than
+            // silenced, so a change that breaks that ordering is not hidden with it.
             let streamTranscriber = AudioStreamTranscriber(
                 audioEncoder: whisperKit.audioEncoder,
                 featureExtractor: whisperKit.featureExtractor,
@@ -197,7 +197,6 @@ actor LocalVoiceService {
             endCapture()
             return
         }
-        guard stopsAfterSilence else { return }
         guard snapshot.levels.isEmpty == false else { return }
         guard snapshot.isSilent else {
             hasHeardSpeech = true
@@ -238,7 +237,6 @@ actor LocalVoiceService {
         lastVoiceActivityAt = nil
         hasHeardSpeech = false
         captureStartedAt = nil
-        stopsAfterSilence = true
         captureFailure = nil
         if let failure { throw failure }
         return transcript
@@ -285,7 +283,6 @@ actor LocalVoiceService {
         latest = .preparing
         lastVoiceActivityAt = nil
         captureStartedAt = nil
-        stopsAfterSilence = true
         whisperKit = nil
         modelURL = nil
     }

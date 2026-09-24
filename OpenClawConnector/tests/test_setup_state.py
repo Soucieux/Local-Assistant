@@ -35,7 +35,16 @@ class SetupStateTests(unittest.TestCase):
         load_config,
         token_exists,
     ) -> None:
-        """The Swift UI can reuse setup without receiving either token."""
+        """The Swift UI can reuse setup without receiving either token.
+
+        Args:
+            known_hosts_path: Replacement locating the pinned host-key file.
+            public_key_path: Replacement locating the public key.
+            private_key_path: Replacement locating the private key.
+            application_directory: Replacement locating the connector's data.
+            load_config: Replacement returning a saved configuration.
+            token_exists: Replacement reporting that both tokens are stored.
+        """
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             private_key = root / "id_ed25519"
@@ -82,7 +91,12 @@ class SetupStateTests(unittest.TestCase):
         application_directory,
         delete_token,
     ) -> None:
-        """Cleanup leaves sibling Local Assistant data untouched."""
+        """Cleanup leaves sibling Local Assistant data untouched.
+
+        Args:
+            application_directory: Replacement locating the connector's data.
+            delete_token: Replacement that records each Keychain deletion.
+        """
         with tempfile.TemporaryDirectory() as temporary_directory:
             parent = Path(temporary_directory)
             root = parent / constants.APPLICATION_DIRECTORY_NAME
@@ -109,7 +123,12 @@ class SetupStateTests(unittest.TestCase):
         application_directory,
         delete_token,
     ) -> None:
-        """Cleanup never follows a replaced Application Support path."""
+        """Cleanup never follows a replaced Application Support path.
+
+        Args:
+            application_directory: Replacement locating a symbolic link.
+            delete_token: Replacement that must never be called.
+        """
         with tempfile.TemporaryDirectory() as temporary_directory:
             parent = Path(temporary_directory)
             target = parent / "target"
