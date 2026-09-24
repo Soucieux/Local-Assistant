@@ -1,4 +1,12 @@
 #!/bin/zsh
+# Builds the embedded llama.cpp inference engine as one static arm64 macOS archive, with Metal
+# and BLAS enabled and every app, tool, example, server, test and OpenSSL option off.
+#
+# Input:  none; LOCAL_ASSISTANT_SOURCE names the project when the script runs from the offline
+#         kit rather than beside LocalAssistant.xcodeproj. Requires CMake.
+# Reads:  Vendor/llama.cpp, the prepared pinned checkout
+# Writes: Vendor/llama.cpp/build-localassistant-macos/Release/libllama-localassistant.a
+# Run by: Scripts/prepare_offline_bundle.sh and Scripts/build_offline.sh
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

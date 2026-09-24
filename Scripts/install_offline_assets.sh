@@ -1,4 +1,12 @@
 #!/bin/zsh
+# Installs the verified offline model assets into the Local Assistant app container on the
+# disconnected Mac, refusing to overwrite an existing model or manifest.
+#
+# Input:  none; runs from inside the offline kit, beside its Models/ folder and SHA256SUMS
+# Reads:  Models/ and SHA256SUMS next to the script; every checksum is verified first
+# Writes: Models/ and model-assets.sha256 under the app container's Application Support
+#         directory, with owner-only permissions
+# Run by: hand from outputs/LocalAssistant-OfflineKit (README, Build from source, step 4)
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

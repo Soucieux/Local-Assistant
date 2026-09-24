@@ -1,4 +1,13 @@
 #!/bin/zsh
+# Builds the standalone OpenClaw Connector.app: renders its icon, freezes the Connector runtime
+# with PyInstaller, compiles the SwiftUI companion, embeds the server setup kit, and signs the
+# bundle ad hoc.
+#
+# Input:  none; requires OpenClawConnector/.venv from Scripts/prepare_connector_runtime.sh with
+#         PyInstaller 6.22.2
+# Reads:  OpenClawConnector/frozen_entry.py, CompanionApp/ and Resources/
+# Writes: OpenClaw Connector.app at the project root; the .connector-build cache is removed
+# Run by: Scripts/build_offline.sh
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"

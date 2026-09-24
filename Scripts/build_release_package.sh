@@ -1,4 +1,9 @@
 #!/bin/zsh
+# Packages the two built applications into the clean-Mac disk image beside an Applications link.
+#
+# Input:  none; requires Local Assistant.app and OpenClaw Connector.app at the project root
+# Writes: Local Assistant Release.dmg at the project root; the staging folder is removed
+# Run by: Scripts/build_offline.sh
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"
