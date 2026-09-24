@@ -160,7 +160,7 @@ source CLI deliberately has no persistent run command.
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-The suite currently contains 40 tests.
+The suite currently contains 43 tests.
 
 Release evidence stays attached to the release that produced it. The v4.8 release passed all 39
 Connector tests it then contained, standalone Swift type checking, the clean packaged runtime

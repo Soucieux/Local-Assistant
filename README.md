@@ -768,9 +768,12 @@ One batch of corrections across every first-party file. Local Assistant and Open
 
 **Evidence and delivery status**
 
-Source change only. 155 macOS test cases and all 40 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings.
+Source change only. 155 macOS test cases and all 43 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings.
 
-Not established: no Release build, signing, disk image, installation, or launch was performed, so the v5.7/build 57 applications at the project root remain the delivered artifacts and do not contain these changes. The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23. The source is **uncommitted**.
+Not established: no Release build, signing, disk image, installation, or launch was performed, so the v5.7/build 57 applications at the project root remain the delivered artifacts and do not contain these changes. The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23. The source was delivered uncommitted and recorded in `4d31e2f`.
+
+[Back to change history](#change-history)
+
 <a id="openclaw-kit-shared-config"></a>
 
 ### v5.7 / build 57
