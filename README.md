@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.8%20build%2058-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.9%20build%2059-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 <!-- project-control:section=overview -->
 ## Overview
@@ -665,7 +665,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v5.8 (build 58)**. [Release details and delivery evidence](#v5-8-build-58).
+**v5.9 (build 59)**. [Release details and delivery evidence](#v5-9-build-59).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -690,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v5.9 / build 59 | 2026-09-26 | <ul><li><strong>Icon:</strong> The app icon is rebuilt in the macOS icon shape, so the app shows its full artwork instead of a smaller copy inside a grey frame.</li><li><strong>Folder:</strong> The project folder's icon is set from the same master, so the folder and the app look identical.</li><li><strong>Delivery:</strong> Signed v5.9 applications and a rebuilt disk image replace the v5.8 set at the project root.</li></ul> | [Full record](#v5-9-build-59) |
 | Documentation | 2026-09-24 | <ul><li><strong>Scripts:</strong> Every build, preparation, installation and check script opens with a header stating its purpose, inputs, what it reads and writes, and who runs it.</li></ul> | [Full record](#script-headers) |
 | v5.8 / build 58 | 2026-09-24 | <ul><li><strong>Fixes:</strong> Reminder summaries, History, and cards now count tag groups the same way, and a malformed scheduled reminder snapshot is reported once instead of on every poll.</li><li><strong>Extraction:</strong> HTML files are read by parsing their markup on the indexing actor rather than through the main-thread WebKit importer.</li><li><strong>Maintenance:</strong> Duplicated logic and unused code removed, repeated values named, and the Connector's parameter and return documentation completed.</li></ul> | [Full record](#v5-8-build-58) |
 | v5.7 / build 57 | 2026-09-23 | <ul><li><strong>Server kit:</strong> Ships the shared configuration the reminder bridge imports, so installing the kit onto an older server no longer fails at import.</li><li><strong>Setup:</strong> Carries bridge v1.5.1, whose installer names a missing CloudBase endpoint up front instead of timing out.</li></ul> | [Full record](#openclaw-kit-shared-config) |
@@ -730,6 +731,25 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="v5-9-build-59"></a>
+
+### v5.9 / build 59
+
+- **Recorded date:** 2026-09-26.
+
+On current macOS, the application showed a smaller copy of its icon inside a light-grey rounded frame, while the project folder showed the full artwork, so the two looked like different versions. macOS draws that frame around an app icon whose outline does not match its own rounded square, and this artwork filled the whole canvas with rounded corners of its own. Local Assistant and OpenClaw Connector advance to v5.9/build 59; the Connector's own icon, the Connector runtime, the server bridge and the runtime contract are unchanged.
+
+**Changed**
+
+- **App icon.** The 1024-pixel master in the asset catalog is now the same artwork made full-bleed (its transparent corners filled with the cream background), clipped to the rounded square macOS draws for app icons, 824 of 1024 pixels. Every smaller size in the catalog was regenerated from it.
+- **Folder icon.** The project folder's Finder icon was set from the same master.
+
+**Evidence and delivery status**
+
+The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link. Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels. The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched. No source code changed, so the Swift and Python suites were not rerun. The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates. Delivered uncommitted; the public mirror still carries v5.8.
+
+[Back to change history](#change-history)
 
 <a id="script-headers"></a>
 
