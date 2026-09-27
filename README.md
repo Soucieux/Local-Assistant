@@ -665,7 +665,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v5.9 (build 59)**. [Release details and delivery evidence](#v5-9-build-59).
+**v6.0 (build 60)**. [Release details and delivery evidence](#v6-0-build-60).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -690,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v6.0 / build 60 | 2026-09-27 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.2, whose configuration reads the Feishu target and CloudBase address from an untracked settings file on the server.</li><li><strong>Setup:</strong> Its installer finds the CloudBase address where the bridge will, and stops before changing anything when it is missing.</li><li><strong>Delivery:</strong> Signed v6.0 applications and a rebuilt disk image replace the v5.9 set at the project root.</li></ul> | [Full record](#v6-0-build-60) |
 | v5.9 / build 59 | 2026-09-26 | <ul><li><strong>Icon:</strong> The app icon is rebuilt in the macOS icon shape, so the app shows its full artwork instead of a smaller copy inside a grey frame.</li><li><strong>Folder:</strong> The project folder's icon is set from the same master, so the folder and the app look identical.</li><li><strong>Delivery:</strong> Signed v5.9 applications and a rebuilt disk image replace the v5.8 set at the project root.</li></ul> | [Full record](#v5-9-build-59) |
 | Documentation | 2026-09-24 | <ul><li><strong>Scripts:</strong> Every build, preparation, installation and check script opens with a header stating its purpose, inputs, what it reads and writes, and who runs it.</li></ul> | [Full record](#script-headers) |
 | v5.8 / build 58 | 2026-09-24 | <ul><li><strong>Fixes:</strong> Reminder summaries, History, and cards now count tag groups the same way, and a malformed scheduled reminder snapshot is reported once instead of on every poll.</li><li><strong>Extraction:</strong> HTML files are read by parsing their markup on the indexing actor rather than through the main-thread WebKit importer.</li><li><strong>Maintenance:</strong> Duplicated logic and unused code removed, repeated values named, and the Connector's parameter and return documentation completed.</li></ul> | [Full record](#v5-8-build-58) |
@@ -731,6 +732,27 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="v6-0-build-60"></a>
+
+### v6.0 / build 60
+
+- **Recorded date:** 2026-09-27.
+
+The OpenClaw server setup kit embedded in the Connector now carries Local Assistant bridge v1.5.2. Local Assistant and OpenClaw Connector advance to v6.0/build 60; the main application, the Connector runtime and its companion app are unchanged, and only the embedded kit differs from v5.9.
+
+**Changed**
+
+- **Server settings.** The kit's `config.sh` and `config.py` read `FEISHU_TARGET` and `CLOUDBASE_ENDPOINT` from an untracked `local.env` in the OpenClaw workspace, so scheduled jobs and the bridge find both without the crontab or the Gateway supplying them. The v5.9 kit installed a configuration that reads neither, so running its server setup on a server that keeps them in `local.env` would have left every scheduled job without them.
+- **Installer.** `setup-server.sh` finds the CloudBase address the way the bridge will at run time: from the environment, the Gateway's `.env` or the workspace's `local.env`. A missing address stops setup before anything changes, with an instruction to add it to `local.env`.
+- **Store manager.** A missing CloudBase setting is named instead of reported as a connection failure.
+- **Audit list.** The shared configuration no longer lists `TOOLS.md` and `HEARTBEAT.md`, which OpenClaw 2026.9 retired, among the documents its integrity audit expects.
+
+**Evidence and delivery status**
+
+All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.0/build 60 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.9 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.0/build 60 applications beside its Applications link. All 26 files in the Connector's embedded kit match their committed OpenClaw source byte for byte. The application launched from the project root, stayed running, quit on request, and left no crash report; the Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v5.9 set is kept as a recovery copy outside the project until its removal is approved. Committed as `4f87d77`; the public mirror still carries v5.9.
+
+[Back to change history](#change-history)
 
 <a id="v5-9-build-59"></a>
 
