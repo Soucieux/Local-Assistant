@@ -747,7 +747,7 @@ On current macOS, the application showed a smaller copy of its icon inside a lig
 
 **Evidence and delivery status**
 
-The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link. Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels. The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched. No source code changed, so the Swift and Python suites were not rerun. The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates. Delivered uncommitted and recorded in `d2ab23e`; the public mirror still carries v5.8.
+The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link. Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels. The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched. No source code changed, so the Swift and Python suites were not rerun. The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates. Delivered uncommitted and recorded in `7cd3a8f`; the public mirror still carries v5.8.
 
 [Back to change history](#change-history)
 
@@ -810,7 +810,7 @@ One batch of corrections across every first-party file. Local Assistant and Open
 
 155 macOS test cases and all 43 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings. The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23.
 
-The offline Release build produced the signed v5.8/build 58 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.7 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the Connector's embedded kit carries `config.py`, `config.sh` and the v1.5.1 installer, each identical to its source. The user opened the built application on 2026-09-24 and confirmed it works. Not established by this build: the signature is ad-hoc with the hardened runtime rather than Developer ID, so the disk image is not notarized for distribution beyond this Mac. The source was delivered uncommitted and recorded in `ce6574e` and `9b618d7`; the build is recorded in `ff29d6d`, and the public mirror was published from it on 2026-09-24, its tip `973dd1d` matching this folder's tree and commit sequence.
+The offline Release build produced the signed v5.8/build 58 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.7 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the Connector's embedded kit carries `config.py`, `config.sh` and the v1.5.1 installer, each identical to its source. The user opened the built application on 2026-09-24 and confirmed it works. Not established by this build: the signature is ad-hoc with the hardened runtime rather than Developer ID, so the disk image is not notarized for distribution beyond this Mac. The source was delivered uncommitted and recorded in `8247691` and `fb358cc`; the build is recorded in `25ece76`, and the public mirror was published from it on 2026-09-24, its tip `973dd1d` matching this folder's tree and commit sequence.
 
 [Back to change history](#change-history)
 
@@ -916,7 +916,7 @@ The clean offline Release build produced signed v5.5/build 55 applications and a
 
 146 macOS test cases and all 40 Connector tests pass against this source; the Debug test cache was removed afterwards so the project root holds only the delivered build.
 
-Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `f861e13`.
+Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `5c11463`.
 
 [Back to change history](#change-history)
 
@@ -958,7 +958,7 @@ Not established by this build: the applications were not launched, so runtime be
 - **Structure:** Put purpose, capabilities, setup, architecture, and workflows before history.
 - **History:** Merge matching repository-origin records into the owning change; preserve unique detail, evidence, and older links.
 - **Ownership:** Keep user documentation here; route scoped contributor rules through root AGENTS.
-- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `9587991`. Existing application versions, artifacts, and deployment state are unchanged.
+- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `6c2027f`. Existing application versions, artifacts, and deployment state are unchanged.
 
 [Back to change history](#change-history)
 
@@ -991,7 +991,7 @@ Local documentation changes; initially delivered uncommitted and recorded in thi
 
 **Evidence and delivery status**
 
-Local documentation update; initially delivered uncommitted and recorded in `9587991`
+Local documentation update; initially delivered uncommitted and recorded in `6c2027f`
 
 [Back to change history](#change-history)
 
@@ -1253,7 +1253,7 @@ Grouped the complete architecture inventory into AI, frontend, on-device logic, 
 
 **Evidence and delivery status**
 
-`998eef1`, `c7938d3`
+`43bdd29`, `b1947bc`
 
 Historical work record
 
@@ -1279,7 +1279,7 @@ Historical work record
 
 **Evidence and delivery status**
 
-`a7d1f04`, `8c135a7`, `8be08cc`, `214b012`, `41a357e`, `1c0fad3`
+`b6640e5`, `d338194`, `adef04c`, `a354674`, `c17ceef`, `a143d86`
 
 [Back to change history](#change-history)
 
@@ -1446,7 +1446,7 @@ Seven end-to-end run tests now cover the first scan, unchanged and modified file
 
 `66ae195` (2026-08-28)
 
-Version-index record in `66ae195`; related date-group work: `fec3aa8`, `8eaa751`, `00fa3c0`, `2f937ba`, `741ebde`, `0cc6a16`, `86312dc`, `66ae195`
+Version-index record in `66ae195`; related date-group work: `2d4b1b4`, `8dba467`, `ac4a485`, `d1f3b8a`, `2880e07`, `7e8fe95`, `f2ecfa4`, `66ae195`
 
 [Back to change history](#change-history)
 
@@ -1511,7 +1511,7 @@ Git reconciliation: Committed the reminder/Connector and responsive-interface se
 
 **Evidence and delivery status**
 
-Version-index record in `20ceb0b` (2026-08-26); related date-group work in `dfb5057`, `5da7990`, `6185970`, `ea58bc9`, `d2cb05a`, `fa9d909`, `43cdcb6`, `811e57d`, `fc0f910`, `042f08c`, `a879df5`, `a8c255b`, `abd522c`, `4effbb9`, `908c1e3`, `7fc7268`, `d89f551`, `b304bc9`, `c936286`, `d29fc49`, `18600bc`, `8becf1e`, `af2139d`, `20ceb0b`, `5c2a617`, `5e6c277`, `1dd4c60`
+Version-index record in `fadec3b` (2026-08-26); related date-group work in `dfb5057`, `5da7990`, `6185970`, `ea58bc9`, `d2cb05a`, `2831dbe`, `c8f9ff8`, `be72824`, `604f531`, `4fd9db5`, `7139a62`, `c087f6b`, `99397d2`, `4925532`, `750e00a`, `647172f`, `50021a5`, `e4c611b`, `bedd00b`, `80fd979`, `4de643d`, `02e0214`, `5d4828f`, `fadec3b`, `5ad3edb`, `bc3c002`, `9cbcb60`
 
 [Back to change history](#change-history)
 
@@ -1549,9 +1549,9 @@ Version-index record in `20ceb0b` (2026-08-26); related date-group work in `dfb5
 
 **Evidence and delivery status**
 
-`c936286` (2026-08-26)
+`bedd00b` (2026-08-26)
 
-Version-index record in `c936286`
+Version-index record in `bedd00b`
 
 [Back to change history](#change-history)
 
@@ -1591,9 +1591,9 @@ Version-index record in `c936286`
 
 **Evidence and delivery status**
 
-`7fc7268` (2026-08-26)
+`647172f` (2026-08-26)
 
-Version-index record in `7fc7268`
+Version-index record in `647172f`
 
 [Back to change history](#change-history)
 
@@ -1637,9 +1637,9 @@ Version-index record in `7fc7268`
 
 **Evidence and delivery status**
 
-`abd522c` (2026-08-26)
+`99397d2` (2026-08-26)
 
-Version-index record in `abd522c`
+Version-index record in `99397d2`
 
 [Back to change history](#change-history)
 
@@ -1687,9 +1687,9 @@ Version-index record in `abd522c`
 
 **Evidence and delivery status**
 
-`abd522c` (2026-08-26)
+`99397d2` (2026-08-26)
 
-Version-index record in `abd522c`
+Version-index record in `99397d2`
 
 [Back to change history](#change-history)
 
@@ -1746,9 +1746,9 @@ Version-index record in `abd522c`
 
 **Evidence and delivery status**
 
-`abd522c` (2026-08-26)
+`99397d2` (2026-08-26)
 
-Version-index record in `abd522c`
+Version-index record in `99397d2`
 
 [Back to change history](#change-history)
 
@@ -1787,9 +1787,9 @@ Version-index record in `abd522c`
 
 **Evidence and delivery status**
 
-`abd522c` (2026-08-26)
+`99397d2` (2026-08-26)
 
-Version-index record in `abd522c`
+Version-index record in `99397d2`
 
 [Back to change history](#change-history)
 
@@ -1839,9 +1839,9 @@ Version-index record in `abd522c`
 
 **Evidence and delivery status**
 
-`abd522c` (2026-08-26)
+`99397d2` (2026-08-26)
 
-Version-index record in `abd522c`
+Version-index record in `99397d2`
 
 [Back to change history](#change-history)
 
@@ -1907,7 +1907,7 @@ Version-index record in `abd522c`
 
 **Evidence and delivery status**
 
-`abd522c` (2026-08-26)
+`99397d2` (2026-08-26)
 
 Historical work record
 
