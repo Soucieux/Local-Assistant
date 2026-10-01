@@ -665,7 +665,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v6.0 (build 60)**. [Release details and delivery evidence](#v6-0-build-60).
+**v6.1 (build 61)**. [Release details and delivery evidence](#v6-1-build-61).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -690,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v6.1 / build 61 | 2026-10-01 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.4, whose installer checks for the SSH host key before changing anything and names an unreadable settings file instead of stopping with a traceback.</li><li><strong>Setup:</strong> Each readiness wait ends within 30 seconds, and a rejected operator token is named as the cause.</li><li><strong>Delivery:</strong> Signed v6.1 applications and a rebuilt disk image replace the v6.0 set at the project root.</li></ul> | [Full record](#v6-1-build-61) |
 | v6.0 / build 60 | 2026-09-27 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.2, whose configuration reads the Feishu target and CloudBase address from an untracked settings file on the server.</li><li><strong>Setup:</strong> Its installer finds the CloudBase address where the bridge will, and stops before changing anything when it is missing.</li><li><strong>Delivery:</strong> Signed v6.0 applications and a rebuilt disk image replace the v5.9 set at the project root.</li></ul> | [Full record](#v6-0-build-60) |
 | v5.9 / build 59 | 2026-09-26 | <ul><li><strong>Icon:</strong> The app icon is rebuilt in the macOS icon shape, so the app shows its full artwork instead of a smaller copy inside a grey frame.</li><li><strong>Folder:</strong> The project folder's icon is set from the same master, so the folder and the app look identical.</li><li><strong>Delivery:</strong> Signed v5.9 applications and a rebuilt disk image replace the v5.8 set at the project root.</li></ul> | [Full record](#v5-9-build-59) |
 | Documentation | 2026-09-24 | <ul><li><strong>Scripts:</strong> Every build, preparation, installation and check script opens with a header stating its purpose, inputs, what it reads and writes, and who runs it.</li></ul> | [Full record](#script-headers) |
@@ -732,6 +733,28 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="v6-1-build-61"></a>
+
+### v6.1 / build 61
+
+- **Recorded date:** 2026-10-01.
+
+The OpenClaw server setup kit embedded in the Connector now carries Local Assistant bridge v1.5.4. Local Assistant and OpenClaw Connector advance to v6.1/build 61; the main application, the Connector runtime and its companion app are unchanged, and only the embedded kit differs from v6.0.
+
+**Changed**
+
+- **Installer checks.** `setup-server.sh` checks for the server's Ed25519 SSH host key with its other preconditions, before it installs or changes anything; the v6.0 kit found out only after reconfiguring the Gateway and SSH. An `openclaw.json` that is not plain JSON, or a `~/.openclaw/.env` that cannot be read, stops setup with the file named instead of a Python traceback.
+- **Readiness.** Each readiness wait ends within 30 seconds, every request limited to the time left; a CloudBase call that hung could stretch the v6.0 wait to about eight minutes. When the Gateway refuses the Agent Card, setup says the operator token was rejected instead of advising a re-run that would fail the same way.
+- **Bridge.** The shared `runtime_support` package keeps its internal names private and holds one Markdown escaper, the bridge handler imports its error type from its owner, and the plugin's response limit is the one copy of the configuration value; behaviour is unchanged.
+- **Retry budget.** The shared report spool reads its retry ceiling from `PENDING_REPORT_MAX_ATTEMPTS`, named for both reports it governs, and still honours the former `AUDIT_CARD_MAX_ATTEMPTS` when the new name is unset.
+- **Store manager and configuration.** The shared configuration's headers describe its defaults and overrides, the store manager's contract header covers its ownership mode and the delete outcomes CloudBase returns, and three store-manager conditions no input could reach are gone; behaviour is unchanged.
+
+**Evidence and delivery status**
+
+All 43 Connector tests passed, and the check that every module a shipped kit file imports ships with it passed again after the kit's last change. The offline Release build produced the signed v6.1/build 61 main application, the matching signed Connector, and `Local Assistant Release.dmg`; the kit was then embedded again with bridge v1.5.4, the Connector re-signed and the disk image rebuilt. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.1/build 61 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.4. The set then replaced the v6.0 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v6.0 set is kept as a recovery copy outside the project until it is moved to the Trash. Delivered uncommitted, then committed as `74a8bbb`; the public mirror still carries v6.0.
+
+[Back to change history](#change-history)
 
 <a id="v6-0-build-60"></a>
 
