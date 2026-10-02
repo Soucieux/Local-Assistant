@@ -738,7 +738,7 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.2/build 62 main application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.2/build 62 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.5. The set then replaced the v6.1 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching the committed source; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. Once those checks passed, the replaced v6.1 set and the llama.cpp build intermediates under `Vendor/`, which the next release build recreates, were moved to the Trash with approval. Delivered uncommitted, then committed as `1867351` and published to the public repository on 2026-10-02.
+All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.2/build 62 main application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.2/build 62 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.5. The set then replaced the v6.1 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching the committed source; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. Once those checks passed, the replaced v6.1 set and the llama.cpp build intermediates under `Vendor/`, which the next release build recreates, were moved to the Trash with approval. Delivered uncommitted, then committed as `b5c96e0` and published to the public repository on 2026-10-02.
 
 [Back to change history](#change-history)
 
@@ -760,7 +760,7 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed, and the check that every module a shipped kit file imports ships with it passed again after the kit's last change. The offline Release build produced the signed v6.1/build 61 main application, the matching signed Connector, and `Local Assistant Release.dmg`; the kit was then embedded again with bridge v1.5.4, the Connector re-signed and the disk image rebuilt. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.1/build 61 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.4. The set then replaced the v6.0 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v6.0 set is kept as a recovery copy outside the project until it is moved to the Trash. Delivered uncommitted, then committed as `74a8bbb` and published to the public repository on 2026-10-01.
+All 43 Connector tests passed, and the check that every module a shipped kit file imports ships with it passed again after the kit's last change. The offline Release build produced the signed v6.1/build 61 main application, the matching signed Connector, and `Local Assistant Release.dmg`; the kit was then embedded again with bridge v1.5.4, the Connector re-signed and the disk image rebuilt. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.1/build 61 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.4. The set then replaced the v6.0 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v6.0 set is kept as a recovery copy outside the project until it is moved to the Trash. Delivered uncommitted, then committed as `540c2e1` and published to the public repository on 2026-10-01.
 
 [Back to change history](#change-history)
 
@@ -781,7 +781,7 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.0/build 60 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.9 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.0/build 60 applications beside its Applications link. All 26 files in the Connector's embedded kit match their committed OpenClaw source byte for byte. The application launched from the project root, stayed running, quit on request, and left no crash report; the Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v5.9 set is kept as a recovery copy outside the project until its removal is approved. Committed as `439f6dd` and published to the public repository on 2026-09-27.
+All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.0/build 60 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.9 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.0/build 60 applications beside its Applications link. All 26 files in the Connector's embedded kit match their committed OpenClaw source byte for byte. The application launched from the project root, stayed running, quit on request, and left no crash report; the Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v5.9 set is kept as a recovery copy outside the project until its removal is approved. Committed as `3194c65` and published to the public repository on 2026-09-27.
 
 [Back to change history](#change-history)
 
@@ -800,7 +800,7 @@ On current macOS, the application showed a smaller copy of its icon inside a lig
 
 **Evidence and delivery status**
 
-The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link. Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels. The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched. No source code changed, so the Swift and Python suites were not rerun. The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates. Delivered uncommitted and recorded in `c891e8c`; the public mirror still carries v5.8.
+The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link. Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels. The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched. No source code changed, so the Swift and Python suites were not rerun. The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates. Delivered uncommitted and recorded in `33ccd0b`; the public mirror still carries v5.8.
 
 [Back to change history](#change-history)
 
@@ -863,7 +863,7 @@ One batch of corrections across every first-party file. Local Assistant and Open
 
 155 macOS test cases and all 43 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings. The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23.
 
-The offline Release build produced the signed v5.8/build 58 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.7 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the Connector's embedded kit carries `config.py`, `config.sh` and the v1.5.1 installer, each identical to its source. The user opened the built application on 2026-09-24 and confirmed it works. Not established by this build: the signature is ad-hoc with the hardened runtime rather than Developer ID, so the disk image is not notarized for distribution beyond this Mac. The source was delivered uncommitted and recorded in `ea01080` and `b4948f6`; the build is recorded in `475dc4f`, and the public mirror was published from it on 2026-09-24, its tip `973dd1d` matching this folder's tree and commit sequence.
+The offline Release build produced the signed v5.8/build 58 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.7 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the Connector's embedded kit carries `config.py`, `config.sh` and the v1.5.1 installer, each identical to its source. The user opened the built application on 2026-09-24 and confirmed it works. Not established by this build: the signature is ad-hoc with the hardened runtime rather than Developer ID, so the disk image is not notarized for distribution beyond this Mac. The source was delivered uncommitted and recorded in `6c2f551` and `d86e626`; the build is recorded in `da3e6f9`, and the public mirror was published from it on 2026-09-24, its tip `26a11b1` matching this folder's tree and commit sequence.
 
 [Back to change history](#change-history)
 
@@ -969,7 +969,7 @@ The clean offline Release build produced signed v5.5/build 55 applications and a
 
 146 macOS test cases and all 40 Connector tests pass against this source; the Debug test cache was removed afterwards so the project root holds only the delivered build.
 
-Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `67a1589`.
+Not established by this build: the applications were not launched, so runtime behaviour is unverified, and the signature is ad-hoc with the hardened runtime rather than Developer ID, so the artifacts are not notarized for distribution beyond this Mac. The source was uncommitted at delivery and is recorded in `40d43c1`.
 
 [Back to change history](#change-history)
 
@@ -1011,7 +1011,7 @@ Not established by this build: the applications were not launched, so runtime be
 - **Structure:** Put purpose, capabilities, setup, architecture, and workflows before history.
 - **History:** Merge matching repository-origin records into the owning change; preserve unique detail, evidence, and older links.
 - **Ownership:** Keep user documentation here; route scoped contributor rules through root AGENTS.
-- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `aec70f4`. Existing application versions, artifacts, and deployment state are unchanged.
+- **Status:** Documentation changes only; initially delivered uncommitted and recorded in `3a5bd2c`. Existing application versions, artifacts, and deployment state are unchanged.
 
 [Back to change history](#change-history)
 
@@ -1044,7 +1044,7 @@ Local documentation changes; initially delivered uncommitted and recorded in thi
 
 **Evidence and delivery status**
 
-Local documentation update; initially delivered uncommitted and recorded in `aec70f4`
+Local documentation update; initially delivered uncommitted and recorded in `3a5bd2c`
 
 [Back to change history](#change-history)
 
@@ -1306,7 +1306,7 @@ Grouped the complete architecture inventory into AI, frontend, on-device logic, 
 
 **Evidence and delivery status**
 
-`ba04bd0`, `749ba25`
+`e63b486`, `5172de1`
 
 Historical work record
 
@@ -1332,7 +1332,7 @@ Historical work record
 
 **Evidence and delivery status**
 
-`4d09e8c`, `7da25e1`, `551b342`, `d64b177`, `6419500`, `631e9e9`
+`0143e20`, `097ddbe`, `1f1cc86`, `10d3831`, `c305aa7`, `cb3c2f0`
 
 [Back to change history](#change-history)
 
@@ -1499,7 +1499,7 @@ Seven end-to-end run tests now cover the first scan, unchanged and modified file
 
 `66ae195` (2026-08-28)
 
-Version-index record in `66ae195`; related date-group work: `a3e2de4`, `646c46e`, `366a7d4`, `ecf109c`, `db171e3`, `13ebf76`, `549d226`, `66ae195`
+Version-index record in `66ae195`; related date-group work: `5bcca17`, `5a2e1bc`, `562a8f7`, `2c99ce5`, `7f82e95`, `1b5fcef`, `9add7e4`, `66ae195`
 
 [Back to change history](#change-history)
 
@@ -1564,7 +1564,7 @@ Git reconciliation: Committed the reminder/Connector and responsive-interface se
 
 **Evidence and delivery status**
 
-Version-index record in `bac1201` (2026-08-26); related date-group work in `dfb5057`, `5da7990`, `6185970`, `ea58bc9`, `d2cb05a`, `98396f3`, `b529364`, `bbbb33f`, `8ad5f4a`, `580a226`, `87b8f8b`, `ac24434`, `34c7cdc`, `508f830`, `aa2a80a`, `dc22687`, `8e6ae4d`, `d4fea52`, `321df25`, `ed0a773`, `14a5a44`, `4ac8146`, `a2a6229`, `bac1201`, `4dee2ef`, `a517ce3`, `9176b9d`
+Version-index record in `4556236` (2026-08-26); related date-group work in `dfb5057`, `5da7990`, `6185970`, `ea58bc9`, `d2cb05a`, `4ff727a`, `f5d19d1`, `f6642b5`, `ca687cb`, `407d9b5`, `863b665`, `3c33edf`, `be6ca96`, `3ffbe75`, `80003b0`, `436c130`, `7cc1ba2`, `c96c459`, `9f848ee`, `b90dd87`, `796129b`, `835964e`, `5436e43`, `4556236`, `1ea69a0`, `1c48542`, `1d7ce3c`
 
 [Back to change history](#change-history)
 
@@ -1602,9 +1602,9 @@ Version-index record in `bac1201` (2026-08-26); related date-group work in `dfb5
 
 **Evidence and delivery status**
 
-`321df25` (2026-08-26)
+`9f848ee` (2026-08-26)
 
-Version-index record in `321df25`
+Version-index record in `9f848ee`
 
 [Back to change history](#change-history)
 
@@ -1644,9 +1644,9 @@ Version-index record in `321df25`
 
 **Evidence and delivery status**
 
-`dc22687` (2026-08-26)
+`436c130` (2026-08-26)
 
-Version-index record in `dc22687`
+Version-index record in `436c130`
 
 [Back to change history](#change-history)
 
@@ -1690,9 +1690,9 @@ Version-index record in `dc22687`
 
 **Evidence and delivery status**
 
-`34c7cdc` (2026-08-26)
+`be6ca96` (2026-08-26)
 
-Version-index record in `34c7cdc`
+Version-index record in `be6ca96`
 
 [Back to change history](#change-history)
 
@@ -1740,9 +1740,9 @@ Version-index record in `34c7cdc`
 
 **Evidence and delivery status**
 
-`34c7cdc` (2026-08-26)
+`be6ca96` (2026-08-26)
 
-Version-index record in `34c7cdc`
+Version-index record in `be6ca96`
 
 [Back to change history](#change-history)
 
@@ -1799,9 +1799,9 @@ Version-index record in `34c7cdc`
 
 **Evidence and delivery status**
 
-`34c7cdc` (2026-08-26)
+`be6ca96` (2026-08-26)
 
-Version-index record in `34c7cdc`
+Version-index record in `be6ca96`
 
 [Back to change history](#change-history)
 
@@ -1840,9 +1840,9 @@ Version-index record in `34c7cdc`
 
 **Evidence and delivery status**
 
-`34c7cdc` (2026-08-26)
+`be6ca96` (2026-08-26)
 
-Version-index record in `34c7cdc`
+Version-index record in `be6ca96`
 
 [Back to change history](#change-history)
 
