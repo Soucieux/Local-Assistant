@@ -1,0 +1,36 @@
+# Local Assistant's ignore rules. The project has a public mirror, so its rules live here
+# rather than in the repository's root .gitignore.
+
+# macOS
+.DS_Store
+
+# Built apps, Python caches and model files
+*.app
+__pycache__/
+*.gguf
+*.mlmodelc/
+*.tmp
+
+# Xcode and Swift build data
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.build/
+.swiftpm/
+
+# Connector environment and packaging output
+/OpenClawConnector/.venv/
+/OpenClawConnector/src/*.egg-info/
+/.connector-build/
+/.connector-typecheck/
+/.openclaw-server-kit-build/
+/.release-package-build/
+/OpenClaw Server Setup.zip
+/Local Assistant Release.dmg
+
+# Generated offline assets and vendored dependencies
+/outputs/*
+!/outputs/.gitkeep
+/Vendor/
+/LocalAssistant/VendorBridge/sqlite-vec.c
+/LocalAssistant/VendorBridge/sqlite-vec.h
