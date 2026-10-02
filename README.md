@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v5.9%20build%2059-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.3%20build%2063-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 <!-- project-control:section=overview -->
 ## Overview
@@ -665,7 +665,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v6.2 (build 62)**. [Release details and delivery evidence](#v6-2-build-62).
+**v6.3 (build 63)**. [Release details and delivery evidence](#v6-3-build-63).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -690,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v6.3 / build 63 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.6, whose store manager no longer needs a package the kit does not ship, and which reads the CloudBase token only from its own section.</li><li><strong>Checks:</strong> The kit check now also reads the Python the kit's shell scripts embed, which is where the missing package hid.</li><li><strong>Delivery:</strong> Signed v6.3 applications and a rebuilt disk image replace the v6.2 set at the project root.</li></ul> | [Full record](#v6-3-build-63) |
 | v6.2 / build 62 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.5, which reads the pending-report retry budget only under its current name.</li><li><strong>Delivery:</strong> Signed v6.2 applications and a rebuilt disk image replace the v6.1 set at the project root.</li></ul> | [Full record](#v6-2-build-62) |
 | v6.1 / build 61 | 2026-10-01 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.4, whose installer checks for the SSH host key before changing anything and names an unreadable settings file instead of stopping with a traceback.</li><li><strong>Setup:</strong> Each readiness wait ends within 30 seconds, and a rejected operator token is named as the cause.</li><li><strong>Delivery:</strong> Signed v6.1 applications and a rebuilt disk image replace the v6.0 set at the project root.</li></ul> | [Full record](#v6-1-build-61) |
 | v6.0 / build 60 | 2026-09-27 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.2, whose configuration reads the Feishu target and CloudBase address from an untracked settings file on the server.</li><li><strong>Setup:</strong> Its installer finds the CloudBase address where the bridge will, and stops before changing anything when it is missing.</li><li><strong>Delivery:</strong> Signed v6.0 applications and a rebuilt disk image replace the v5.9 set at the project root.</li></ul> | [Full record](#v6-0-build-60) |
@@ -723,6 +724,27 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="v6-3-build-63"></a>
+
+### v6.3 / build 63
+
+- **Recorded date:** 2026-10-02.
+
+The OpenClaw server setup kit embedded in the Connector now carries Local Assistant bridge v1.5.6. Local Assistant and OpenClaw Connector advance to v6.3/build 63; the main application, the Connector runtime and its companion app are unchanged.
+
+**Changed**
+
+- **Store manager imports.** The kit's reminder store manager checked a new reminder for duplicates with a rule it imported from OpenClaw's synchronization package, which the kit does not ship, so on a server without the synchronizer it would refuse every new reminder at that check. The rule now lives in the shared `runtime_support` package the kit already carries, and the synchronizer uses the same copy.
+- **Token.** The store manager and the reminder bridge read the CloudBase token only from the `cloudbase` section of the server's secrets file; the legacy `tencentCloudbase` section is no longer read. The server was checked on 2026-10-02 and has no such section.
+- **Kit check.** `OpenClawConnector/tests/test_server_kit.py` checked only the kit's `.py` files, so the store manager's import, inside a Python program its shell script runs, was invisible to it. It now also parses every Python program embedded in a shell script the kit builder copies, the setup script included, and fails on any import the kit does not satisfy.
+- **Release badge.** The badge under this README's title had still named v5.9/build 59; it now names this release.
+
+**Evidence and delivery status**
+
+All 43 Connector tests passed. Against the previous store manager, the extended kit check fails and names the duplicate check's import of `reminder_calendar_sync`; against this source it passes. The OpenClaw side's tests are recorded with bridge v1.5.6 in the OpenClaw workspace's change history. The offline Release build, run in a separate working copy, produced the signed v6.3/build 63 main application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.3/build 63 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.6. The set then replaced the v6.2 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching this source; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The owner moved the replaced v6.2 set to the Trash before the new set was copied in. Delivered uncommitted on 2026-10-02, then committed as `2683a50`, with this record after it.
+
+[Back to change history](#change-history)
 
 <a id="v6-2-build-62"></a>
 
