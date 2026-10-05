@@ -690,6 +690,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-05 | <ul><li><strong>Readability:</strong> Long paragraphs, bullets and table cells are now short leads with sub-points, one fact each; no detail was removed.</li></ul> | [Full record](#readme-structure) |
 | v6.3 / build 63 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.6, whose store manager no longer needs a package the kit does not ship, and which reads the CloudBase token only from its own section.</li><li><strong>Checks:</strong> The kit check now also reads the Python the kit's shell scripts embed, which is where the missing package hid.</li><li><strong>Delivery:</strong> Signed v6.3 applications and a rebuilt disk image replace the v6.2 set at the project root.</li></ul> | [Full record](#v6-3-build-63) |
 | v6.2 / build 62 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.5, which reads the pending-report retry budget only under its current name.</li><li><strong>Delivery:</strong> Signed v6.2 applications and a rebuilt disk image replace the v6.1 set at the project root.</li></ul> | [Full record](#v6-2-build-62) |
 | v6.1 / build 61 | 2026-10-01 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.4, whose installer checks for the SSH host key before changing anything and names an unreadable settings file instead of stopping with a traceback.</li><li><strong>Setup:</strong> Each readiness wait ends within 30 seconds, and a rejected operator token is named as the cause.</li><li><strong>Delivery:</strong> Signed v6.1 applications and a rebuilt disk image replace the v6.0 set at the project root.</li></ul> | [Full record](#v6-1-build-61) |
@@ -725,6 +726,23 @@ One record per change; complete details and evidence are below. Older work dates
 <details>
 <summary>Full records for this table</summary>
 
+<a id="readme-structure"></a>
+
+### Documentation
+
+- **Recorded date:** 2026-10-05.
+- **Why:** many records and some guidance ran as bullets or paragraphs of 50 to 100 words, which hid
+  the separate facts inside them.
+- **Layout:** every paragraph, bullet and table cell over 50 words is now a short lead with
+  sub-points, one fact each. The wording was moved, not rewritten.
+- **Unchanged:** every section, heading, link, anchor, table row, diagram, number and identifier.
+- **Evidence:** compared with the previous version, no word is removed, and the headings, anchors,
+  links, code spans, numbers and fenced samples are identical. The README layout, link and history
+  checks pass.
+- **Scope:** Documentation only; no source, version or delivered application changed.
+
+[Back to change history](#change-history)
+
 <a id="v6-3-build-63"></a>
 
 ### v6.3 / build 63
@@ -735,14 +753,29 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Changed**
 
-- **Store manager imports.** The kit's reminder store manager checked a new reminder for duplicates with a rule it imported from OpenClaw's synchronization package, which the kit does not ship, so on a server without the synchronizer it would refuse every new reminder at that check. The rule now lives in the shared `runtime_support` package the kit already carries, and the synchronizer uses the same copy.
+- **Store manager imports.**
+  - The kit's reminder store manager checked a new reminder for duplicates with a rule it imported from OpenClaw's synchronization package, which the kit does not ship, so on a server without the synchronizer it would refuse every new reminder at that check.
+  - The rule now lives in the shared `runtime_support` package the kit already carries, and the synchronizer uses the same copy.
 - **Token.** The store manager and the reminder bridge read the CloudBase token only from the `cloudbase` section of the server's secrets file; the legacy `tencentCloudbase` section is no longer read. The server was checked on 2026-10-02 and has no such section.
-- **Kit check.** `OpenClawConnector/tests/test_server_kit.py` checked only the kit's `.py` files, so the store manager's import, inside a Python program its shell script runs, was invisible to it. It now also parses every Python program embedded in a shell script the kit builder copies, the setup script included, and fails on any import the kit does not satisfy.
+- **Kit check.**
+  - `OpenClawConnector/tests/test_server_kit.py` checked only the kit's `.py` files, so the store manager's import, inside a Python program its shell script runs, was invisible to it.
+  - It now also parses every Python program embedded in a shell script the kit builder copies, the setup script included, and fails on any import the kit does not satisfy.
 - **Release badge.** The badge under this README's title had still named v5.9/build 59; it now names this release.
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed. Against the previous store manager, the extended kit check fails and names the duplicate check's import of `reminder_calendar_sync`; against this source it passes. The OpenClaw side's tests are recorded with bridge v1.5.6 in the OpenClaw workspace's change history. The offline Release build, run in a separate working copy, produced the signed v6.3/build 63 main application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.3/build 63 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.6. The set then replaced the v6.2 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching this source; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The owner moved the replaced v6.2 set to the Trash before the new set was copied in. Delivered uncommitted on 2026-10-02, then committed as `2683a50`, with this record after it, and published to the public repository the same day.
+All 43 Connector tests passed.
+
+- Against the previous store manager, the extended kit check fails and names the duplicate check's import of `reminder_calendar_sync`; against this source it passes.
+- The OpenClaw side's tests are recorded with bridge v1.5.6 in the OpenClaw workspace's change history.
+- The offline Release build, run in a separate working copy, produced the signed v6.3/build 63 main application, the matching signed Connector, and `Local Assistant Release.dmg`.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.3/build 63 applications beside its Applications link.
+- All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.6.
+- The set then replaced the v6.2 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching this source; the application launched from there, stayed running, quit on request, and left no crash report.
+- The Connector was not launched.
+- No Swift source changed, so the Swift suite was not rerun.
+- The owner moved the replaced v6.2 set to the Trash before the new set was copied in.
+- Delivered uncommitted on 2026-10-02, then committed as `2683a50`, with this record after it, and published to the public repository the same day.
 
 [Back to change history](#change-history)
 
@@ -760,7 +793,16 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.2/build 62 main application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.2/build 62 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.5. The set then replaced the v6.1 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching the committed source; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. Once those checks passed, the replaced v6.1 set and the llama.cpp build intermediates under `Vendor/`, which the next release build recreates, were moved to the Trash with approval. Delivered uncommitted, then committed as `b5c96e0` and published to the public repository on 2026-10-02.
+All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it.
+
+- The offline Release build produced the signed v6.2/build 62 main application, the matching signed Connector, and `Local Assistant Release.dmg`.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.2/build 62 applications beside its Applications link.
+- All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.5.
+- The set then replaced the v6.1 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching the committed source; the application launched from there, stayed running, quit on request, and left no crash report.
+- The Connector was not launched.
+- No Swift source changed, so the Swift suite was not rerun.
+- Once those checks passed, the replaced v6.1 set and the llama.cpp build intermediates under `Vendor/`, which the next release build recreates, were moved to the Trash with approval.
+- Delivered uncommitted, then committed as `b5c96e0` and published to the public repository on 2026-10-02.
 
 [Back to change history](#change-history)
 
@@ -774,15 +816,28 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Changed**
 
-- **Installer checks.** `setup-server.sh` checks for the server's Ed25519 SSH host key with its other preconditions, before it installs or changes anything; the v6.0 kit found out only after reconfiguring the Gateway and SSH. An `openclaw.json` that is not plain JSON, or a `~/.openclaw/.env` that cannot be read, stops setup with the file named instead of a Python traceback.
-- **Readiness.** Each readiness wait ends within 30 seconds, every request limited to the time left; a CloudBase call that hung could stretch the v6.0 wait to about eight minutes. When the Gateway refuses the Agent Card, setup says the operator token was rejected instead of advising a re-run that would fail the same way.
+- **Installer checks.**
+  - `setup-server.sh` checks for the server's Ed25519 SSH host key with its other preconditions, before it installs or changes anything; the v6.0 kit found out only after reconfiguring the Gateway and SSH.
+  - An `openclaw.json` that is not plain JSON, or a `~/.openclaw/.env` that cannot be read, stops setup with the file named instead of a Python traceback.
+- **Readiness.**
+  - Each readiness wait ends within 30 seconds, every request limited to the time left; a CloudBase call that hung could stretch the v6.0 wait to about eight minutes.
+  - When the Gateway refuses the Agent Card, setup says the operator token was rejected instead of advising a re-run that would fail the same way.
 - **Bridge.** The shared `runtime_support` package keeps its internal names private and holds one Markdown escaper, the bridge handler imports its error type from its owner, and the plugin's response limit is the one copy of the configuration value; behaviour is unchanged.
 - **Retry budget.** The shared report spool reads its retry ceiling from `PENDING_REPORT_MAX_ATTEMPTS`, named for both reports it governs, and still honours the former `AUDIT_CARD_MAX_ATTEMPTS` when the new name is unset.
 - **Store manager and configuration.** The shared configuration's headers describe its defaults and overrides, the store manager's contract header covers its ownership mode and the delete outcomes CloudBase returns, and three store-manager conditions no input could reach are gone; behaviour is unchanged.
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed, and the check that every module a shipped kit file imports ships with it passed again after the kit's last change. The offline Release build produced the signed v6.1/build 61 main application, the matching signed Connector, and `Local Assistant Release.dmg`; the kit was then embedded again with bridge v1.5.4, the Connector re-signed and the disk image rebuilt. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.1/build 61 applications beside its Applications link. All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.4. The set then replaced the v6.0 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks; the application launched from there, stayed running, quit on request, and left no crash report. The Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v6.0 set is kept as a recovery copy outside the project until it is moved to the Trash. Delivered uncommitted, then committed as `540c2e1` and published to the public repository on 2026-10-01.
+All 43 Connector tests passed, and the check that every module a shipped kit file imports ships with it passed again after the kit's last change.
+
+- The offline Release build produced the signed v6.1/build 61 main application, the matching signed Connector, and `Local Assistant Release.dmg`; the kit was then embedded again with bridge v1.5.4, the Connector re-signed and the disk image rebuilt.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.1/build 61 applications beside its Applications link.
+- All 26 files in the Connector's embedded kit match their OpenClaw source byte for byte, and its plugin reports v1.5.4.
+- The set then replaced the v6.0 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks; the application launched from there, stayed running, quit on request, and left no crash report.
+- The Connector was not launched.
+- No Swift source changed, so the Swift suite was not rerun.
+- The replaced v6.0 set is kept as a recovery copy outside the project until it is moved to the Trash.
+- Delivered uncommitted, then committed as `540c2e1` and published to the public repository on 2026-10-01.
 
 [Back to change history](#change-history)
 
@@ -796,14 +851,24 @@ The OpenClaw server setup kit embedded in the Connector now carries Local Assist
 
 **Changed**
 
-- **Server settings.** The kit's `config.sh` and `config.py` read `FEISHU_TARGET` and `CLOUDBASE_ENDPOINT` from an untracked `local.env` in the OpenClaw workspace, so scheduled jobs and the bridge find both without the crontab or the Gateway supplying them. The v5.9 kit installed a configuration that reads neither, so running its server setup on a server that keeps them in `local.env` would have left every scheduled job without them.
+- **Server settings.**
+  - The kit's `config.sh` and `config.py` read `FEISHU_TARGET` and `CLOUDBASE_ENDPOINT` from an untracked `local.env` in the OpenClaw workspace, so scheduled jobs and the bridge find both without the crontab or the Gateway supplying them.
+  - The v5.9 kit installed a configuration that reads neither, so running its server setup on a server that keeps them in `local.env` would have left every scheduled job without them.
 - **Installer.** `setup-server.sh` finds the CloudBase address the way the bridge will at run time: from the environment, the Gateway's `.env` or the workspace's `local.env`. A missing address stops setup before anything changes, with an instruction to add it to `local.env`.
 - **Store manager.** A missing CloudBase setting is named instead of reported as a connection failure.
 - **Audit list.** The shared configuration no longer lists `TOOLS.md` and `HEARTBEAT.md`, which OpenClaw 2026.9 retired, among the documents its integrity audit expects.
 
 **Evidence and delivery status**
 
-All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it. The offline Release build produced the signed v6.0/build 60 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.9 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.0/build 60 applications beside its Applications link. All 26 files in the Connector's embedded kit match their committed OpenClaw source byte for byte. The application launched from the project root, stayed running, quit on request, and left no crash report; the Connector was not launched. No Swift source changed, so the Swift suite was not rerun. The replaced v5.9 set is kept as a recovery copy outside the project until its removal is approved. Committed as `3194c65` and published to the public repository on 2026-09-27.
+All 43 Connector tests passed, including the check that every module a shipped kit file imports ships with it.
+
+- The offline Release build produced the signed v6.0/build 60 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.9 artifacts at the project root.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v6.0/build 60 applications beside its Applications link.
+- All 26 files in the Connector's embedded kit match their committed OpenClaw source byte for byte.
+- The application launched from the project root, stayed running, quit on request, and left no crash report; the Connector was not launched.
+- No Swift source changed, so the Swift suite was not rerun.
+- The replaced v5.9 set is kept as a recovery copy outside the project until its removal is approved.
+- Committed as `3194c65` and published to the public repository on 2026-09-27.
 
 [Back to change history](#change-history)
 
@@ -813,7 +878,10 @@ All 43 Connector tests passed, including the check that every module a shipped k
 
 - **Recorded date:** 2026-09-26.
 
-On current macOS, the application showed a smaller copy of its icon inside a light-grey rounded frame, while the project folder showed the full artwork, so the two looked like different versions. macOS draws that frame around an app icon whose outline does not match its own rounded square, and this artwork filled the whole canvas with rounded corners of its own. Local Assistant and OpenClaw Connector advance to v5.9/build 59; the Connector's own icon, the Connector runtime, the server bridge and the runtime contract are unchanged.
+On current macOS, the application showed a smaller copy of its icon inside a light-grey rounded frame, while the project folder showed the full artwork, so the two looked like different versions.
+
+- macOS draws that frame around an app icon whose outline does not match its own rounded square, and this artwork filled the whole canvas with rounded corners of its own.
+- Local Assistant and OpenClaw Connector advance to v5.9/build 59; the Connector's own icon, the Connector runtime, the server bridge and the runtime contract are unchanged.
 
 **Changed**
 
@@ -822,7 +890,14 @@ On current macOS, the application showed a smaller copy of its icon inside a lig
 
 **Evidence and delivery status**
 
-The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link. Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels. The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched. No source code changed, so the Swift and Python suites were not rerun. The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates. Delivered uncommitted and recorded in `33ccd0b`; the public mirror still carries v5.8.
+The offline Release build produced the signed v5.9/build 59 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.8 artifacts at the project root.
+
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the mounted image carries both v5.9/build 59 applications beside its Applications link.
+- Rendered through macOS's own icon lookup, the application now draws its full artwork with no frame, and its outline matches the folder icon to within 0.2% of pixels.
+- The application launched from the project root, ran without a crash report, and quit cleanly; the Connector was not launched.
+- No source code changed, so the Swift and Python suites were not rerun.
+- The replaced v5.8 set, kept as a recovery copy outside the project until these checks passed, was then moved to the Trash with approval, together with the llama.cpp build intermediates under `Vendor/`, which the next release build recreates.
+- Delivered uncommitted and recorded in `33ccd0b`; the public mirror still carries v5.8.
 
 [Back to change history](#change-history)
 
@@ -831,10 +906,12 @@ The offline Release build produced the signed v5.9/build 59 main application, th
 ### Documentation
 
 - **Recorded date:** 2026-09-24.
-- **Scripts:** The ten zsh scripts under `Scripts/` now open with a header comment stating what the
-  script does, its inputs, what it reads and writes, and who runs it, the same documentation the
-  project's Swift declarations and Python functions carry. A reader can learn a script's purpose and
-  prerequisites from its first lines instead of working them out from its variable block.
+- **Scripts:**
+  - The ten zsh scripts under `Scripts/` now open with a header comment stating what the script
+    does, its inputs, what it reads and writes, and who runs it, the same documentation the
+    project's Swift declarations and Python functions carry.
+  - A reader can learn a script's purpose and prerequisites from its first lines instead of working
+    them out from its variable block.
 - **Scope:** Comments only. No script changes behavior, and the delivered v5.8/build 58 applications
   and disk image at the project root remain current.
 
@@ -855,23 +932,50 @@ One batch of corrections across every first-party file. Local Assistant and Open
 
 **Corrected behavior**
 
-- **Reminder tag groups.** The spoken summary, the History bubble, and the reminder cards each derived a tag group their own way, so a reminder tagged with the words "No tag" was counted together with untagged reminders in the summary while the cards showed two sections. All three now use one rule on the reminder itself: a blank tag is untagged, and tags that differ only by capitalization or surrounding spaces form one group that keeps its displayed spelling.
-- **Malformed scheduled snapshot.** A scheduled reminder snapshot that could not be read was left in place, so the one-second health poll rejected it again on every pass and kept reporting a failed refresh, even after **Refresh Now** succeeded, until the Connector's next scheduled run. A rejected snapshot is now discarded like an accepted one and reported once.
-- **HTML files.** HTML was imported through `NSAttributedString`, whose HTML importer is backed by WebKit and documented as unsupported away from the main thread. Called from the indexing actor it had to synchronize with the main run loop for each file, measured here at about 0.7 seconds against under 0.01 seconds for direct parsing. HTML is now decoded with the same encoding detection as plain text and parsed directly, with external entities never loaded: scripts, styles, and templates are left out, block elements stay on their own lines, the page title is indexed, and unclosed fragments are still read. Rich-text files name their type explicitly so a mislabeled file can never be routed to that importer. A local probe observed no network request from the old importer, so this is a threading and speed correction rather than a privacy one.
+- **Reminder tag groups.**
+  - The spoken summary, the History bubble, and the reminder cards each derived a tag group their own way, so a reminder tagged with the words "No tag" was counted together with untagged reminders in the summary while the cards showed two sections.
+  - All three now use one rule on the reminder itself: a blank tag is untagged, and tags that differ only by capitalization or surrounding spaces form one group that keeps its displayed spelling.
+- **Malformed scheduled snapshot.**
+  - A scheduled reminder snapshot that could not be read was left in place, so the one-second health poll rejected it again on every pass and kept reporting a failed refresh, even after **Refresh Now** succeeded, until the Connector's next scheduled run.
+  - A rejected snapshot is now discarded like an accepted one and reported once.
+- **HTML files.**
+  - HTML was imported through `NSAttributedString`, whose HTML importer is backed by WebKit and documented as unsupported away from the main thread.
+  - Called from the indexing actor it had to synchronize with the main run loop for each file, measured here at about 0.7 seconds against under 0.01 seconds for direct parsing.
+  - HTML is now decoded with the same encoding detection as plain text and parsed directly, with external entities never loaded: scripts, styles, and templates are left out, block elements stay on their own lines, the page title is indexed, and unclosed fragments are still read.
+  - Rich-text files name their type explicitly so a mislabeled file can never be routed to that importer.
+  - A local probe observed no network request from the old importer, so this is a threading and speed correction rather than a privacy one.
 - **One re-extraction.** Because the text produced for unchanged HTML files changes, the extraction version rises to 3 and every indexed file is re-extracted once on the next indexing run.
 - **Offline audit.** The last `file | grep -q` pipeline in the offline-boundary audit is replaced by the shell match the rest of the script uses. Under `pipefail` that pipeline could skip a bundled binary instead of auditing it, which is the failure the script's own comment warns about.
 - **Setup wording.** The existing-installation screen said every release needs one server update for A2A. It now says a fresh server setup ZIP is needed only when the server was set up from an older release.
 
 **Simplified without changing behavior**
 
-- **Shared logic.** One implementation now serves each of these: SHA-256 hex rendering, the indexing progress fraction, the stored-passage identifier, copying an indexed item with a new content hash, embedding blob binding, the item column list used by six queries, the ZIP entry size guard shared by the Office and Pages extractors, route-parser tokenizing, search-kind ordering, and the installed version label shown in About and Settings.
+- **Shared logic.**
+  - One implementation now serves each of these:
+    - SHA-256 hex rendering,
+    - the indexing progress fraction,
+    - the stored-passage identifier,
+    - copying an indexed item with a new content hash,
+    - embedding blob binding,
+    - the item column list used by six queries,
+    - the ZIP entry size guard shared by the Office and Pages extractors,
+    - route-parser tokenizing,
+    - search-kind ordering,
+    - and the installed version label shown in About and Settings.
 - **Less work.** An empty reminder query no longer reads the reminder cache twice.
-- **Named values.** Repeated button-state numbers in both design systems, the Activity screen's status colors, the llama sequence capacity, and the Connector's permission masks, SSH patterns, and workflow node names now have names. Connector host validation keeps its allow-list and leading-dash check and drops three checks the allow-list already implied, identically in Python and Swift.
+- **Named values.**
+  - Repeated button-state numbers in both design systems, the Activity screen's status colors, the llama sequence capacity, and the Connector's permission masks, SSH patterns, and workflow node names now have names.
+  - Connector host validation keeps its allow-list and leading-dash check and drops three checks the allow-list already implied, identically in Python and Swift.
 - **Connector errors.** Sixty-three five-line error constructions became three named constructors, and the reminder snapshot request is built in one place for both verification and the scheduled refresh.
 - **Unused code removed.** `ReminderSpoolService.spoolURL()`, `SearchFilter.none`, and the `system` message role had no callers, and no release ever stored a `system` message.
-- **Removed what only had one value.** The voice input modes both ended capture after a pause, so the flag that said so, its parameter and its test are gone; the hand-written conversation encoder was identical to the compiler's and would have silently dropped any field added later; and the app no longer creates the Connector spool folders itself, because the spool service creates and protects them on every use.
+- **Removed what only had one value.**
+  - The voice input modes both ended capture after a pause, so the flag that said so, its parameter and its test are gone;
+    - the hand-written conversation encoder was identical to the compiler's and would have silently dropped any field added later;
+    - and the app no longer creates the Connector spool folders itself, because the spool service creates and protects them on every use.
 - **Schema.** Four prototype-era tables that no code reads or writes are no longer declared; a database created before this release keeps its empty copies untouched.
-- **Documentation in code.** Every Python callable in the Connector, its tests, and the staging scripts now documents its parameters, return value, and raised errors. Stale comments about speech output and the capture limit were corrected, and the one remaining compiler warning — handing the speech library's non-Sendable components to its streaming actor — is explained where it occurs and left visible rather than silenced.
+- **Documentation in code.**
+  - Every Python callable in the Connector, its tests, and the staging scripts now documents its parameters, return value, and raised errors.
+  - Stale comments about speech output and the capture limit were corrected, and the one remaining compiler warning — handing the speech library's non-Sendable components to its streaming actor — is explained where it occurs and left visible rather than silenced.
 - **Tests.** Eleven cases were added for tag grouping, the discarded snapshot, and HTML extraction. Repeated fixtures in the reminder spool, folder indexing, and Connector service tests became helpers, and one statement-cache test was renamed because batched lookups are deliberately not cached.
 
 **Documentation corrected**
@@ -883,9 +987,16 @@ One batch of corrections across every first-party file. Local Assistant and Open
 
 **Evidence and delivery status**
 
-155 macOS test cases and all 43 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings. The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23.
+155 macOS test cases and all 43 Connector tests pass against this source from a Debug build kept outside the project; the index-activity and indexing-decision script checks pass; and the Connector companion sources type-check with the build script's settings.
 
-The offline Release build produced the signed v5.8/build 58 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.7 artifacts at the project root. Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the Connector's embedded kit carries `config.py`, `config.sh` and the v1.5.1 installer, each identical to its source. The user opened the built application on 2026-09-24 and confirmed it works. Not established by this build: the signature is ad-hoc with the hardened runtime rather than Developer ID, so the disk image is not notarized for distribution beyond this Mac. The source was delivered uncommitted and recorded in `6c2f551` and `d86e626`; the build is recorded in `da3e6f9`, and the public mirror was published from it on 2026-09-24, its tip `26a11b1` matching this folder's tree and commit sequence.
+- The interface changes — token-named colors with the same system values and one reworded setup sentence — were reviewed visually on 2026-09-23.
+
+The offline Release build produced the signed v5.8/build 58 main application, the matching signed Connector, and `Local Assistant Release.dmg`, which replace the v5.7 artifacts at the project root.
+
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit, the disk image checksum is valid, and the Connector's embedded kit carries `config.py`, `config.sh` and the v1.5.1 installer, each identical to its source.
+- The user opened the built application on 2026-09-24 and confirmed it works.
+- Not established by this build: the signature is ad-hoc with the hardened runtime rather than Developer ID, so the disk image is not notarized for distribution beyond this Mac.
+- The source was delivered uncommitted and recorded in `6c2f551` and `d86e626`; the build is recorded in `da3e6f9`, and the public mirror was published from it on 2026-09-24, its tip `26a11b1` matching this folder's tree and commit sequence.
 
 [Back to change history](#change-history)
 
@@ -894,10 +1005,12 @@ The offline Release build produced the signed v5.8/build 58 main application, th
 ### v5.7 / build 57
 
 - **Recorded date:** 2026-09-23.
-- **Server kit:** The OpenClaw server setup kit now ships the shared `config.py` and `config.sh`
-  beside the reminder bridge and store manager that import them. On a server whose workspace was
-  older than that configuration, the previous kit installed the bridge without it, so the bridge
-  failed at import and setup stopped with only a readiness timeout.
+- **Server kit:**
+  - The OpenClaw server setup kit now ships the shared `config.py` and `config.sh` beside the
+    reminder bridge and store manager that import them.
+  - On a server whose workspace was older than that configuration, the previous kit installed the
+    bridge without it, so the bridge failed at import and setup stopped with only a readiness
+    timeout.
 - **Setup:** The kit now carries Local Assistant bridge v1.5.1. Its installer checks for a CloudBase
   endpoint before it changes anything and says how to supply one. The bridge cannot serve a
   reminder request without an endpoint, and the earlier installer reported that only as a timeout.
@@ -908,13 +1021,16 @@ The offline Release build produced the signed v5.8/build 58 main application, th
 
 **Evidence and delivery status**
 
-The full macOS test suite passed, 146 test cases, and all 43 Connector tests passed. The offline
-Release build produced the signed v5.7/build 57 main application, the matching signed Connector,
-and `Local Assistant Release.dmg`. Both bundles passed strict deep signature verification, the main
-app passed the offline-boundary audit, and the disk image checksum is valid. The Connector's
-embedded kit was confirmed to carry `config.py`, `config.sh` and the v1.5.1 installer, each
-identical to its source. The rebuilt deliverables are at the project root; publication was not
-requested. The source and this record are committed together.
+The full macOS test suite passed, 146 test cases, and all 43 Connector tests passed.
+
+- The offline Release build produced the signed v5.7/build 57 main application, the matching signed
+  Connector, and `Local Assistant Release.dmg`.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary
+  audit, and the disk image checksum is valid.
+- The Connector's embedded kit was confirmed to carry `config.py`, `config.sh` and the v1.5.1
+  installer, each identical to its source.
+- The rebuilt deliverables are at the project root; publication was not requested.
+- The source and this record are committed together.
 
 [Back to change history](#change-history)
 
@@ -936,11 +1052,14 @@ requested. The source and this record are committed together.
 
 **Evidence and delivery status**
 
-The full macOS test suite passed. The offline Release build produced the signed v5.6/build 56 main
-application, the matching signed Connector, and `Local Assistant Release.dmg`. Both bundles passed
-strict deep signature verification, the main app passed the offline-boundary audit, the disk image
-checksum is valid, and the packaged 256-pixel icon representation matches the source catalog pixels.
-The rebuilt deliverables are at the project root; publication was not requested.
+The full macOS test suite passed.
+
+- The offline Release build produced the signed v5.6/build 56 main application, the matching signed
+  Connector, and `Local Assistant Release.dmg`.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary
+  audit, the disk image checksum is valid, and the packaged 256-pixel icon representation matches
+  the source catalog pixels.
+- The rebuilt deliverables are at the project root; publication was not requested.
 
 [Back to change history](#change-history)
 
@@ -955,20 +1074,25 @@ The rebuilt deliverables are at the project root; publication was not requested.
 - The prepared `Vendor` tree is recreated from pinned revisions and is not part of the repository,
   so both links resolved for no reader of the public repository. Only a checkout that had already
   run the preparation script could follow them.
-- The second label also named the wrong destination. The preserved file is upstream's agent
-  instruction document under a local name, kept that way so no nested instruction file sits in a
-  project folder. The label now names what it opens, and the sentence still records that the
-  prepared tree holds it as `CONTRIBUTOR_GUIDANCE.md`.
+- The second label also named the wrong destination.
+  - The preserved file is upstream's agent instruction document under a local name, kept that way so
+    no nested instruction file sits in a project folder.
+  - The label now names what it opens, and the sentence still records that the prepared tree holds
+    it as `CONTRIBUTOR_GUIDANCE.md`.
 - The links address `master` rather than the pinned revision, because a contributor changing the
   prepared source should follow upstream's current contribution rules.
 
 **Evidence and delivery status**
 
-Documentation only. Both upstream documents were retrieved and their headings match the preserved
-copies: `Contributors` for the contribution guide and `Instructions for llama.cpp` for the agent
-instructions. The repository link check now reports that all links in 31 documents resolve and name
-their destination, where it previously reported these two as broken; the README layout and retention
-checks pass. No source, build, application version or build number changed.
+Documentation only.
+
+- Both upstream documents were retrieved and their headings match the preserved copies:
+  `Contributors` for the contribution guide and `Instructions for llama.cpp` for the agent
+  instructions.
+- The repository link check now reports that all links in 31 documents resolve and name their
+  destination, where it previously reported these two as broken; the README layout and retention
+  checks pass.
+- No source, build, application version or build number changed.
 
 [Back to change history](#change-history)
 
@@ -979,15 +1103,23 @@ checks pass. No source, build, application version or build number changed.
 - **Recorded date:** 2026-09-20.
 
 - The server setup kit now ships `runtime_support`, the shared Python package that the typed reminder bridge and the reminder store manager both import, and the installer places it beside them in the workspace.
-- Before this, the kit shipped both callers without their package. Both import `runtime_support.strict_json`, so installing the kit onto a workspace provisioned before that module existed left the bridge unable to import at all, and the setup's own snapshot test then timed out against a Gateway that was healthy, reporting the wrong cause.
-- The installer places the shared package before its callers, so a failure leaves the workspace on its previous self-consistent pair rather than a new caller over an older package. Each install keeps the directory it replaces under a `.before-local-assistant-setup` name for rollback, and the two package installs now share one helper instead of repeating the same sequence twice.
+- Before this, the kit shipped both callers without their package.
+  - Both import `runtime_support.strict_json`, so installing the kit onto a workspace provisioned before that module existed left the bridge unable to import at all, and the setup's own snapshot test then timed out against a Gateway that was healthy, reporting the wrong cause.
+- The installer places the shared package before its callers, so a failure leaves the workspace on its previous self-consistent pair rather than a new caller over an older package.
+  - Each install keeps the directory it replaces under a `.before-local-assistant-setup` name for rollback, and the two package installs now share one helper instead of repeating the same sequence twice.
 - Existing users create and run a fresh server setup ZIP once for this to reach a server.
 
 **Evidence and delivery status**
 
 Source change only. A kit built from this source was confirmed to carry the package, and every import the kit's bridge and store manager make resolved from the installed set alone; removing the package again reproduced the original `ModuleNotFoundError`.
 
-The clean offline Release build produced signed v5.5/build 55 applications and a rebuilt disk image that replace the v5.4 artifacts at the project root. Both bundles pass a strict deep signature check and keep the project's ad-hoc signature; the main application also carries the hardened runtime, which the Connector's build does not request; the signed-app offline-boundary audit passes with only the four expected entitlements and no network entitlement; and the disk image verifies its checksum and mounts with both applications at v5.5/build 55. The shipped Connector carries the corrected kit: its embedded setup payload contains the nine-module `runtime_support` package and the installer that places it before its callers.
+The clean offline Release build produced signed v5.5/build 55 applications and a rebuilt disk image that replace the v5.4 artifacts at the project root.
+
+- Both bundles pass a strict deep signature check and keep the project's ad-hoc signature;
+  - the main application also carries the hardened runtime, which the Connector's build does not request;
+  - the signed-app offline-boundary audit passes with only the four expected entitlements and no network entitlement;
+  - and the disk image verifies its checksum and mounts with both applications at v5.5/build 55.
+- The shipped Connector carries the corrected kit: its embedded setup payload contains the nine-module `runtime_support` package and the installer that places it before its callers.
 
 146 macOS test cases and all 40 Connector tests pass against this source; the Debug test cache was removed afterwards so the project root holds only the delivered build.
 
@@ -1104,16 +1236,18 @@ returned statements have their bindings cleared so a cached insert cannot pin th
 
 A full re-read of both project READMEs after that install also corrected a stale `v5.3 (build 53)` release declaration in the Connector README that no changed hunk covered.
 
-- Reuses prepared SQL statements across calls. Every read and write on the private index used to
-  prepare a statement and discard it, so SQLite reparsed and recompiled the same SQL once per file
-  during a scan and five times per reminder during a sync. Statements are now checked out of a
-  per-connection cache and returned when the operation finishes.
+- Reuses prepared SQL statements across calls.
+  - Every read and write on the private index used to prepare a statement and discard it, so SQLite
+    reparsed and recompiled the same SQL once per file during a scan and five times per reminder
+    during a sync.
+  - Statements are now checked out of a per-connection cache and returned when the operation
+    finishes.
 - Clears a returned statement's bindings, so a cached insert does not keep the last embedding blob
   alive, and finalizes every cached statement when the connection closes.
-- Bounds that cache to the 46 statements whose SQL is fixed. SQL whose placeholder count follows the
-  query — a search's token list, a batch of identifiers, a set of item kinds — is prepared per call
-  and finalized, because caching it by text would leave a permanent entry for every distinct width
-  the app ever sees.
+- Bounds that cache to the 46 statements whose SQL is fixed.
+  - SQL whose placeholder count follows the query — a search's token list, a batch of identifiers, a
+    set of item kinds — is prepared per call and finalized, because caching it by text would leave a
+    permanent entry for every distinct width the app ever sees.
 
 Those statements run once per user query, not once per file.
 - Rebinds one delete statement for every vector belonging to a re-indexed file. A document deletes
@@ -1135,10 +1269,10 @@ Those statements run once per user query, not once per file.
 - Passed all 146 macOS test cases and all 40 Connector tests. The three added statement-reuse cases
   were each confirmed to fail when the reuse code is deliberately broken.
 - Passed the clean offline Release build, strict deep signature checks on both bundles, the
-  signed-app offline-boundary audit, and disk-image checksum and mount validation. This is the first
-  build to carry the v5.3 launchd correction. Both applications are now installed on this Mac, and
-  the Connector's existing-setup update re-registered the background job at the corrected path, so
-  that correction is in effect here.
+  signed-app offline-boundary audit, and disk-image checksum and mount validation.
+  - This is the first build to carry the v5.3 launchd correction.
+  - Both applications are now installed on this Mac, and the Connector's existing-setup update
+    re-registered the background job at the corrected path, so that correction is in effect here.
 
 - The current release is **v5.4 (build 54)**.
 - The private index now reuses its prepared SQL statements instead of preparing and discarding one for every operation, so a scan or a reminder sync stops re-parsing the same statement once per file.
@@ -1156,7 +1290,9 @@ Both applications are installed on this Mac and the Connector's existing-setup u
 
 - **Documentation:** **v5.4 status:** Complete; **Meaning:** Records v5.4/build 54 here and in the repository README, including the signed build, the installed-Mac launch-agent verification, and the checks that were not repeated.
 
-- **Release build:** **v5.4 status:** Complete; **Meaning:** The clean offline Release build produced `Local Assistant.app` and `OpenClaw Connector.app` at v5.4/build 54 with a rebuilt disk image, replacing the v5.2 artifacts at the project root. Both bundles pass a strict deep signature check, and the `DerivedData` cache was removed so the project root is the only place the build exists.
+- **Release build:**
+  - **v5.4 status:** Complete; **Meaning:** The clean offline Release build produced `Local Assistant.app` and `OpenClaw Connector.app` at v5.4/build 54 with a rebuilt disk image, replacing the v5.2 artifacts at the project root.
+  - Both bundles pass a strict deep signature check, and the `DerivedData` cache was removed so the project root is the only place the build exists.
 
 - **Automated tests:** **v5.4 status:** Complete; **Meaning:** 146 macOS test cases and all 40 Connector tests pass on this source. The three added cases cover statement reuse and were each confirmed to fail when the reuse code is deliberately broken.
 
@@ -1164,16 +1300,21 @@ Both applications are installed on this Mac and the Connector's existing-setup u
 
 - **Interface inspection:** **v5.4 status:** Complete; **Meaning:** No copy, layout, or visual styling changed in this release, and the installed v5.4 application's screens were inspected after the upgrade.
 
-- **Formal verification:** **v5.4 status:** Partial; **Meaning:** The corrected launchd registration is verified on this Mac. The installed v5.4/build 54 Connector wrote `com.soucieux.LocalAssistant.OpenClawConnector.plist` to `~/Library/LaunchAgents` with owner-only permissions, removed the superseded `~/LaunchAgents` copy, and launchd reports the job loaded from that path with its scheduled spawn armed and a zero exit code. The disconnected acceptance run over the signed application was carried out separately; runtime socket inspection is still not part of this record.
+- **Formal verification:**
+  - **v5.4 status:** Partial; **Meaning:** The corrected launchd registration is verified on this Mac.
+  - The installed v5.4/build 54 Connector wrote `com.soucieux.LocalAssistant.OpenClawConnector.plist` to `~/Library/LaunchAgents` with owner-only permissions, removed the superseded `~/LaunchAgents` copy, and launchd reports the job loaded from that path with its scheduled spawn armed and a zero exit code.
+  - The disconnected acceptance run over the signed application was carried out separately; runtime socket inspection is still not part of this record.
 
 - **Release artifact integrity:** **v5.4 status:** Complete; **Meaning:** `Local Assistant Release.dmg` verifies its checksum, mounts, and carries both applications at v5.4/build 54 beside the `Applications` link.
 
 </details>
 
-- **Status:** Released v5.4/build 54 after the private index moved to reused prepared statements and
-  paired activity writes; the signed applications and disk image at the project root replace the
-  v5.2 artifacts and are the first build carrying the v5.3 launchd correction, which is now
-  installed and re-registered at the corrected launch-agent path on this Mac.
+- **Status:**
+  - Released v5.4/build 54 after the private index moved to reused prepared statements and paired
+    activity writes;
+    - the signed applications and disk image at the project root replace the v5.2 artifacts and are
+      the first build carrying the v5.3 launchd correction, which is now installed and re-registered
+      at the corrected launch-agent path on this Mac.
 
 **Evidence and delivery status**
 
@@ -1441,10 +1582,11 @@ Historical work record
 
 - Interface inspection was completed by the maintainer directly; automated capture stayed
   unavailable because macOS withheld screen-capture permission, and no permission boundary was
-  widened. No user-facing copy, layout, or referenced design token changed. Git reconciliation:
-  Advanced Local Assistant to v4.9/build 49 and Connector runtime v1.9.0: testable indexing, bounded
-  archive expansion, deterministic retrieval, safer connector spool recovery, split setup files, and
-  completed constants/documentation.
+  widened.
+  - No user-facing copy, layout, or referenced design token changed.
+  - Git reconciliation: Advanced Local Assistant to v4.9/build 49 and Connector runtime v1.9.0:
+    testable indexing, bounded archive expansion, deterministic retrieval, safer connector spool
+    recovery, split setup files, and completed constants/documentation.
 
 - Gives ranked file results and folder-scope matches a total order. Both previously sorted a
   dictionary by one score key, so equally scored files could differ between launches for the same
@@ -1494,9 +1636,10 @@ Seven end-to-end run tests now cover the first scan, unchanged and modified file
 - Splits that 245-line `index` into an error boundary plus named passes — `startingRun`,
   `performRun`, `beginRun`, `recordUnchangedFile`, `indexChangedFile`, `announceFileStart`,
   `recordSkippedFile`, and `finishInterruptedRun` — and collapses the two identical skip-handling
-  branches into one. `index` is now 47 lines and no function in the folder exceeds 50. The record
-  and progress builders moved to `IndexingService+Records.swift` so the file stays inside the
-  800-line limit.
+  branches into one.
+  - `index` is now 47 lines and no function in the folder exceeds 50.
+  - The record and progress builders moved to `IndexingService+Records.swift` so the file stays
+    inside the 800-line limit.
 - Stops re-reading every indexed row for a folder on each run. `pruneItems` re-derived a stale list
   the run had already computed in its scan pass; it now takes that list directly.
 - Commits a run's opening per-file classifications in one transaction instead of one durable write
