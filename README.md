@@ -771,7 +771,7 @@ Local Assistant and OpenClaw Connector advance to v6.4/build 64; the Connector's
 - On 2026-10-05 the owner chose the Mac library in the delivered app and confirmed that selecting the model folder and voice input work; the app verified all 23 model files at the library's paths.
 - The Connector was not launched.
 - The replaced v6.3 set and the 23 model links in the sandbox's earlier Models folder were moved to the Trash with approval on 2026-10-05.
-- Delivered from uncommitted source.
+- Delivered uncommitted on 2026-10-05, then committed as `09a3323`, with this citation after it.
 
 [Back to change history](#change-history)
 
