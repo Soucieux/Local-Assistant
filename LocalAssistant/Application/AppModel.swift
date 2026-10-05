@@ -21,6 +21,8 @@ internal final class AppModel {
     internal var offlineStatus: OfflineStatus = .checking
     internal var modelCapabilities: [LocalModelCapabilityStatus] = []
     internal var modelStorageByteCount: Int64 = 0
+    /// The chosen model folder, at its last known place when it cannot be found; `nil` when none is chosen.
+    internal var modelLibraryPath: String?
     internal var indexedFileCount = 0
     internal var indexStorageByteCount: Int64 = 0
     internal var reminderSyncState: ReminderSyncState = .disabled
@@ -47,7 +49,6 @@ internal final class AppModel {
     internal var inputFocusRequest = 0
     internal var conversationClearConfirmationIsPresented = false
     internal var activityClearConfirmationIsPresented = false
-    internal var modelRemovalConfirmationIsPresented = false
     internal var searchIndexClearConfirmationIsPresented = false
     internal private(set) var pendingOpenClawRequest: OpenClawRequestIntent?
     internal var presentedError: LocalAssistantError?
@@ -138,10 +139,7 @@ internal final class AppModel {
                 runtime: services.runtime,
                 voice: services.voice
             )
-            let status = try await bootstrapper.start()
-            offlineStatus = status.state
-            modelCapabilities = status.capabilities
-            modelStorageByteCount = status.totalByteCount
+            showModelStatus(try await bootstrapper.start())
             indexedFileCount = try await services.database.indexedFileCount()
             indexStorageByteCount = try await services.database.databaseByteCount()
             indexedRoots = try await services.database.fetchRoots()
@@ -185,10 +183,7 @@ internal final class AppModel {
     /// Re-verifies installed models and re-counts indexed files on demand.
     internal func checkSystemStatus() async {
         do {
-            let status = try await services.modelStore.refreshStatus()
-            offlineStatus = status.state
-            modelCapabilities = status.capabilities
-            modelStorageByteCount = status.totalByteCount
+            try await useModelStatus(try await services.modelStore.refreshStatus())
             indexedFileCount = try await services.database.indexedFileCount()
             indexStorageByteCount = try await services.database.databaseByteCount()
         } catch {
@@ -196,27 +191,51 @@ internal final class AppModel {
         }
     }
 
-    /// Requests confirmation before every installed model file is deleted.
-    internal func requestModelRemovalConfirmation() {
+    /// Lets the user choose the folder Local Assistant reads its models from, then loads what is ready.
+    internal func chooseModelLibrary() async {
         guard isBusy == false, isIndexing == false, isListening == false else { return }
-        modelRemovalConfirmationIsPresented = true
-    }
-
-    /// Dismisses the model-removal confirmation without deleting anything.
-    internal func dismissModelRemovalConfirmation() {
-        modelRemovalConfirmationIsPresented = false
-    }
-
-    /// Deletes every installed model file and refreshes readiness for all three capabilities.
-    internal func confirmModelRemoval() async {
-        modelRemovalConfirmationIsPresented = false
         do {
-            let status = try await services.modelStore.removeInstalledModels()
-            offlineStatus = status.state
-            modelCapabilities = status.capabilities
-            modelStorageByteCount = status.totalByteCount
+            guard let selection = try await services.authorization.authorizeModelLibrary() else { return }
+            try await useModelStatus(try await services.modelStore.selectLibrary(selection))
         } catch {
             handle(error)
+        }
+    }
+
+    /// Stops reading models from the chosen folder; the folder and its files are left as they are.
+    internal func stopUsingModelLibrary() async {
+        guard isBusy == false, isIndexing == false, isListening == false else { return }
+        do {
+            try await useModelStatus(try await services.modelStore.forgetLibrary())
+        } catch {
+            handle(error)
+        }
+    }
+
+    /// Shows a model status in Settings.
+    /// - Parameter status: Status the model store just computed.
+    private func showModelStatus(_ status: LocalModelStatus) {
+        offlineStatus = status.state
+        modelCapabilities = status.capabilities
+        modelStorageByteCount = status.totalByteCount
+        modelLibraryPath = status.libraryPath
+    }
+
+    /// Shows a model status and, once every model is ready, loads the runtimes.
+    ///
+    /// Models that become ready after launch, because a folder was chosen or its drive was
+    /// reconnected, also start the indexing run that launch would have requested.
+    /// - Parameter status: Status the model store just computed.
+    /// - Throws: A local inference error when a ready model cannot be loaded.
+    private func useModelStatus(_ status: LocalModelStatus) async throws {
+        let becameReady = offlineStatus != .ready && status.state == .ready
+        showModelStatus(status)
+        guard status.state == .ready else { return }
+        try await services.runtime.load(status: status)
+        await services.voice.configure(modelURL: status.speechURL)
+        guard becameReady else { return }
+        for root in indexedRoots where pausedMonitoringRootIDs.contains(root.id) == false {
+            requestIndex(root: root, trigger: .startup)
         }
     }
 

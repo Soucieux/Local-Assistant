@@ -163,6 +163,8 @@ The scanner:
 - excludes credential-like extensions before content extraction; and
 - treats unreadable items as skipped rather than bypassing macOS controls.
 
+The model folder enters scope the same way. The user chooses it under **Settings → Models**; `ModelStore` keeps its read-only bookmark in `model-library.json` and holds the folder's security scope for as long as the folder stays chosen, because the runtimes keep reading the model files after they load. The folder is never indexed, and the app never writes, moves, or deletes anything in it.
+
 `Open File` and `Reveal in Finder` are explicit user actions. Immediately before either handoff, the app resolves current symlink targets and rejects a target outside the active authorized root. It then hands the resolved URL to macOS; any external application operates under its own permissions.
 
 ### Private writable zone
@@ -176,8 +178,10 @@ The app creates owner-only content below:
 │   ├── Processing/
 │   └── Responses/
 ├── Index/assistant.sqlite3
-└── Models/
+└── model-library.json
 ```
+
+No model is stored here. The models stay in the chosen model folder, laid out as the shared library is (`gguf/` and `whisper/`), and are read in place.
 
 The spool contains bounded task and response JSON only. It contains no token, remote origin, model credential, or unrestricted application state. The connector keeps only the validated non-secret SSH server address, port, restricted username, and public pinned host key in its own Application Support directory; the reminder-snapshot and full-operator tokens remain in separate macOS Keychain entries. Its owner-only LangGraph checkpoint database retains only connector workflow state and the task envelope. An agent task can therefore retain the exact submitted message and typed authorization, but never reminder rows, file-index content, or app conversation history. Confirmed Connector cleanup deletes those exact Keychain entries and the Connector directory while preserving the Local Assistant database, including the last committed reminder cache and RAG index.
 
@@ -194,9 +198,9 @@ Connected preparation is confined to repository scripts run outside the app. The
 Configuration alone is not treated as sufficient. WhisperKit is configured with `download: false` and `useBackgroundDownloadSession: false`, and two capabilities are removed from the vendored source rather than switched off:
 
 - its model-hub client started an `NWPathMonitor` whenever it was constructed, which observes network state before any request is made; and
-- its tokenizer loader downloaded a missing tokenizer from a public model host, which is reached whenever the installed model folder lacks one.
+- its tokenizer loader downloaded a missing tokenizer from a public model host, which is reached whenever the speech model's folder lacks one.
 
-Both are removed. Offline mode is unconditional and a caller cannot re-enable downloading; a missing tokenizer raises a reinstall instruction. The tokenizer ships inside the verified model package and is found in the installed model folder, so no cache directory outside the sandbox is consulted.
+Both are removed. Offline mode is unconditional and a caller cannot re-enable downloading; a missing tokenizer raises a reinstall instruction. The tokenizer ships inside the verified model package and is found in the speech model's folder, so no cache directory outside the sandbox is consulted.
 
 `Vendor/` is regenerated from pinned revisions and is not tracked in Git, so a modification made only there would disappear on the next checkout. The modified files are stored under `Patches/WhisperKit/` with the dependency revision they apply to. `Scripts/apply_offline_patches.py` refuses to run against a different pinned revision, restores the stored files, and then verifies that the required marker is present and that the removed constructs are absent from the resulting source. `Scripts/prepare_dependencies.py` invokes it after every checkout, so preparation fails rather than silently producing a network-capable build.
 
@@ -308,7 +312,7 @@ Library state is converted to an app value where the library reports it, so a no
 never crosses an isolation boundary. The library writes an English placeholder into its own
 partial text before speech arrives; that placeholder is filtered rather than displayed.
 
-Settings reports voice input as unavailable when the installed model folder lacks its tokenizer files, rather than reporting readiness that fails at first use.
+Settings reports voice input as unavailable when the speech model's folder lacks its tokenizer files, rather than reporting readiness that fails at first use.
 
 There is no speech-output or cloud transcription path in the current release.
 
@@ -367,7 +371,7 @@ The bundle runs only against the Debug configuration. Loading a test bundle into
 
 The Debug configuration therefore also carries `get-task-allow`, a test-manager lookup exception, and a read-only sandbox exception used by the test harness. Those widen the Debug sandbox and never ship: `Scripts/build_offline.sh` builds Release, and the boundary audit refuses a Debug build.
 
-`SettingsModelStatusPreviews.swift` renders the model readiness states that a verified installation never reaches. Chat, file search, and voice input all report ready once the offline model package is installed, so reviewing the not-installed and damaged wording in a running app would mean deliberately removing or corrupting installed model files. The previews instead construct the presentation state directly and render each readiness state — including voice input missing only its tokenizer — in light and dark side by side at the minimum window size, which is what the interface-inspection gate asks for. The whole file sits inside `#if DEBUG`; the Release build defines no such condition, and the preview types are absent from the Release binary while present in the Debug binary.
+`SettingsModelStatusPreviews.swift` renders the model readiness states that a verified installation never reaches. Chat, file search, and voice input all report ready once the offline model package is installed, so reviewing the not-installed and damaged wording in a running app would mean deliberately removing or corrupting installed model files. The previews instead construct the presentation state directly and render each readiness state — including no model folder chosen, a chosen folder that can no longer be found, and voice input missing only its tokenizer — in light and dark side by side at the minimum window size, which is what the interface-inspection gate asks for. The whole file sits inside `#if DEBUG`; the Release build defines no such condition, and the preview types are absent from the Release binary while present in the Debug binary.
 
 ## Release gates
 

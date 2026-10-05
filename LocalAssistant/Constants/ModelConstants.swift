@@ -2,6 +2,12 @@ import Foundation
 
 /// Names and integrity values for locally installed inference assets.
 internal enum ModelConstants {
+    /// Where each kind of model sits inside a model folder, following the shared library's layout.
+    internal enum Library {
+        internal static let languageModelDirectory = "gguf"
+        internal static let speechModelDirectory = "whisper"
+    }
+
     internal enum Chat {
         internal static let filename = "Qwen3-4B-Q4_K_M.gguf"
         internal static let sha256 = "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5"

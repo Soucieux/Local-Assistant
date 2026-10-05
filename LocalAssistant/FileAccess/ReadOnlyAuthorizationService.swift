@@ -8,10 +8,45 @@ internal final class ReadOnlyAuthorizationService {
     /// - Returns: Newly authorized root, or `nil` when the user cancels.
     /// - Throws: A local permission error when bookmark creation fails.
     internal func authorizeNewRoot() async throws -> AuthorizedRoot? {
+        guard let url = await chooseDirectory(
+            title: UIStrings.folderPickerTitle,
+            message: UIStrings.folderPickerMessage,
+            prompt: UIStrings.folderPickerPrompt
+        ) else { return nil }
+        return AuthorizedRoot(
+            id: StableIdentifier.uuid(for: url.standardizedFileURL.path),
+            displayName: url.lastPathComponent,
+            lastKnownPath: url.path,
+            bookmarkData: try readOnlyBookmark(for: url),
+            addedAt: Date(),
+            lastIndexedAt: nil,
+            isAvailable: true
+        )
+    }
+
+    /// Presents a directory picker and returns the folder Local Assistant reads its models from.
+    /// - Returns: The chosen model folder, or `nil` when the user cancels.
+    /// - Throws: A local permission error when bookmark creation fails.
+    internal func authorizeModelLibrary() async throws -> ModelLibrarySelection? {
+        guard let url = await chooseDirectory(
+            title: UIStrings.modelLibraryPickerTitle,
+            message: UIStrings.modelLibraryPickerMessage,
+            prompt: UIStrings.modelLibraryPickerPrompt
+        ) else { return nil }
+        return ModelLibrarySelection(bookmarkData: try readOnlyBookmark(for: url), path: url.path)
+    }
+
+    /// Presents a picker for one existing directory.
+    /// - Parameters:
+    ///   - title: Panel title.
+    ///   - message: Sentence explaining what the choice grants.
+    ///   - prompt: Label of the confirming button.
+    /// - Returns: The chosen directory, or `nil` when the user cancels.
+    private func chooseDirectory(title: String, message: String, prompt: String) async -> URL? {
         let panel = NSOpenPanel()
-        panel.title = UIStrings.folderPickerTitle
-        panel.message = UIStrings.folderPickerMessage
-        panel.prompt = UIStrings.folderPickerPrompt
+        panel.title = title
+        panel.message = message
+        panel.prompt = prompt
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
@@ -23,22 +58,20 @@ internal final class ReadOnlyAuthorizationService {
                 continuation.resume(returning: result)
             }
         }
-        guard response == .OK, let url = panel.url else { return nil }
+        guard response == .OK else { return nil }
+        return panel.url
+    }
 
+    /// Creates a persistable bookmark that grants read-only access to a chosen directory.
+    /// - Parameter url: Directory the user chose in a picker.
+    /// - Returns: App-scoped, read-only bookmark data.
+    /// - Throws: A local permission error when bookmark creation fails.
+    private func readOnlyBookmark(for url: URL) throws -> Data {
         do {
-            let bookmark = try url.bookmarkData(
+            return try url.bookmarkData(
                 options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess],
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
-            )
-            return AuthorizedRoot(
-                id: StableIdentifier.uuid(for: url.standardizedFileURL.path),
-                displayName: url.lastPathComponent,
-                lastKnownPath: url.path,
-                bookmarkData: bookmark,
-                addedAt: Date(),
-                lastIndexedAt: nil,
-                isAvailable: true
             )
         } catch {
             throw LocalAssistantError.permission(error.localizedDescription)

@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.3%20build%2063-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.4%20build%2064-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 <!-- project-control:section=overview -->
 ## Overview
@@ -239,8 +239,11 @@ From the transferred project root, run:
 ./outputs/LocalAssistant-OfflineKit/install_offline_assets.sh
 ```
 
-- **Result:** Verified local models are installed inside the application sandbox.
-- The installer refuses to overwrite an existing model or checksum manifest; verify or move the existing asset before retrying.
+- **Result:** Verified local models are in the shared model library, and their checksum manifest is inside the application sandbox.
+  - The library is `~/Documents/AI-Models` unless another folder is given as the script's argument.
+  - A model the library already holds is left as it is; the app checks it against its pinned checksums.
+- The installer refuses to overwrite an existing checksum manifest.
+- Open Local Assistant, then choose that folder under **Settings → Models**.
 
 #### Step 5 — Build the Release application
 
@@ -314,8 +317,8 @@ LocalAssistant/
 │   └── Responses/
 │       └── scheduled-reminder-snapshot.json
 ├── Index/assistant.sqlite3
-├── Models/
 ├── model-assets.sha256
+├── model-library.json
 └── model-verification.json
 ```
 
@@ -448,11 +451,14 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 - The shared library's README records **Local Assistant** as a consumer of all three models and owns their exact revision, storage and change-history records.
 - Project settings, indexes and installation-specific verification records stay in the app's private storage.
 
-On the current Mac, the app's existing sandbox filenames are **hard links to these shared files**: both locations name the same stored data, without duplicate model copies.
+The app keeps no model of its own. Under **Settings → Models**, **Choose Folder…** selects the model folder, and the app reads the three models there in place with read-only access.
 
-- No additional terminal, service, SSD or app setting is needed.
-- The offline installer does not create this sharing arrangement automatically; check the links after reinstalling or replacing models.
-- This storage arrangement does not change the app's sandbox or offline runtime boundary.
+- The folder follows the shared library's layout shown in the table, so the Mac library and the library on the external SSD are both valid choices.
+- Settings shows the chosen folder, and says when none is chosen, when the folder can no longer be found, and when a model is missing from it or damaged.
+- **Stop Using** forgets the choice; the app never changes or deletes anything in the folder.
+  - A model that is already loaded stays in memory until the app is reopened.
+- No additional terminal or service is needed.
+- This storage arrangement does not change the app's sandbox or offline runtime boundary: the app reaches the folder only through the choice made in the picker.
 
 SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
 
@@ -609,12 +615,14 @@ The optional Connector requires an approved route to the OpenClaw server.
 
 ## Troubleshooting
 
-### Why does Settings say a feature is not installed or damaged?
+### Why does Settings say a model is not found or damaged?
 
 Open **Settings → Models**:
 
-- **Not installed:** install the verified offline model package.
-- **Damaged:** reinstall the package because a model file failed its integrity check.
+- **Choose your model folder:** no folder is chosen yet; choose the AI-Models folder with **Choose Folder…**.
+- **The model folder can't be found:** reconnect the drive it is on and choose **Check Now**, or choose the folder again.
+- **Not found:** the folder lacks that model; add it by installing the verified offline model package, or choose another folder.
+- **Damaged:** replace the file with a verified copy because it failed its integrity check.
 
 The app cannot download a replacement itself.
 
@@ -654,7 +662,7 @@ Another application may already own `⌃⌥Space`. Quit or reconfigure the confl
 
 - Confirm that macOS microphone permission is allowed.
 - Confirm that **Settings → Models** reports Voice input as ready.
-- If it is unavailable, reinstall the verified offline model package.
+- If it is unavailable, check the model folder there, then reinstall the verified offline model package if the model is missing.
 
 The first transcription may wait briefly while the local speech model loads.
 
@@ -665,7 +673,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v6.3 (build 63)**. [Release details and delivery evidence](#v6-3-build-63).
+**v6.4 (build 64)**. [Release details and delivery evidence](#v6-4-build-64).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -690,6 +698,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v6.4 / build 64 | 2026-10-05 | <ul><li><strong>Models:</strong> The app keeps no model of its own; it reads the three models in place from a model folder chosen under Settings → Models.</li><li><strong>Settings:</strong> Models names the chosen folder and says when none is chosen, when it can no longer be found, and when a model is missing or damaged.</li><li><strong>Installer:</strong> The offline installer puts models into the shared library instead of the app's private storage.</li><li><strong>Evidence:</strong> 160 Swift and 43 Connector tests, the Release set's signatures, the offline-boundary audit and a launch passed; the owner then chose the model folder in the delivered app, which verified every model in it.</li></ul> | [Full record](#v6-4-build-64) |
 | Documentation | 2026-10-05 | <ul><li><strong>Readability:</strong> Long paragraphs, bullets and table cells are now short leads with sub-points, one fact each; no detail was removed.</li></ul> | [Full record](#readme-structure) |
 | v6.3 / build 63 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.6, whose store manager no longer needs a package the kit does not ship, and which reads the CloudBase token only from its own section.</li><li><strong>Checks:</strong> The kit check now also reads the Python the kit's shell scripts embed, which is where the missing package hid.</li><li><strong>Delivery:</strong> Signed v6.3 applications and a rebuilt disk image replace the v6.2 set at the project root.</li></ul> | [Full record](#v6-3-build-63) |
 | v6.2 / build 62 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.5, which reads the pending-report retry budget only under its current name.</li><li><strong>Delivery:</strong> Signed v6.2 applications and a rebuilt disk image replace the v6.1 set at the project root.</li></ul> | [Full record](#v6-2-build-62) |
@@ -725,6 +734,46 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="v6-4-build-64"></a>
+
+### v6.4 / build 64
+
+- **Recorded date:** 2026-10-05.
+
+Local Assistant no longer keeps models in its private storage. It reads them in place from a model folder the user chooses, and Settings says plainly when that folder or a model in it is missing.
+
+Local Assistant and OpenClaw Connector advance to v6.4/build 64; the Connector's runtime and companion app are unchanged.
+
+**Changed**
+
+- **Model folder.**
+  - The app read its three models from a Models folder inside its sandbox container; on this Mac those files were hard links to the shared library, and an offline install made real copies there.
+  - **Settings → Models** now has **Choose Folder…**. The app keeps a read-only bookmark to the chosen folder and reads the models there, at the shared library's paths: `gguf/` for the chat and file-search models and `whisper/` for the speech model.
+  - The Mac library and the library on the external SSD are both valid choices.
+  - Each model is still checked against its pinned checksum, and the speech model against the installed checksum manifest, before it is used.
+- **Settings states.**
+  - Models shows the chosen folder with the size of the models read from it.
+  - It has its own wording for no folder chosen, a chosen folder that can no longer be found, a model missing from the folder, and a damaged file.
+  - **Check Now** loads the models when a drive is reconnected, without reopening the app.
+- **Removal.** **Remove Downloaded Models** is gone, because the app must never delete files in a shared library. **Stop Using** forgets the chosen folder and leaves it untouched.
+  - A model that is already loaded stays in memory until the app is reopened, as it did after the earlier removal.
+- **Installer.** `Scripts/install_offline_assets.sh` installs the kit's models into a model library, `~/Documents/AI-Models` unless a folder is given, leaves a model the library already holds as it is, and still writes the checksum manifest into the sandbox.
+- **After updating.** The app shows **Choose your model folder** until the folder is chosen once; the earlier Models folder in the sandbox is no longer read.
+
+**Evidence and delivery status**
+
+- All 160 Swift tests passed, five of them new for the model folder states, and all 43 Connector tests passed.
+- The new Settings states were rendered from the built app in the light appearance at the minimum window width and reviewed: no folder chosen, folder not found, a model missing, and everything ready.
+- The offline Release build, run in a separate working copy, produced the signed v6.4/build 64 main application, the matching signed Connector, and `Local Assistant Release.dmg`.
+- Both bundles passed strict deep signature verification, the main app passed the offline-boundary audit with its four entitlements unchanged, and the disk image checksum is valid.
+- The set replaced the v6.3 artifacts at the project root, where the application launched, stayed running for ten seconds without a crash report, and quit on request.
+- On 2026-10-05 the owner chose the Mac library in the delivered app and confirmed that selecting the model folder and voice input work; the app verified all 23 model files at the library's paths.
+- The Connector was not launched.
+- The replaced v6.3 set and the 23 model links in the sandbox's earlier Models folder were moved to the Trash with approval on 2026-10-05.
+- Delivered from uncommitted source.
+
+[Back to change history](#change-history)
 
 <a id="readme-structure"></a>
 

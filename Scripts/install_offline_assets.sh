@@ -1,19 +1,22 @@
 #!/bin/zsh
-# Installs the verified offline model assets into the Local Assistant app container on the
-# disconnected Mac, refusing to overwrite an existing model or manifest.
+# Installs the verified offline model assets into a shared model library on the disconnected
+# Mac. Local Assistant keeps no model of its own: after installing, choose the library folder
+# in Settings, under Models.
 #
-# Input:  none; runs from inside the offline kit, beside its Models/ folder and SHA256SUMS
+# Input:  optional library folder; ~/Documents/AI-Models when omitted. Runs from inside the
+#         offline kit, beside its Models/ folder and SHA256SUMS
 # Reads:  Models/ and SHA256SUMS next to the script; every checksum is verified first
-# Writes: Models/ and model-assets.sha256 under the app container's Application Support
-#         directory, with owner-only permissions
+# Writes: gguf/ and whisper/ under the library folder, leaving a model already there as it is,
+#         and model-assets.sha256, owner-only, under the app container's Application Support
+#         directory; refuses to overwrite an existing manifest
 # Run by: hand from outputs/LocalAssistant-OfflineKit (README, Build from source, step 4)
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"
 BUNDLE_MODELS="${SCRIPT_DIR}/Models"
 MANIFEST_FILE="${SCRIPT_DIR}/SHA256SUMS"
+LIBRARY_ROOT="${1:-${HOME}/Documents/AI-Models}"
 CONTAINER_ROOT="${HOME}/Library/Containers/com.soucieux.LocalAssistant/Data/Library/Application Support/LocalAssistant"
-DESTINATION_MODELS="${CONTAINER_ROOT}/Models"
 DESTINATION_MANIFEST="${CONTAINER_ROOT}/model-assets.sha256"
 
 if [[ ! -d "${BUNDLE_MODELS}" || ! -f "${MANIFEST_FILE}" ]]; then
@@ -31,22 +34,27 @@ fi
   /usr/bin/shasum -a 256 -c "${MANIFEST_FILE}"
 )
 
-/bin/mkdir -p "${DESTINATION_MODELS}"
-/bin/chmod 700 "${CONTAINER_ROOT}" "${DESTINATION_MODELS}"
-
 for source in "${BUNDLE_MODELS}"/*; do
-  destination="${DESTINATION_MODELS}/${source:t}"
-  if [[ -e "${destination}" ]]; then
-    print -u2 "Refusing to overwrite existing model asset: ${destination}"
-    print -u2 "Verify or move the existing asset, then run this installer again."
-    exit 1
+  # The library keeps a language model, a single file, under gguf/ and a speech model, a
+  # folder, under whisper/.
+  if [[ -d "${source}" ]]; then
+    destination="${LIBRARY_ROOT}/whisper/${source:t}"
+  else
+    destination="${LIBRARY_ROOT}/gguf/${source:t}"
   fi
+  # A shared library may already hold the model for another app. It is left untouched, and
+  # Local Assistant checks it against its pinned checksums when it opens.
+  if [[ -e "${destination}" ]]; then
+    print "Already in the library, left as it is: ${destination}"
+    continue
+  fi
+  /bin/mkdir -p "${destination:h}"
   /usr/bin/ditto "${source}" "${destination}"
 done
 
+/bin/mkdir -p "${CONTAINER_ROOT}"
+/bin/chmod 700 "${CONTAINER_ROOT}"
 /usr/bin/ditto "${MANIFEST_FILE}" "${DESTINATION_MANIFEST}"
-
-/usr/bin/find "${DESTINATION_MODELS}" -type d -exec /bin/chmod 700 {} +
-/usr/bin/find "${DESTINATION_MODELS}" -type f -exec /bin/chmod 600 {} +
 /bin/chmod 600 "${DESTINATION_MANIFEST}"
-print "Verified offline model assets installed in the app container."
+print "Verified offline model assets installed in the model library: ${LIBRARY_ROOT}"
+print "Open Local Assistant, then choose that folder in Settings, under Models."

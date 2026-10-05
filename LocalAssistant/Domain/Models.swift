@@ -11,6 +11,12 @@ internal struct AuthorizedRoot: Identifiable, Codable, Hashable, Sendable {
     internal var isAvailable: Bool
 }
 
+/// The model folder the user chose, as a read-only security-scoped bookmark and its path.
+internal struct ModelLibrarySelection: Sendable {
+    internal let bookmarkData: Data
+    internal let path: String
+}
+
 /// Metadata for a file or directory stored in the local index.
 internal struct IndexedItem: Identifiable, Codable, Hashable, Sendable {
     internal let id: UUID

@@ -77,12 +77,18 @@ internal enum UIStrings {
     internal static let modelsEverythingReady = "Everything is ready"
     internal static let modelsEverythingReadyDescription =
         "Chat, file search, and voice input are available."
-    internal static let modelsMissing = "Some features are not installed"
+    internal static let modelsNoLibrary = "Choose your model folder"
+    internal static let modelsNoLibraryDescription =
+        "Local Assistant reads its models from a folder you choose and keeps no copy of its own. Choose your AI-Models folder to turn on the features listed below."
+    internal static let modelsLibraryUnavailable = "The model folder can’t be found"
+    internal static let modelsLibraryUnavailableDescription =
+        "It was moved, renamed, or is on a drive that isn’t connected. Reconnect the drive and check again, or choose the folder again."
+    internal static let modelsMissing = "Some models are missing from the folder"
     internal static let modelsMissingDescription =
-        "Install the offline model package to turn on the features listed below."
+        "Add the missing models to your model folder, or choose a different folder, to turn on the features listed below."
     internal static let modelsDamaged = "Some files are damaged"
     internal static let modelsDamagedDescription =
-        "Reinstall the offline model package to replace files that no longer match what the app expects."
+        "Replace the files in your model folder that no longer match what the app expects with verified copies."
     internal static let modelsChecking = "Checking what is ready"
     internal static let modelsCheckingDescription =
         "Local Assistant checks its required files when the app opens."
@@ -104,17 +110,19 @@ internal enum UIStrings {
     internal static let voiceHoldSpaceDescription =
         "Hold Space while the command field is not being edited. Release it or pause for \(Int(VoiceConstants.silenceTimeout)) seconds to send."
     internal static let modelCapabilityReady = "Ready"
-    internal static let modelCapabilityMissing = "Not installed"
+    internal static let modelCapabilityMissing = "Not found"
     internal static let modelCapabilityDamaged = "Damaged"
     internal static let modelCapabilityChecking = "Checking"
-    internal static let modelStoragePrivate = "Private app storage"
     internal static let modelsCheckedOnLaunch = "Checked when the app opens"
     internal static let checkNow = "Check Now"
-    internal static let removeDownloadedModels = "Remove Downloaded Models"
-    internal static let removeDownloadedModelsAction = "Remove Models"
-    internal static let removeDownloadedModelsTitle = "Remove downloaded models?"
-    internal static let removeDownloadedModelsMessage =
-        "This deletes every installed model file. Chat, file search, and voice input become unavailable until the models are reinstalled and Local Assistant is reopened."
+    internal static let modelLibrary = "Model folder"
+    internal static let modelLibraryNotChosen = "Not chosen"
+    internal static let chooseModelLibrary = "Choose Folder…"
+    internal static let stopUsingModelLibrary = "Stop Using"
+    internal static let modelLibraryPickerTitle = "Choose your model folder"
+    internal static let modelLibraryPickerMessage =
+        "Local Assistant receives read-only access to the folder and reads its models there. It never changes or deletes them."
+    internal static let modelLibraryPickerPrompt = "Use This Folder"
     internal static let clearSearchIndex = "Clear Search Index"
     internal static let clearSearchIndexAction = "Clear Index"
     internal static let clearSearchIndexTitle = "Clear the search index?"
@@ -315,15 +323,19 @@ internal enum UIStrings {
         "\(ready) of \(total) ready"
     }
 
-    /// Formats the total private storage used by installed model assets.
-    /// - Parameter byteCount: Total number of locally installed bytes.
-    /// - Returns: Human-readable private-storage usage.
-    internal static func modelStorageUsage(_ byteCount: Int64) -> String {
+    /// Describes the chosen model folder: where it is and how much the models in it hold.
+    /// - Parameters:
+    ///   - path: The folder's path, or `nil` when none is chosen.
+    ///   - byteCount: Total size of the models read from the folder.
+    /// - Returns: The path, then the size when any model was found; "Not chosen" without a folder.
+    internal static func modelLibraryDetail(path: String?, byteCount: Int64) -> String {
+        guard let path else { return modelLibraryNotChosen }
+        guard byteCount > 0 else { return path }
         let formatted = ByteCountFormatter.string(
             fromByteCount: byteCount,
             countStyle: .file
         )
-        return "\(formatted) in \(modelStoragePrivate.lowercased())"
+        return "\(path) · \(formatted)"
     }
 
     /// Formats the total on-disk size of the private search index.

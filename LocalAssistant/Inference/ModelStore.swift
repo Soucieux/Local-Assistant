@@ -8,9 +8,11 @@ internal struct LocalModelCapabilityStatus: Identifiable, Sendable {
     internal let byteCount: Int64
 }
 
-/// Verified paths and readiness for all locally installed model assets.
+/// Verified paths and readiness for all model assets in the chosen model folder.
 internal struct LocalModelStatus: Sendable {
     internal let state: OfflineStatus
+    /// The chosen model folder, at its last known place when it cannot be found; `nil` when none is chosen.
+    internal let libraryPath: String?
     internal let chatURL: URL?
     internal let embeddingURL: URL?
     internal let speechURL: URL?
@@ -18,10 +20,15 @@ internal struct LocalModelStatus: Sendable {
     internal let totalByteCount: Int64
 }
 
-/// Locates and verifies models only inside the app's private container.
+/// Locates and verifies models in the model folder the user chose, reading them where they are.
+///
+/// The app keeps no model of its own. The folder follows the shared library's layout, and the
+/// store holds its read-only security scope for as long as the folder stays chosen, because the
+/// runtimes keep reading the files after they load.
 internal actor ModelStore {
     internal private(set) var status = LocalModelStatus(
         state: .checking,
+        libraryPath: nil,
         chatURL: nil,
         embeddingURL: nil,
         speechURL: nil,
@@ -39,21 +46,53 @@ internal actor ModelStore {
         internal let verifiedAt: Double
     }
 
+    /// The chosen model folder as it is kept between launches.
+    private struct StoredLibrary: Codable {
+        internal let bookmarkData: Data
+        internal let lastKnownPath: String
+    }
+
+    private let supportDirectory: URL?
+    private var libraryAccess: SecurityScopedAccess?
     private var verifiedAssets: [String: VerifiedAsset] = [:]
     private var hasLoadedVerificationCache = false
     private var verificationCacheChanged = false
 
-    /// Recomputes model readiness using pinned filenames and SHA-256 values.
-    /// - Returns: Current local model status.
-    /// - Throws: A local error when the models directory or an installed asset cannot be read.
+    /// Creates the store.
+    /// - Parameter supportDirectory: Folder for the store's own records; the app's private
+    ///   Application Support folder when omitted.
+    internal init(supportDirectory: URL? = nil) {
+        self.supportDirectory = supportDirectory
+    }
+
+    /// Recomputes model readiness from the chosen model folder.
+    /// - Returns: Current local model status; it names a folder that is not chosen or cannot be found.
+    /// - Throws: A local error when the store's records or a model file cannot be read.
     internal func refreshStatus() throws -> LocalModelStatus {
-        let modelsDirectory = try AppDirectories.modelsDirectory()
-        let chatURL = modelsDirectory.appendingPathComponent(ModelConstants.Chat.filename)
-        let embeddingURL = modelsDirectory.appendingPathComponent(ModelConstants.Embedding.filename)
-        let speechURL = modelsDirectory.appendingPathComponent(
-            ModelConstants.Speech.directoryName,
+        guard let stored = try storedLibrary() else {
+            libraryAccess = nil
+            return unavailableStatus(.noLibrary, libraryPath: nil)
+        }
+        guard let libraryURL = openLibrary(stored) else {
+            return unavailableStatus(.libraryUnavailable, libraryPath: stored.lastKnownPath)
+        }
+        return try refreshStatus(libraryURL: libraryURL)
+    }
+
+    /// Recomputes model readiness for one model folder, using pinned filenames and SHA-256 values.
+    /// - Parameter libraryURL: Readable model folder laid out as the shared library is.
+    /// - Returns: Current local model status.
+    /// - Throws: A local error when the store's records or a model file cannot be read.
+    internal func refreshStatus(libraryURL: URL) throws -> LocalModelStatus {
+        let languageModels = libraryURL.appendingPathComponent(
+            ModelConstants.Library.languageModelDirectory,
             isDirectory: true
         )
+        let chatURL = languageModels.appendingPathComponent(ModelConstants.Chat.filename)
+        let embeddingURL = languageModels.appendingPathComponent(ModelConstants.Embedding.filename)
+        let speechURL = libraryURL
+            .appendingPathComponent(ModelConstants.Library.speechModelDirectory, isDirectory: true)
+            .appendingPathComponent(ModelConstants.Speech.directoryName, isDirectory: true)
         let fileManager = FileManager.default
         let chatExists = fileManager.fileExists(atPath: chatURL.path)
         let embeddingExists = fileManager.fileExists(atPath: embeddingURL.path)
@@ -71,7 +110,7 @@ internal actor ModelStore {
             false
         }
         let speechVerified = if speechExists && manifestExists {
-            try verifyInstalledAssetManifest(modelsDirectory: modelsDirectory)
+            try verifyInstalledAssetManifest(speechDirectory: speechURL)
         } else {
             false
         }
@@ -107,6 +146,7 @@ internal actor ModelStore {
         }
         status = LocalModelStatus(
             state: overallState,
+            libraryPath: libraryURL.path,
             chatURL: chatVerified ? chatURL : nil,
             embeddingURL: embeddingVerified ? embeddingURL : nil,
             speechURL: speechVerified ? speechURL : nil,
@@ -117,35 +157,91 @@ internal actor ModelStore {
         return status
     }
 
-    /// Deletes every installed model file and clears cached verification state.
-    /// - Returns: Freshly recomputed status reporting every capability as missing.
-    /// - Throws: A local error when installed files cannot be removed or re-created.
-    internal func removeInstalledModels() throws -> LocalModelStatus {
-        let modelsDirectory = try AppDirectories.modelsDirectory()
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: modelsDirectory.path) {
-            try fileManager.removeItem(at: modelsDirectory)
-        }
-        try fileManager.createDirectory(
-            at: modelsDirectory,
-            withIntermediateDirectories: true,
-            attributes: [.posixPermissions: AppConstants.Storage.ownerOnlyDirectoryPermissions]
+    /// Keeps the folder the user chose and reads the models in it.
+    /// - Parameter selection: Read-only bookmark and path of the chosen folder.
+    /// - Returns: Freshly recomputed status for that folder.
+    /// - Throws: A local error when the choice cannot be saved or a model file cannot be read.
+    internal func selectLibrary(_ selection: ModelLibrarySelection) throws -> LocalModelStatus {
+        let stored = StoredLibrary(bookmarkData: selection.bookmarkData, lastKnownPath: selection.path)
+        let recordURL = try libraryRecordURL()
+        try JSONEncoder().encode(stored).write(to: recordURL, options: [.atomic])
+        try FileManager.default.setAttributes(
+            [.posixPermissions: AppConstants.Storage.ownerOnlyFilePermissions],
+            ofItemAtPath: recordURL.path
         )
-        try fileManager.setAttributes(
-            [.posixPermissions: AppConstants.Storage.ownerOnlyDirectoryPermissions],
-            ofItemAtPath: modelsDirectory.path
-        )
-        let manifestURL = try assetManifestURL()
-        if fileManager.fileExists(atPath: manifestURL.path) {
-            try fileManager.removeItem(at: manifestURL)
-        }
-        let cacheURL = try verificationCacheURL()
-        if fileManager.fileExists(atPath: cacheURL.path) {
-            try fileManager.removeItem(at: cacheURL)
-        }
-        verifiedAssets = [:]
-        verificationCacheChanged = false
+        libraryAccess = nil
         return try refreshStatus()
+    }
+
+    /// Forgets the chosen model folder; the folder and every file in it are left as they are.
+    /// - Returns: Freshly recomputed status reporting that no folder is chosen.
+    /// - Throws: A local error when the saved choice cannot be removed.
+    internal func forgetLibrary() throws -> LocalModelStatus {
+        let recordURL = try libraryRecordURL()
+        if FileManager.default.fileExists(atPath: recordURL.path) {
+            try FileManager.default.removeItem(at: recordURL)
+        }
+        libraryAccess = nil
+        return try refreshStatus()
+    }
+
+    /// Reads the saved choice of model folder.
+    /// - Returns: The saved choice, or `nil` when none is saved or it cannot be read.
+    /// - Throws: A local directory-resolution error.
+    private func storedLibrary() throws -> StoredLibrary? {
+        guard let data = try? Data(contentsOf: try libraryRecordURL()) else { return nil }
+        return try? JSONDecoder().decode(StoredLibrary.self, from: data)
+    }
+
+    /// Opens the saved model folder for reading, reusing the open session while the folder is there.
+    ///
+    /// A bookmark macOS reports as stale is still used when it resolves to a folder, so a renamed
+    /// or remounted folder keeps working.
+    /// - Parameter stored: The saved choice.
+    /// - Returns: The folder, or `nil` when it was moved, removed, or sits on a drive that is not connected.
+    private func openLibrary(_ stored: StoredLibrary) -> URL? {
+        if let libraryAccess, isDirectory(libraryAccess.url) { return libraryAccess.url }
+        libraryAccess = nil
+        var isStale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: stored.bookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ), let access = try? SecurityScopedAccess(url: url), isDirectory(url) else {
+            return nil
+        }
+        libraryAccess = access
+        return url
+    }
+
+    /// Reports whether a location is a folder that exists.
+    /// - Parameter url: Location to inspect.
+    /// - Returns: `true` when a directory is there.
+    private func isDirectory(_ url: URL) -> Bool {
+        var isDirectory = ObjCBool(false)
+        return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+            && isDirectory.boolValue
+    }
+
+    /// Records a status in which no model can be read, because no folder is usable.
+    /// - Parameters:
+    ///   - state: Why no folder is usable.
+    ///   - libraryPath: Last known place of the chosen folder, when one is chosen.
+    /// - Returns: The recorded status, with every capability missing.
+    private func unavailableStatus(_ state: OfflineStatus, libraryPath: String?) -> LocalModelStatus {
+        status = LocalModelStatus(
+            state: state,
+            libraryPath: libraryPath,
+            chatURL: nil,
+            embeddingURL: nil,
+            speechURL: nil,
+            capabilities: LocalModelCapabilityKind.allCases.map {
+                LocalModelCapabilityStatus(kind: $0, state: .missing, byteCount: 0)
+            },
+            totalByteCount: 0
+        )
+        return status
     }
 
     /// Reports whether the installed speech model carries its own tokenizer.
@@ -210,20 +306,34 @@ internal actor ModelStore {
         return byteCount
     }
 
+    /// Returns the folder holding the store's own records.
+    /// - Returns: The injected folder, otherwise the app's private Application Support folder.
+    /// - Throws: A local directory-resolution error.
+    private func recordsDirectory() throws -> URL {
+        try supportDirectory ?? AppDirectories.applicationSupport()
+    }
+
+    /// Returns where the choice of model folder is saved.
+    /// - Returns: Record location inside the app container.
+    /// - Throws: A local directory-resolution error.
+    private func libraryRecordURL() throws -> URL {
+        try recordsDirectory().appendingPathComponent(AppConstants.Identity.modelLibraryRecordFilename)
+    }
+
     /// Returns the private installed-asset checksum manifest URL.
-    /// - Returns: Manifest beside the Models directory.
+    /// - Returns: Manifest inside the app container.
     /// - Throws: A local directory-resolution error.
     private func assetManifestURL() throws -> URL {
-        try AppDirectories.applicationSupport().appendingPathComponent(
+        try recordsDirectory().appendingPathComponent(
             AppConstants.Identity.modelAssetManifestFilename
         )
     }
 
-    /// Verifies every model file against the staging-generated installed manifest.
-    /// - Parameter modelsDirectory: Private Models directory.
+    /// Verifies every speech model file against the staging-generated installed manifest.
+    /// - Parameter speechDirectory: The speech model's directory in the chosen model folder.
     /// - Returns: `true` only when every safe manifest entry exists and matches.
     /// - Throws: A local file-read or hash error.
-    private func verifyInstalledAssetManifest(modelsDirectory: URL) throws -> Bool {
+    private func verifyInstalledAssetManifest(speechDirectory: URL) throws -> Bool {
         let manifestText = try String(contentsOf: assetManifestURL(), encoding: .utf8)
         var verifiedCount = 0
         for line in manifestText.split(whereSeparator: \.isNewline) {
@@ -233,10 +343,10 @@ internal actor ModelStore {
             let storedPath = String(fields[1]).trimmingCharacters(in: .whitespaces)
             guard storedPath.hasPrefix(InferenceConstants.assetManifestPrefix) else { return false }
             guard storedPath.hasPrefix(InferenceConstants.speechAssetManifestPrefix) else { continue }
-            let relativePath = String(storedPath.dropFirst(InferenceConstants.assetManifestPrefix.count))
+            let relativePath = String(storedPath.dropFirst(InferenceConstants.speechAssetManifestPrefix.count))
             let relativeComponents = relativePath.split(separator: FileConstants.pathSeparatorCharacter)
             guard relativeComponents.contains(FileConstants.parentDirectoryComponent) == false else { return false }
-            let fileURL = relativeComponents.reduce(modelsDirectory) { partial, component in
+            let fileURL = relativeComponents.reduce(speechDirectory) { partial, component in
                 partial.appendingPathComponent(String(component))
             }
             guard FileManager.default.fileExists(atPath: fileURL.path),
@@ -323,7 +433,7 @@ internal actor ModelStore {
     /// - Returns: Cache location inside the app container.
     /// - Throws: A local directory-resolution error.
     private func verificationCacheURL() throws -> URL {
-        try AppDirectories.applicationSupport().appendingPathComponent(
+        try recordsDirectory().appendingPathComponent(
             InferenceConstants.verificationCacheFilename
         )
     }

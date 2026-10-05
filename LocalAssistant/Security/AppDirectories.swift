@@ -28,16 +28,6 @@ internal enum AppDirectories {
         )
     }
 
-    /// Returns the private directory containing model assets.
-    /// - Returns: The models directory URL.
-    /// - Throws: A local error when application support cannot be resolved.
-    internal static func modelsDirectory() throws -> URL {
-        try applicationSupport().appendingPathComponent(
-            AppConstants.Identity.modelsDirectory,
-            isDirectory: true
-        )
-    }
-
     /// Returns the owner-only spool shared with the optional connector process.
     ///
     /// The spool service creates and protects this folder and its queues on every use, so
@@ -63,8 +53,7 @@ internal enum AppDirectories {
     internal static func prepare() throws {
         let directories = try [
             applicationSupport(),
-            indexDirectory(),
-            modelsDirectory()
+            indexDirectory()
         ]
         let fileManager = FileManager.default
 

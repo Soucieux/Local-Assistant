@@ -12,14 +12,17 @@ private enum ModelStatusPreview {
     /// - Parameters:
     ///   - status: Overall readiness shown in the model summary.
     ///   - capabilities: Readiness shown for each listed capability.
+    ///   - libraryPath: Chosen model folder shown in the folder row; none when omitted.
     /// - Returns: A Settings screen configured for preview only.
     @MainActor
     internal static func settings(
         status: OfflineStatus,
-        capabilities: [LocalModelCapabilityKind: LocalModelCapabilityState]
+        capabilities: [LocalModelCapabilityKind: LocalModelCapabilityState],
+        libraryPath: String? = nil
     ) -> some View {
         let model = AppModel()
         model.offlineStatus = status
+        model.modelLibraryPath = libraryPath
         model.modelCapabilities = LocalModelCapabilityKind.allCases.map { kind in
             LocalModelCapabilityStatus(
                 kind: kind,
@@ -34,13 +37,15 @@ private enum ModelStatusPreview {
     /// - Parameters:
     ///   - status: Overall readiness shown in the model summary.
     ///   - capabilities: Readiness shown for each listed capability.
+    ///   - libraryPath: Chosen model folder shown in the folder row; none when omitted.
     /// - Returns: The intended light appearance for one readiness state.
     @MainActor
     internal static func lightAppearance(
         status: OfflineStatus,
-        capabilities: [LocalModelCapabilityKind: LocalModelCapabilityState]
+        capabilities: [LocalModelCapabilityKind: LocalModelCapabilityState],
+        libraryPath: String? = nil
     ) -> some View {
-        settings(status: status, capabilities: capabilities)
+        settings(status: status, capabilities: capabilities, libraryPath: libraryPath)
             .environment(\.colorScheme, .light)
             .frame(
                 width: DesignTokens.Window.minimumWidth,
@@ -71,6 +76,21 @@ private enum ModelStatusPreview {
     ModelStatusPreview.lightAppearance(
         status: .missingModels,
         capabilities: ModelStatusPreview.uniform(.missing)
+    )
+}
+
+#Preview("Models: no folder chosen") {
+    ModelStatusPreview.lightAppearance(
+        status: .noLibrary,
+        capabilities: ModelStatusPreview.uniform(.missing)
+    )
+}
+
+#Preview("Models: folder cannot be found") {
+    ModelStatusPreview.lightAppearance(
+        status: .libraryUnavailable,
+        capabilities: ModelStatusPreview.uniform(.missing),
+        libraryPath: "/Volumes/Models/AI-Models"
     )
 }
 

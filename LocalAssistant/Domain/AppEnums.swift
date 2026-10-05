@@ -43,6 +43,10 @@ internal enum ConfidenceLevel: Int, Codable, Comparable, CaseIterable, Sendable 
 internal enum OfflineStatus: String, Codable, Sendable {
     case checking
     case ready
+    /// No model folder is chosen.
+    case noLibrary
+    /// The chosen model folder was moved, removed, or is on a drive that is not connected.
+    case libraryUnavailable
     case missingModels
     case integrityFailure
 }

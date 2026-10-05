@@ -86,19 +86,6 @@ internal struct RootView: View {
             } message: {
                 Text(UIStrings.clearSearchIndexMessage)
             }
-            .alert(
-                UIStrings.removeDownloadedModelsTitle,
-                isPresented: $model.modelRemovalConfirmationIsPresented
-            ) {
-                Button(UIStrings.removeDownloadedModels, role: .destructive) {
-                    Task { await model.confirmModelRemoval() }
-                }
-                Button(UIStrings.cancel, role: .cancel) {
-                    model.dismissModelRemovalConfirmation()
-                }
-            } message: {
-                Text(UIStrings.removeDownloadedModelsMessage)
-            }
     }
 
     /// Explains why controls are unavailable while private local services open.

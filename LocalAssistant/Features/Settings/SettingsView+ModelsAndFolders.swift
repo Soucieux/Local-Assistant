@@ -62,15 +62,7 @@ extension SettingsView {
                         .stroke(DesignTokens.Color.hairline)
                 )
 
-                destructiveActionRow(
-                    title: UIStrings.removeDownloadedModels,
-                    systemImage: SystemImages.model,
-                    actionLabel: UIStrings.removeDownloadedModelsAction,
-                    detail: UIStrings.modelStorageUsage(model.modelStorageByteCount),
-                    isDisabled: model.isBusy || model.isIndexing || model.isListening
-                ) {
-                    model.requestModelRemovalConfirmation()
-                }
+                modelLibraryRow
 
                 Divider()
 
@@ -463,6 +455,66 @@ extension SettingsView {
         )
     }
 
+    /// Shows the folder the models are read from, with the controls to choose it or stop using it.
+    private var modelLibraryRow: some View {
+        let isDisabled = model.isBusy || model.isIndexing || model.isListening
+        return HStack(spacing: DesignTokens.Spacing.medium) {
+            Image(systemName: SystemImages.folder)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(modelStatusColor)
+                .frame(
+                    width: DesignTokens.Control.glyphSlotSize,
+                    height: DesignTokens.Control.glyphSlotSize
+                )
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxSmall) {
+                Text(UIStrings.modelLibrary)
+                    .font(.callout.weight(.semibold))
+                Text(
+                    UIStrings.modelLibraryDetail(
+                        path: model.modelLibraryPath,
+                        byteCount: model.modelStorageByteCount
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .truncationMode(.middle)
+                .textSelection(.enabled)
+            }
+
+            Spacer(minLength: DesignTokens.Spacing.small)
+
+            if model.modelLibraryPath == nil {
+                Button(UIStrings.chooseModelLibrary) {
+                    Task { await model.chooseModelLibrary() }
+                }
+                .buttonStyle(PrimaryActionButtonStyle())
+                .disabled(isDisabled)
+            } else {
+                Button(UIStrings.stopUsingModelLibrary) {
+                    Task { await model.stopUsingModelLibrary() }
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+                .disabled(isDisabled)
+                Button(UIStrings.chooseModelLibrary) {
+                    Task { await model.chooseModelLibrary() }
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+                .disabled(isDisabled)
+            }
+        }
+        .padding(DesignTokens.Spacing.medium)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                .fill(DesignTokens.Color.subtleFill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.medium)
+                .stroke(DesignTokens.Color.hairline)
+        )
+    }
+
     /// Returns every required capability in a stable display order.
     private var displayedModelCapabilities: [LocalModelCapabilityStatus] {
         LocalModelCapabilityKind.allCases.map { kind in
@@ -481,6 +533,8 @@ extension SettingsView {
         switch model.offlineStatus {
         case .checking: UIStrings.modelsChecking
         case .ready: UIStrings.modelsEverythingReady
+        case .noLibrary: UIStrings.modelsNoLibrary
+        case .libraryUnavailable: UIStrings.modelsLibraryUnavailable
         case .missingModels: UIStrings.modelsMissing
         case .integrityFailure: UIStrings.modelsDamaged
         }
@@ -491,6 +545,8 @@ extension SettingsView {
         switch model.offlineStatus {
         case .checking: UIStrings.modelsCheckingDescription
         case .ready: UIStrings.modelsEverythingReadyDescription
+        case .noLibrary: UIStrings.modelsNoLibraryDescription
+        case .libraryUnavailable: UIStrings.modelsLibraryUnavailableDescription
         case .missingModels: UIStrings.modelsMissingDescription
         case .integrityFailure: UIStrings.modelsDamagedDescription
         }
@@ -506,7 +562,8 @@ extension SettingsView {
         switch model.offlineStatus {
         case .ready: DesignTokens.Color.verifiedLocal
         case .checking: DesignTokens.Color.processing
-        case .missingModels, .integrityFailure: DesignTokens.Color.destructive
+        case .noLibrary, .libraryUnavailable, .missingModels, .integrityFailure:
+            DesignTokens.Color.destructive
         }
     }
 
