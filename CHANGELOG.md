@@ -2,6 +2,20 @@
 
 Every change to Local Assistant, newest first, in one shape: the summary from the history table, then what changed, what was checked and how it was delivered. The README's Change history table lists the newest 10 and links here.
 
+<a id="readme-source-audit"></a>
+
+## README checked against the source — 2026-10-06
+
+- **Audit:** The Connector's Python stack, CryptoKit, the Carbon hotkey and a Build & Delivery table joined the architecture tables, and the structure tree lists the three root documents.
+
+### Changed
+
+- **Why:** a check of the README against the source found the Connector's LangGraph workflow and Keychain storage undocumented, two imported frameworks without a row, no build or test tooling in Architecture, and a tree without the root documents.
+- **Architecture:** CryptoKit, whose SHA-256 digests tell changed files from unchanged ones and derive stable identifiers; Carbon HIToolbox, which registers the quick-call shortcut; LangGraph with its SQLite checkpointer and keyring for the Connector; the Swift row now says the main app has no LangGraph dependency.
+- **Build & Delivery:** a new table for the Xcode project and `Config/` manifests, the build scripts, Swift Testing for the app's tests, and unittest and hatchling for the Connector.
+- **Structure:** `ARCHITECTURE.md`, `CONTRIBUTING.md` and `CHANGELOG.md` join the tree.
+- **Scope:** Documentation only.
+
 <a id="changelog"></a>
 
 ## Documentation — 2026-10-06

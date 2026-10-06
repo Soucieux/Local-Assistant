@@ -474,7 +474,9 @@ Only bounded evidence reaches the local grounding pass. Indexed content is treat
 
 | Technology or concept | Use in this project |
 |---|---|
-| Swift | Native Swift services and typed request routes orchestrate the app; no LangChain or LangGraph dependency. |
+| Swift | Native Swift services and typed request routes orchestrate the app; the main app has no LangChain or LangGraph dependency. |
+| CryptoKit | SHA-256 digests of file contents and of generated search context tell changed files from unchanged ones during incremental indexing, and derive stable identifiers from local paths without disclosing them. |
+| Carbon HIToolbox | Registers the one system-wide quick-call shortcut that summons the assistant while the app runs. |
 | Foundation | Supplies file, text, date, and structured-data APIs used by native services. |
 | Indexing | IndexingService extracts content, splits it into passages, and generates embeddings; complete reminder snapshots enter the same private knowledge index. |
 | CoreServices | FolderMonitorService uses filesystem events to detect changes for incremental indexing. |
@@ -497,6 +499,17 @@ Only bounded evidence reaches the local grounding pass. Indexed content is treat
 | App Sandbox | Enforces the main app's offline and filesystem permission boundary. |
 | Agent-to-Agent (A2A) | The separate one-shot OpenClaw Connector sends explicitly authorized agent requests using A2A v1.0. |
 | SSH | The Connector's temporary encrypted tunnel; networking never moves into the main app. |
+| LangGraph | The Connector's one-shot workflow is a LangGraph state graph in Python 3.10 or newer, checkpointed to a SQLite file through langgraph-checkpoint-sqlite. |
+| keyring | Keeps the Connector's credentials in the macOS Keychain through the system keyring backend; they never enter the bundle or a file. |
+
+### Build & Delivery
+
+| Technology or concept | Use in this project |
+|---|---|
+| Xcode project | `LocalAssistant.xcodeproj` builds the sandboxed app with `xcodebuild`; `Config/` holds the dependency pins, model manifest and privacy boundary the scripts read. |
+| Build scripts | `Scripts/` prepares the offline bundle and pinned dependencies, builds llama.cpp statically, packages the release, builds the Connector app and server kit, and audits a built app's offline boundary. |
+| Swift Testing | `LocalAssistantTests` use the Swift Testing framework for routing, retrieval and exclusion checks. |
+| unittest and hatchling | The Connector's tests run with Python's unittest; hatchling builds its wheel from `pyproject.toml`. |
 
 - The category-grouped Architecture tables above list each technology, concept, and model on its own row.
 - Backend & Application Logic means on-device services here, not a network server.
@@ -530,6 +543,9 @@ Local Assistant/
 ├── OpenClawConnector/            # Connector companion app, runtime, and its tests
 ├── Patches/                      # Offline modifications applied to pinned dependencies
 ├── Scripts/                      # Preparation, installation, build, audit, and patch tools
+├── ARCHITECTURE.md               # Trust zones, indexing lifecycle and design decisions
+├── CONTRIBUTING.md               # Contribution and numbering rules for the public mirror
+├── CHANGELOG.md                  # Complete change history
 ├── Vendor/                       # Recreated pinned dependencies; excluded from Git
 └── outputs/                      # Generated offline transfer kit; excluded from Git
 ```
@@ -701,6 +717,7 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-06 | <ul><li><strong>Audit:</strong> The Connector's Python stack, CryptoKit, the Carbon hotkey and a Build & Delivery table joined the architecture tables, and the structure tree lists the three root documents.</li></ul> | [Full record](CHANGELOG.md#readme-source-audit) |
 | Documentation | 2026-10-06 | <ul><li><strong>History:</strong> The complete change history now lives in <code>CHANGELOG.md</code>, one entry per change with its summary, what changed, what was checked and how it was delivered; the README table keeps the newest ten rows and opens each entry from its Details cell.</li></ul> | [Full record](CHANGELOG.md#changelog) |
 | Documentation | 2026-10-05 | <ul><li><strong>Alignment:</strong> Capabilities carries the overview marker; the architecture notes sit under Architecture, and the structure tree is no longer collapsed.</li></ul> | [Full record](CHANGELOG.md#readme-alignment) |
 | Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](CHANGELOG.md#readme-skeleton) |
@@ -710,7 +727,6 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 | v6.2 / build 62 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.5, which reads the pending-report retry budget only under its current name.</li><li><strong>Delivery:</strong> Signed v6.2 applications and a rebuilt disk image replace the v6.1 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-2-build-62) |
 | v6.1 / build 61 | 2026-10-01 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.4, whose installer checks for the SSH host key before changing anything and names an unreadable settings file instead of stopping with a traceback.</li><li><strong>Setup:</strong> Each readiness wait ends within 30 seconds, and a rejected operator token is named as the cause.</li><li><strong>Delivery:</strong> Signed v6.1 applications and a rebuilt disk image replace the v6.0 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-1-build-61) |
 | v6.0 / build 60 | 2026-09-27 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.2, whose configuration reads the Feishu target and CloudBase address from an untracked settings file on the server.</li><li><strong>Setup:</strong> Its installer finds the CloudBase address where the bridge will, and stops before changing anything when it is missing.</li><li><strong>Delivery:</strong> Signed v6.0 applications and a rebuilt disk image replace the v5.9 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-0-build-60) |
-| v5.9 / build 59 | 2026-09-26 | <ul><li><strong>Icon:</strong> The app icon is rebuilt in the macOS icon shape, so the app shows its full artwork instead of a smaller copy inside a grey frame.</li><li><strong>Folder:</strong> The project folder's icon is set from the same master, so the folder and the app look identical.</li><li><strong>Delivery:</strong> Signed v5.9 applications and a rebuilt disk image replace the v5.8 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v5-9-build-59) |
 ---
 
 <!-- project-control:section=ignore -->
