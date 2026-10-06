@@ -2,10 +2,12 @@
 
 ![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.4%20build%2064-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
+[Overview](#overview) · [Capabilities](#capabilities) · [Quick start](#quick-start) · [Usage](#usage) · [Workflow](#workflow) · [Architecture](#architecture) · [Project structure](#project-structure) · [Models](#models) · [Limits](#limits) · [Troubleshooting](#troubleshooting) · [Current release](#current-release) · [References](#references) · [Contributing](#contributing) · [Change history](#change-history)
+
 <!-- project-control:section=overview -->
 ## Overview
 
-> A private macOS assistant for local conversation, file search, and reminder knowledge.
+A private macOS assistant for local conversation, file search, and reminder knowledge.
 
 Local Assistant runs on one Mac and keeps its main application offline. It can:
 
@@ -24,6 +26,59 @@ OpenClaw is optional and remains outside the app:
   when needed and exits after the request.
 - Only the exact submitted message is sent; files, reminder rows, and conversation history are not
   attached.
+
+## Capabilities
+
+### Conversation
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Local conversation | Available | Runs through an embedded model in the application process. |
+| Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
+| Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
+| Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
+| Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
+| Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
+| Automatic conversation scrolling | Available | Follows new messages, results, and completed answers while respecting reduced motion. |
+| Message timestamps | Available | Uses local time for today and an abbreviated local date and time for older messages. |
+| Clear conversation history | Available | Removes saved messages and cards after confirmation. |
+
+### Finding files
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
+| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
+| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
+| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
+| Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
+
+### Authorized folders and indexing
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
+| Folder revocation | Available | Removes authorization and dependent private index records. |
+| Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
+| Continuous folder updates | Available in v1.0 source | Uses native macOS folder events while the application is running and performs a catch-up scan at launch. |
+| Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
+| Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
+| PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
+
+### Speaking and shortcuts
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
+| Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
+
+### Deliberately not included
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Speech output | Not included | No text-to-speech surface is included in the current interface. |
+| Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
+| Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
 
 ## Quick start
 
@@ -132,60 +187,7 @@ Press **Control–Option–Space** (`⌃⌥Space`) while the app is running to b
 | `OpenClaw, add this to CloudBase only` | Lets OpenClaw apply the explicit CloudBase-only instruction instead of its normal paired reminder behavior. |
 | `OpenClaw, summarize today's weather plan` | Sends the exact non-reminder request to OpenClaw through A2A. |
 
-## Capabilities
-
-### Conversation
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Local conversation | Available | Runs through an embedded model in the application process. |
-| Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
-| Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
-| Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
-| Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
-| Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
-| Automatic conversation scrolling | Available | Follows new messages, results, and completed answers while respecting reduced motion. |
-| Message timestamps | Available | Uses local time for today and an abbreviated local date and time for older messages. |
-| Clear conversation history | Available | Removes saved messages and cards after confirmation. |
-
-### Finding files
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
-| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
-| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
-| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
-| Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
-
-### Authorized folders and indexing
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
-| Folder revocation | Available | Removes authorization and dependent private index records. |
-| Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
-| Continuous folder updates | Available in v1.0 source | Uses native macOS folder events while the application is running and performs a catch-up scan at launch. |
-| Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
-| Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
-| PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
-
-### Speaking and shortcuts
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
-| Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
-
-### Deliberately not included
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Speech output | Not included | No text-to-speech surface is included in the current interface. |
-| Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
-| Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
-
-## Build from source
+### Build from source
 
 <details>
 <summary>Developer: show offline build and installation steps</summary>
@@ -336,7 +338,9 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 
 </details>
 
-## Supported content
+## Usage
+
+### Supported content
 
 | Content | Local processing |
 |---|---|
@@ -354,7 +358,9 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 - The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
 
 <!-- project-control:section=workflows -->
-## How local RAG works
+## Workflow
+
+### How local RAG works
 
 RAG means **Retrieval-Augmented Generation**. The app first finds relevant local evidence, then gives only that evidence to the local language model for the answer.
 
@@ -383,8 +389,62 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 
 ---
 
+<!-- project-control:section=workflows -->
+### Request flow
+
+Every request is classified locally:
+
+```text
+Conversation
+embedded model
+  ↓
+local answer
+
+File request
+private index
+  ↓
+grounded answer and result cards
+
+Reminder read
+local reminder cache/RAG
+  ↓
+answer or reminder cards
+
+Reminder change
+local confirmation
+  ↓
+one-shot Connector
+  ↓
+A2A
+  ↓
+OpenClaw
+
+Other OpenClaw task
+explicit OpenClaw wording
+  ↓
+one-shot Connector
+  ↓
+A2A
+  ↓
+OpenClaw
+```
+
+<!-- project-control:section=ignore -->
+### How A2A is used
+
+A2A v1.0 is the Connector's standard protocol for OpenClaw agent work:
+
+- It discovers and validates OpenClaw's Agent Card.
+- It sends every delegated conversation with the standard A2A `SendMessage` operation.
+- It carries confirmed reminder changes and explicit non-reminder OpenClaw requests.
+- It preserves a stable conversation context without attaching local files or history.
+
+Reminder snapshot synchronization does not use A2A. It remains a separate complete, read-only route with its own credential.
+
+Only bounded evidence reaches the local grounding pass. Indexed content is treated as data, never as an instruction.
+
 <!-- project-control:section=architecture -->
-## Local architecture
+## Architecture
 
 ### AI & Intelligence
 
@@ -437,90 +497,12 @@ The app stores its index in relational SQLite tables. The SQLite engine is part 
 | Agent-to-Agent (A2A) | The separate one-shot OpenClaw Connector sends explicitly authorized agent requests using A2A v1.0. |
 | SSH | The Connector's temporary encrypted tunnel; networking never moves into the main app. |
 
-<!-- project-control:section=models -->
-### Models and shared storage
+## Project structure
 
-**Shared model storage:** Local Assistant uses the shared **AI-Models library in the Mac's Documents folder**, rather than maintaining separate project-owned model copies.
-
-| Model used by this project | Path within the shared library |
-| --- | --- |
-| Chat: Qwen3-4B Q4_K_M | `gguf/Qwen3-4B-Q4_K_M.gguf` |
-| File search: Qwen3-Embedding-0.6B Q8_0 | `gguf/Qwen3-Embedding-0.6B-Q8_0.gguf` |
-| Speech: Whisper Small and its tokenizer | `whisper/openai_whisper-small/` |
-
-- The shared library's README records **Local Assistant** as a consumer of all three models and owns their exact revision, storage and change-history records.
-- Project settings, indexes and installation-specific verification records stay in the app's private storage.
-
-The app keeps no model of its own. Under **Settings → Models**, **Choose Folder…** selects the model folder, and the app reads the three models there in place with read-only access.
-
-- The folder follows the shared library's layout shown in the table, so the Mac library and the library on the external SSD are both valid choices.
-- Settings shows the chosen folder, and says when none is chosen, when the folder can no longer be found, and when a model is missing from it or damaged.
-- **Stop Using** forgets the choice; the app never changes or deletes anything in the folder.
-  - A model that is already loaded stays in memory until the app is reopened.
-- No additional terminal or service is needed.
-- This storage arrangement does not change the app's sandbox or offline runtime boundary: the app reaches the folder only through the choice made in the picker.
-
-SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
-
-## Architecture and project structure
-
-- The category-grouped Local architecture tables above list each technology, concept, and model on its own row.
+- The category-grouped Architecture tables above list each technology, concept, and model on its own row.
 - Backend & Application Logic means on-device services here, not a network server.
 - The 2026-08-31 architecture update also added stable README section mappings for Project Control, keeping models and RAG visible in Architecture.
 - The later v5.2 reconciliation changes release metadata and documentation only; application behavior and model storage remain unchanged.
-
-<!-- project-control:section=workflows -->
-### Request flow
-
-Every request is classified locally:
-
-```text
-Conversation
-embedded model
-  ↓
-local answer
-
-File request
-private index
-  ↓
-grounded answer and result cards
-
-Reminder read
-local reminder cache/RAG
-  ↓
-answer or reminder cards
-
-Reminder change
-local confirmation
-  ↓
-one-shot Connector
-  ↓
-A2A
-  ↓
-OpenClaw
-
-Other OpenClaw task
-explicit OpenClaw wording
-  ↓
-one-shot Connector
-  ↓
-A2A
-  ↓
-OpenClaw
-```
-
-### How A2A is used
-
-A2A v1.0 is the Connector's standard protocol for OpenClaw agent work:
-
-- It discovers and validates OpenClaw's Agent Card.
-- It sends every delegated conversation with the standard A2A `SendMessage` operation.
-- It carries confirmed reminder changes and explicit non-reminder OpenClaw requests.
-- It preserves a stable conversation context without attaching local files or history.
-
-Reminder snapshot synchronization does not use A2A. It remains a separate complete, read-only route with its own credential.
-
-Only bounded evidence reaches the local grounding pass. Indexed content is treated as data, never as an instruction.
 
 ### Source layout
 
@@ -558,7 +540,32 @@ Local Assistant/
 
 </details>
 
-## Boundaries and limitations
+<!-- project-control:section=models -->
+## Models
+
+**Shared model storage:** Local Assistant uses the shared **AI-Models library in the Mac's Documents folder**, rather than maintaining separate project-owned model copies.
+
+| Model used by this project | Path within the shared library |
+| --- | --- |
+| Chat: Qwen3-4B Q4_K_M | `gguf/Qwen3-4B-Q4_K_M.gguf` |
+| File search: Qwen3-Embedding-0.6B Q8_0 | `gguf/Qwen3-Embedding-0.6B-Q8_0.gguf` |
+| Speech: Whisper Small and its tokenizer | `whisper/openai_whisper-small/` |
+
+- The shared library's README records **Local Assistant** as a consumer of all three models and owns their exact revision, storage and change-history records.
+- Project settings, indexes and installation-specific verification records stay in the app's private storage.
+
+The app keeps no model of its own. Under **Settings → Models**, **Choose Folder…** selects the model folder, and the app reads the three models there in place with read-only access.
+
+- The folder follows the shared library's layout shown in the table, so the Mac library and the library on the external SSD are both valid choices.
+- Settings shows the chosen folder, and says when none is chosen, when the folder can no longer be found, and when a model is missing from it or damaged.
+- **Stop Using** forgets the choice; the app never changes or deletes anything in the folder.
+  - A model that is already loaded stays in memory until the app is reopened.
+- No additional terminal or service is needed.
+- This storage arrangement does not change the app's sandbox or offline runtime boundary: the app reaches the folder only through the choice made in the picker.
+
+SQLite is an in-process library rather than a database server. See [ARCHITECTURE.md](ARCHITECTURE.md) for trust zones, the indexing lifecycle, and detailed design decisions.
+
+## Limits
 
 ### Privacy and security boundaries
 
@@ -677,7 +684,9 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
-## Design reference
+## References
+
+### Design reference
 
 [ARCHITECTURE.md](ARCHITECTURE.md) explains system design, data flow, and privacy boundaries.
 
@@ -698,6 +707,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](#readme-skeleton) |
 | v6.4 / build 64 | 2026-10-05 | <ul><li><strong>Models:</strong> The app keeps no model of its own; it reads the three models in place from a model folder chosen under Settings → Models.</li><li><strong>Settings:</strong> Models names the chosen folder and says when none is chosen, when it can no longer be found, and when a model is missing or damaged.</li><li><strong>Installer:</strong> The offline installer puts models into the shared library instead of the app's private storage.</li><li><strong>Evidence:</strong> 160 Swift and 43 Connector tests, the Release set's signatures, the offline-boundary audit and a launch passed; the owner then chose the model folder in the delivered app, which verified every model in it.</li></ul> | [Full record](#v6-4-build-64) |
 | Documentation | 2026-10-05 | <ul><li><strong>Readability:</strong> Long paragraphs, bullets and table cells are now short leads with sub-points, one fact each; no detail was removed.</li></ul> | [Full record](#readme-structure) |
 | v6.3 / build 63 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.6, whose store manager no longer needs a package the kit does not ship, and which reads the CloudBase token only from its own section.</li><li><strong>Checks:</strong> The kit check now also reads the Python the kit's shell scripts embed, which is where the missing package hid.</li><li><strong>Delivery:</strong> Signed v6.3 applications and a rebuilt disk image replace the v6.2 set at the project root.</li></ul> | [Full record](#v6-3-build-63) |
@@ -734,6 +744,30 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="readme-skeleton"></a>
+
+### Documentation
+
+- **Recorded date:** 2026-10-05.
+- **Why:** project READMEs named and ordered the same kinds of section differently, so setup, workflow and
+  architecture sat in a different place in each.
+- **Order:** the sections now run Overview, Capabilities, Quick start, Usage, Workflow, Architecture, Project structure, Models, Limits, Troubleshooting, Current release, References, Contributing, Change history.
+- **Renamed:** Local architecture is now Architecture, Architecture and project structure is Project structure, Models and shared storage is Models, and Boundaries and limitations is Limits.
+- **Moved:**
+  - Capabilities now comes before Quick start, and Build from source joined Quick start.
+  - Supported content sits under Usage.
+  - How local RAG works, Request flow, and How A2A is used sit under Workflow.
+  - Models is its own section after Project structure, and Design reference sits under References.
+- **Project Control:** How A2A is used carries an ignore marker, so the app shows what it showed before.
+- **Opening:** a contents line under the title links every section.
+  - The overview opens with its describing line as a plain paragraph, where it was a quotation.
+- **Unchanged:** every sentence, table, diagram and Project Control marker inside the sections; whole sections
+  moved, and links to a renamed section were updated.
+  - One sentence that named the Local architecture tables now names the Architecture tables.
+- **Scope:** Documentation only.
+
+[Back to change history](#change-history)
 
 <a id="v6-4-build-64"></a>
 
