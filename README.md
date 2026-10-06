@@ -2,7 +2,7 @@
 
 ![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.4%20build%2064-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
-[Overview](#overview) · [Capabilities](#capabilities) · [Quick start](#quick-start) · [Usage](#usage) · [Workflow](#workflow) · [Architecture](#architecture) · [Project structure](#project-structure) · [Models](#models) · [Limits](#limits) · [Troubleshooting](#troubleshooting) · [Current release](#current-release) · [References](#references) · [Contributing](#contributing) · [Change history](#change-history)
+[Quick start](#quick-start) · [Architecture](#architecture) · [Change history](#change-history)
 
 <!-- project-control:section=overview -->
 ## Overview
@@ -717,6 +717,7 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-06 | <ul><li><strong>Layout:</strong> The line of section links under the title now holds three quick links, Quick start, Architecture and Change history, in place of one for every section; the outline of the whole README is the one GitHub, Obsidian and Project Control provide.</li></ul> | [Full record](CHANGELOG.md#three-quick-links) |
 | Documentation | 2026-10-06 | <ul><li><strong>Audit:</strong> The Connector's Python stack, CryptoKit, the Carbon hotkey and a Build & Delivery table joined the architecture tables, and the structure tree lists the three root documents.</li></ul> | [Full record](CHANGELOG.md#readme-source-audit) |
 | Documentation | 2026-10-06 | <ul><li><strong>History:</strong> The complete change history now lives in <code>CHANGELOG.md</code>, one entry per change with its summary, what changed, what was checked and how it was delivered; the README table keeps the newest ten rows and opens each entry from its Details cell.</li></ul> | [Full record](CHANGELOG.md#changelog) |
 | Documentation | 2026-10-05 | <ul><li><strong>Alignment:</strong> Capabilities carries the overview marker; the architecture notes sit under Architecture, and the structure tree is no longer collapsed.</li></ul> | [Full record](CHANGELOG.md#readme-alignment) |
@@ -726,7 +727,6 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 | v6.3 / build 63 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.6, whose store manager no longer needs a package the kit does not ship, and which reads the CloudBase token only from its own section.</li><li><strong>Checks:</strong> The kit check now also reads the Python the kit's shell scripts embed, which is where the missing package hid.</li><li><strong>Delivery:</strong> Signed v6.3 applications and a rebuilt disk image replace the v6.2 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-3-build-63) |
 | v6.2 / build 62 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.5, which reads the pending-report retry budget only under its current name.</li><li><strong>Delivery:</strong> Signed v6.2 applications and a rebuilt disk image replace the v6.1 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-2-build-62) |
 | v6.1 / build 61 | 2026-10-01 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.4, whose installer checks for the SSH host key before changing anything and names an unreadable settings file instead of stopping with a traceback.</li><li><strong>Setup:</strong> Each readiness wait ends within 30 seconds, and a rejected operator token is named as the cause.</li><li><strong>Delivery:</strong> Signed v6.1 applications and a rebuilt disk image replace the v6.0 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-1-build-61) |
-| v6.0 / build 60 | 2026-09-27 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.2, whose configuration reads the Feishu target and CloudBase address from an untracked settings file on the server.</li><li><strong>Setup:</strong> Its installer finds the CloudBase address where the bridge will, and stops before changing anything when it is missing.</li><li><strong>Delivery:</strong> Signed v6.0 applications and a rebuilt disk image replace the v5.9 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-0-build-60) |
 ---
 
 <!-- project-control:section=ignore -->
