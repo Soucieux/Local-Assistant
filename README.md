@@ -27,6 +27,7 @@ OpenClaw is optional and remains outside the app:
 - Only the exact submitted message is sent; files, reminder rows, and conversation history are not
   attached.
 
+<!-- project-control:section=overview -->
 ## Capabilities
 
 ### Conversation
@@ -497,17 +498,12 @@ Only bounded evidence reaches the local grounding pass. Indexed content is treat
 | Agent-to-Agent (A2A) | The separate one-shot OpenClaw Connector sends explicitly authorized agent requests using A2A v1.0. |
 | SSH | The Connector's temporary encrypted tunnel; networking never moves into the main app. |
 
-## Project structure
-
 - The category-grouped Architecture tables above list each technology, concept, and model on its own row.
 - Backend & Application Logic means on-device services here, not a network server.
 - The 2026-08-31 architecture update also added stable README section mappings for Project Control, keeping models and RAG visible in Architecture.
 - The later v5.2 reconciliation changes release metadata and documentation only; application behavior and model storage remain unchanged.
 
-### Source layout
-
-<details>
-<summary>Source directory map</summary>
+## Project structure
 
 ```text
 Local Assistant/
@@ -537,8 +533,6 @@ Local Assistant/
 ├── Vendor/                       # Recreated pinned dependencies; excluded from Git
 └── outputs/                      # Generated offline transfer kit; excluded from Git
 ```
-
-</details>
 
 <!-- project-control:section=models -->
 ## Models
@@ -707,6 +701,7 @@ One record per change; complete details and evidence are below. Older work dates
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-05 | <ul><li><strong>Alignment:</strong> Capabilities carries the overview marker; the architecture notes sit under Architecture, and the structure tree is no longer collapsed.</li></ul> | [Full record](#readme-alignment) |
 | Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](#readme-skeleton) |
 | v6.4 / build 64 | 2026-10-05 | <ul><li><strong>Models:</strong> The app keeps no model of its own; it reads the three models in place from a model folder chosen under Settings → Models.</li><li><strong>Settings:</strong> Models names the chosen folder and says when none is chosen, when it can no longer be found, and when a model is missing or damaged.</li><li><strong>Installer:</strong> The offline installer puts models into the shared library instead of the app's private storage.</li><li><strong>Evidence:</strong> 160 Swift and 43 Connector tests, the Release set's signatures, the offline-boundary audit and a launch passed; the owner then chose the model folder in the delivered app, which verified every model in it.</li></ul> | [Full record](#v6-4-build-64) |
 | Documentation | 2026-10-05 | <ul><li><strong>Readability:</strong> Long paragraphs, bullets and table cells are now short leads with sub-points, one fact each; no detail was removed.</li></ul> | [Full record](#readme-structure) |
@@ -744,6 +739,20 @@ One record per change; complete details and evidence are below. Older work dates
 
 <details>
 <summary>Full records for this table</summary>
+
+<a id="readme-alignment"></a>
+
+### Documentation
+
+- **Recorded date:** 2026-10-05.
+- **Why:** every project README shares one structure; this one still lacked part of it.
+- **Capabilities:** now carries the overview marker, so Project Control shows it as the other projects' capabilities.
+- **Architecture:** the four notes about its tables, which opened Project structure, now close Architecture.
+- **Project structure:** the source tree stands on its own, no longer inside a collapsed block.
+- **Unchanged:** every sentence inside the sections that stayed; links to a moved part were updated.
+- **Scope:** Documentation only.
+
+[Back to change history](#change-history)
 
 <a id="readme-skeleton"></a>
 
