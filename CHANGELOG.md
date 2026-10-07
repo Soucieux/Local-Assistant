@@ -2,6 +2,18 @@
 
 Every change to Local Assistant, newest first, in one shape: the summary from the history table, then what changed, what was checked and how it was delivered. The README's Change history table lists the newest 10 and links here.
 
+<a id="in-detail-named-as-the-map"></a>
+
+## In detail named as the map — 2026-10-07
+
+- **Documentation:** Every In detail heading names a map item: the content table that was Supported content now sits under Finding files, as what the index reads from each kind of content.
+
+### Changed
+
+- **Why:** the repository rule now says each heading under In detail is named exactly as a map item, so a reader finds a map item's rules under its own name.
+- **In detail:** the Supported content table and its two notes moved under Finding files, the map item they detail; no other heading changed.
+- **Scope:** Documentation only.
+
 <a id="capabilities-in-one-section"></a>
 
 ## Capabilities in one section — 2026-10-07

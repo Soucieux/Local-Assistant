@@ -65,6 +65,22 @@ What each capability covers, as the project records it, then the content the ind
 | Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
 | Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
 
+What the index reads from each kind of content:
+
+| Content | Local processing |
+|---|---|
+| Plain text and common source files | Text extraction and chunking |
+| PDF | PDFKit extraction; Vision OCR for image-only pages |
+| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR; labels and visible text become searchable, but visual objects and chart shapes are not captioned. |
+| DOCX | Visible Open XML text |
+| XLSX | Visible worksheet and shared-string XML text |
+| PPTX | Visible slide XML text |
+| Pages | OCR from an available local preview |
+| Folders | Name, relative path, direct-child context, local embedding, and descendant scoping |
+| Other files | Name, path, type, and metadata search |
+
+- Complex formulas, charts, comments, embedded objects, encrypted files, and proprietary Pages IWA bodies are not fully reconstructed.
+- The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
 #### Authorized folders and indexing
 
 | Capability | Availability | Notes |
@@ -91,23 +107,6 @@ What each capability covers, as the project records it, then the content the ind
 | Speech output | Not included | No text-to-speech surface is included in the current interface. |
 | Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
 | Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
-
-#### Supported content
-
-| Content | Local processing |
-|---|---|
-| Plain text and common source files | Text extraction and chunking |
-| PDF | PDFKit extraction; Vision OCR for image-only pages |
-| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR; labels and visible text become searchable, but visual objects and chart shapes are not captioned. |
-| DOCX | Visible Open XML text |
-| XLSX | Visible worksheet and shared-string XML text |
-| PPTX | Visible slide XML text |
-| Pages | OCR from an available local preview |
-| Folders | Name, relative path, direct-child context, local embedding, and descendant scoping |
-| Other files | Name, path, type, and metadata search |
-
-- Complex formulas, charts, comments, embedded objects, encrypted files, and proprietary Pages IWA bodies are not fully reconstructed.
-- The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
 
 ## Quick start
 
@@ -718,7 +717,7 @@ For source changes, follow the [Local Assistant contribution guide](CONTRIBUTING
 <!-- project-control:section=history -->
 ## Change history
 
-![Changelog history, Aug – Oct 2026: 87 entries; busiest August 2026 (57); v0.1 → v6.4 over 64 releases.](CHANGELOG.svg)
+![Changelog history, Aug – Oct 2026: 88 entries; busiest August 2026 (57); v0.1 → v6.4 over 64 releases.](CHANGELOG.svg)
 
 **Change-history numbering:** This project uses marketing versions and integer build numbers.
 Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
@@ -729,6 +728,7 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> Every In detail heading names a map item: the content table that was Supported content now sits under Finding files, as what the index reads from each kind of content.</li></ul> | [Full record](CHANGELOG.md#in-detail-named-as-the-map) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> The rules behind the Capabilities map moved from Usage into Capabilities itself, under one In detail subsection with a heading per map item; Project Control still shows the map alone.</li></ul> | [Full record](CHANGELOG.md#capabilities-in-one-section) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> Capabilities is a map of five labelled lines, one per area; the five availability tables moved under Usage as subsections of the same names, ahead of Supported content.</li></ul> | [Full record](CHANGELOG.md#capabilities-as-a-map) |
 | Documentation | 2026-10-06 | <ul><li><strong>Changelog:</strong> The README's Change history opens with a history strip, <code>CHANGELOG.svg</code>, drawn from the changelog: the entries of every period as shaded cells, release months marked, and the span, total and version range beside them.</li></ul> | [Full record](CHANGELOG.md#history-strip) |
@@ -738,7 +738,6 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 | Documentation | 2026-10-05 | <ul><li><strong>Alignment:</strong> Capabilities carries the overview marker; the architecture notes sit under Architecture, and the structure tree is no longer collapsed.</li></ul> | [Full record](CHANGELOG.md#readme-alignment) |
 | Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](CHANGELOG.md#readme-skeleton) |
 | v6.4 / build 64 | 2026-10-05 | <ul><li><strong>Models:</strong> The app keeps no model of its own; it reads the three models in place from a model folder chosen under Settings → Models.</li><li><strong>Settings:</strong> Models names the chosen folder and says when none is chosen, when it can no longer be found, and when a model is missing or damaged.</li><li><strong>Installer:</strong> The offline installer puts models into the shared library instead of the app's private storage.</li><li><strong>Evidence:</strong> 160 Swift and 43 Connector tests, the Release set's signatures, the offline-boundary audit and a launch passed; the owner then chose the model folder in the delivered app, which verified every model in it.</li></ul> | [Full record](CHANGELOG.md#v6-4-build-64) |
-| Documentation | 2026-10-05 | <ul><li><strong>Readability:</strong> Long paragraphs, bullets and table cells are now short leads with sub-points, one fact each; no detail was removed.</li></ul> | [Full record](CHANGELOG.md#readme-structure) |
 ---
 
 <!-- project-control:section=ignore -->
