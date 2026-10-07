@@ -2,6 +2,19 @@
 
 Every change to Local Assistant, newest first, in one shape: the summary from the history table, then what changed, what was checked and how it was delivered. The README's Change history table lists the newest 10 and links here.
 
+<a id="capabilities-as-a-map"></a>
+
+## Capabilities as a map — 2026-10-07
+
+- **Documentation:** Capabilities is a map of five labelled lines, one per area; the five availability tables moved under Usage as subsections of the same names, ahead of Supported content.
+
+### Changed
+
+- **Why:** the repository now asks every README's Capabilities to be a short map of what the user can do, with the rules behind it under Usage, so a newcomer reads the map first.
+- **Capabilities:** Conversation, Finding files, Authorized folders and indexing, Speaking and shortcuts, and Deliberately not included, one sentence each.
+- **Usage:** the five capability tables, with their availability and notes, sit under subsections of the same names, before the content table; nothing was dropped.
+- **Scope:** Documentation only.
+
 <a id="history-strip"></a>
 
 ## History strip — 2026-10-06
