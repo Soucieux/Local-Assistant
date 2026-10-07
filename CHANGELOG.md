@@ -2,6 +2,48 @@
 
 Every change to Local Assistant, newest first, in one shape: the summary from the history table, then what changed, what was checked and how it was delivered. The README's Change history table lists the newest 10 and links here.
 
+<a id="v6-5-build-65"></a>
+
+## v6.5 / build 65 — 2026-10-07
+
+- **Messages:** Chat, file search, indexing and voice input name the model they are missing, as Settings › Models names it, and point there instead of describing an offline package or bundled models.
+- **Settings:** The error alert offers Open Settings beside Done when a model is missing.
+- **Evidence:** 17 focused Swift tests, the Release set's signatures and the offline-boundary audit passed; the alert was reviewed in both appearances, and the installed app launched.
+
+### Added
+
+- **Open Settings.** For a missing model, the error alert shows **Open Settings** beside **Done**; it opens Settings, where Models says whether the folder or a model needs attention. Every other error keeps **Done** alone.
+
+### Changed
+
+- Local Assistant and OpenClaw Connector advance to v6.5/build 65; the Connector's runtime and companion app are unchanged.
+
+### Fixed
+
+- **Missing-model messages.** The messages still told the user to run an offline setup on a staging Mac, or called the speech model bundled, though the app keeps no model of its own.
+  - Each now names the model by its row in Settings › Models and ends: "Choose or check your model folder in Settings › Models."
+  - **Chat:** "Chat and answers", in the conversation.
+  - **File search and indexing:** "File search", in the conversation for a search, and in the error alert and the run's Activity details for indexing.
+  - **Voice input:** "Voice input", or the tokenizer in that model, in the error alert.
+  - **Loading the models:** names every model that is not ready.
+
+### Checked
+
+- 17 focused Swift tests passed: the 5 new missing-model tests, the 5 model-folder tests and the 7 indexing-run tests. The full suite was not run.
+  - The new tests reach each message the way its feature does: chat and the conversation text, search and indexing through embedding, loading with models not ready, and voice input when recording starts.
+  - The tokenizer message is checked as text, because reaching it needs a loaded speech model.
+  - A further test finds none of the earlier wording in any of the messages, and a search of the project's source, scripts and documents, outside the change history, found none either.
+- The alert was rendered from the built Debug app at the minimum window size and reviewed: Open Settings beside Done for a missing model, in the light appearance and with macOS in Dark appearance; an integrity failure keeps Done alone.
+- The offline Release build, run in a separate working copy, produced the signed v6.5/build 65 main application, the matching signed Connector, and `Local Assistant Release.dmg`.
+  - Both bundles passed strict deep signature verification, the disk image checksum is valid, and the main app passed the offline-boundary audit.
+  - The Connector was not launched.
+
+### Delivered
+
+- The set replaced the v6.4 artifacts at the project root on 2026-10-07, where the application launched, stayed running for ten seconds without a crash report, and quit on request.
+- The replaced v6.4 set was moved to the Trash with approval on 2026-10-07.
+- Committed on 2026-10-07 with this record.
+
 <a id="in-detail-named-as-the-map"></a>
 
 ## In detail named as the map — 2026-10-07

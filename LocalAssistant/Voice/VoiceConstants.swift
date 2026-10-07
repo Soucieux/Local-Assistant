@@ -5,7 +5,8 @@ internal enum VoiceConstants {
     internal static let recordingDirectory = "Voice"
     internal static let transcriptionSeparator = " "
     internal static let missingRecording = "No push-to-talk recording is active."
-    internal static let missingTokenizer = "The bundled speech tokenizer is not installed."
+    internal static let missingTokenizer =
+        "the tokenizer in the “\(UIStrings.modelVoiceCapability)” model. \(UIStrings.missingModelGuidance)"
 
     /// Placeholder the speech library writes into its own partial text before any speech
     /// arrives. It is upstream English copy, so it is filtered rather than displayed.
@@ -33,7 +34,7 @@ internal enum VoiceConstants {
     /// indefinitely. This bound applies in every mode, so no single failure keeps capture
     /// running.
     internal static let maximumCaptureSeconds: TimeInterval = 120
-    internal static let missingSpeechModel = "The bundled speech model is not installed."
+    internal static let missingSpeechModel = UIStrings.missingModelDetail([.voiceInput])
     internal static let speechInitializationFailure = "The local speech model could not be loaded."
 
     /// Adds a local framework diagnostic to a safe voice prefix.

@@ -52,7 +52,11 @@ internal actor LlamaCppRuntime {
         guard status.state == .ready,
               let chatURL = status.chatURL,
               let embeddingURL = status.embeddingURL else {
-            throw LocalAssistantError.modelMissing(UIStrings.offlineSetupRequired)
+            throw LocalAssistantError.modelMissing(
+                UIStrings.missingModelDetail(
+                    status.capabilities.filter { $0.state != .ready }.map(\.kind)
+                )
+            )
         }
         if resources.backendInitialized == false {
             llama_backend_init()

@@ -1,7 +1,8 @@
 import Foundation
 @preconcurrency import WhisperKit
 
-/// Streams microphone audio through a bundled offline Core ML model and publishes live text.
+/// Streams microphone audio through an offline Core ML model from the chosen model folder and
+/// publishes live text.
 ///
 /// Audio is never written to disk. Samples pass from the microphone into the speech model in
 /// memory, so a recording cannot outlive the request that produced it.
@@ -19,7 +20,8 @@ internal actor LocalVoiceService {
     private var captureFailure: Error?
 
     /// Stores the verified local model location without loading it during app startup.
-    /// - Parameter modelURL: Bundled Core ML model directory.
+    /// - Parameter modelURL: Verified Core ML model directory in the chosen model folder, or `nil`
+    ///   when the speech model is not ready.
     internal func configure(modelURL: URL?) {
         self.modelURL = modelURL
         removeLegacyRecordings()

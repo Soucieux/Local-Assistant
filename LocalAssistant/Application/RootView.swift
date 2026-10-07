@@ -42,7 +42,10 @@ internal struct RootView: View {
                     set: { if $0 == false { model.dismissError() } }
                 ),
                 presenting: model.presentedError
-            ) { _ in
+            ) { error in
+                if case .modelMissing = error {
+                    Button(UIStrings.openSettings) { model.showSettings() }
+                }
                 Button(UIStrings.done, role: .cancel) { model.dismissError() }
             } message: { error in
                 Text(error.localizedDescription)

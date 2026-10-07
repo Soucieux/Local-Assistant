@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.4%20build%2064-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.5%20build%2065-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 [Quick start](#quick-start) · [Architecture](#architecture) · [Change history](#change-history)
 
@@ -577,6 +577,7 @@ The app keeps no model of its own. Under **Settings → Models**, **Choose Folde
 
 - The folder follows the shared library's layout shown in the table, so the Mac library and the library on the external SSD are both valid choices.
 - Settings shows the chosen folder, and says when none is chosen, when the folder can no longer be found, and when a model is missing from it or damaged.
+- When a model is not ready, chat, file search, indexing and voice input name it as Settings names it and point to **Settings → Models**; the error alert offers **Open Settings**.
 - **Stop Using** forgets the choice; the app never changes or deletes anything in the folder.
   - A model that is already loaded stays in memory until the app is reopened.
 - No additional terminal or service is needed.
@@ -699,7 +700,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v6.4 (build 64)**. [Release details and delivery evidence](CHANGELOG.md#v6-4-build-64).
+**v6.5 (build 65)**. [Release details and delivery evidence](CHANGELOG.md#v6-5-build-65).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -717,7 +718,7 @@ For source changes, follow the [Local Assistant contribution guide](CONTRIBUTING
 <!-- project-control:section=history -->
 ## Change history
 
-![Changelog history, Aug – Oct 2026: 88 entries; busiest August 2026 (57); v0.1 → v6.4 over 64 releases.](CHANGELOG.svg)
+![Changelog history, Aug – Oct 2026: 89 entries; busiest August 2026 (57); v0.1 → v6.5 over 65 releases.](CHANGELOG.svg)
 
 **Change-history numbering:** This project uses marketing versions and integer build numbers.
 Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
@@ -728,6 +729,7 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v6.5 / build 65 | 2026-10-07 | <ul><li><strong>Messages:</strong> Chat, file search, indexing and voice input name the model they are missing, as Settings › Models names it, and point there instead of describing an offline package or bundled models.</li><li><strong>Settings:</strong> The error alert offers Open Settings beside Done when a model is missing.</li><li><strong>Evidence:</strong> 17 focused Swift tests, the Release set's signatures and the offline-boundary audit passed; the alert was reviewed in both appearances, and the installed app launched.</li></ul> | [Full record](CHANGELOG.md#v6-5-build-65) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> Every In detail heading names a map item: the content table that was Supported content now sits under Finding files, as what the index reads from each kind of content.</li></ul> | [Full record](CHANGELOG.md#in-detail-named-as-the-map) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> The rules behind the Capabilities map moved from Usage into Capabilities itself, under one In detail subsection with a heading per map item; Project Control still shows the map alone.</li></ul> | [Full record](CHANGELOG.md#capabilities-in-one-section) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> Capabilities is a map of five labelled lines, one per area; the five availability tables moved under Usage as subsections of the same names, ahead of Supported content.</li></ul> | [Full record](CHANGELOG.md#capabilities-as-a-map) |
@@ -737,7 +739,6 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 | Documentation | 2026-10-06 | <ul><li><strong>History:</strong> The complete change history now lives in <code>CHANGELOG.md</code>, one entry per change with its summary, what changed, what was checked and how it was delivered; the README table keeps the newest ten rows and opens each entry from its Details cell.</li></ul> | [Full record](CHANGELOG.md#changelog) |
 | Documentation | 2026-10-05 | <ul><li><strong>Alignment:</strong> Capabilities carries the overview marker; the architecture notes sit under Architecture, and the structure tree is no longer collapsed.</li></ul> | [Full record](CHANGELOG.md#readme-alignment) |
 | Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](CHANGELOG.md#readme-skeleton) |
-| v6.4 / build 64 | 2026-10-05 | <ul><li><strong>Models:</strong> The app keeps no model of its own; it reads the three models in place from a model folder chosen under Settings → Models.</li><li><strong>Settings:</strong> Models names the chosen folder and says when none is chosen, when it can no longer be found, and when a model is missing or damaged.</li><li><strong>Installer:</strong> The offline installer puts models into the shared library instead of the app's private storage.</li><li><strong>Evidence:</strong> 160 Swift and 43 Connector tests, the Release set's signatures, the offline-boundary audit and a launch passed; the owner then chose the model folder in the delivered app, which verified every model in it.</li></ul> | [Full record](CHANGELOG.md#v6-4-build-64) |
 ---
 
 <!-- project-control:section=ignore -->

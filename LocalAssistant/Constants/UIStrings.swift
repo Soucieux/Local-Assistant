@@ -50,8 +50,8 @@ internal enum UIStrings {
     internal static let resumeAutomaticUpdates = "Resume Automatic Updates"
     internal static let done = "Done"
     internal static let errorTitle = "Local Assistant could not complete that action"
-    internal static let offlineSetupRequired =
-        "Run the offline setup on an internet-connected staging Mac, then transfer the verified package to this Mac."
+    internal static let openSettings = "Open Settings"
+    internal static let missingModelGuidance = "Choose or check your model folder in Settings › Models."
     internal static let folderPickerTitle = "Choose folders for Local Assistant"
     internal static let folderPickerMessage = "Local Assistant receives read-only access to the folders you select."
     internal static let folderPickerPrompt = "Allow Read-Only Access"
@@ -299,6 +299,22 @@ internal enum UIStrings {
         case .fileSearch: return modelFileSearchCapability
         case .voiceInput: return modelVoiceCapability
         }
+    }
+
+    /// Names the models a feature is missing and points to Settings › Models.
+    ///
+    /// Each model is named by the Settings row of the capability it supplies, so the message
+    /// leads to the row that says whether the model is missing, damaged or in a folder that
+    /// can't be found.
+    /// - Parameter kinds: Capabilities whose model is not ready, in Settings order.
+    /// - Returns: Detail that follows the missing-model error prefix.
+    internal static func missingModelDetail(_ kinds: [LocalModelCapabilityKind]) -> String {
+        let names = kinds.map { "“\(modelCapabilityTitle($0))”" }
+        let list = names.count > 2
+            ? names.dropLast().joined(separator: ", ") + ", and " + names[names.count - 1]
+            : names.joined(separator: " and ")
+        let noun = names.count == 1 ? "model" : "models"
+        return "the \(list) \(noun). \(missingModelGuidance)"
     }
 
     /// Returns the user-facing purpose of one assistant capability.

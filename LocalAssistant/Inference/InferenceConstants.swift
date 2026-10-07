@@ -104,8 +104,8 @@ internal enum InferenceConstants {
     internal static let maximumHistoryCharacters = 4_000
     internal static let maximumHistoryMessageCharacters = 1_500
     internal static let maximumEvidenceCharacters = 12_000
-    internal static let missingChatModel = "The chat model is not installed or verified."
-    internal static let missingEmbeddingModel = "The embedding model is not installed or verified."
+    internal static let missingChatModel = UIStrings.missingModelDetail([.chat])
+    internal static let missingEmbeddingModel = UIStrings.missingModelDetail([.fileSearch])
     internal static let modelLoadFailure = "llama.cpp could not load a verified local model."
     internal static let vocabularyFailure = "llama.cpp could not access the local model vocabulary."
     internal static let contextLoadFailure = "llama.cpp could not create a local inference context."
