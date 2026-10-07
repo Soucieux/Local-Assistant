@@ -36,6 +36,79 @@ OpenClaw is optional and remains outside the app:
 - **Speaking and shortcuts:** Dictate a request locally and summon the assistant anywhere with `⌃⌥Space`.
 - **Deliberately not included:** No speech output, no Feishu bridge and no runtime web access; the main app has no network entitlement.
 
+<!-- project-control:section=ignore -->
+### In detail
+
+What each capability covers, as the project records it, then the content the index reads.
+
+#### Conversation
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Local conversation | Available | Runs through an embedded model in the application process. |
+| Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
+| Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
+| Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
+| Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
+| Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
+| Automatic conversation scrolling | Available | Follows new messages, results, and completed answers while respecting reduced motion. |
+| Message timestamps | Available | Uses local time for today and an abbreviated local date and time for older messages. |
+| Clear conversation history | Available | Removes saved messages and cards after confirmation. |
+
+#### Finding files
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
+| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
+| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
+| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
+| Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
+
+#### Authorized folders and indexing
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
+| Folder revocation | Available | Removes authorization and dependent private index records. |
+| Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
+| Continuous folder updates | Available in v1.0 source | Uses native macOS folder events while the application is running and performs a catch-up scan at launch. |
+| Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
+| Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
+| PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
+
+#### Speaking and shortcuts
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
+| Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
+
+#### Deliberately not included
+
+| Capability | Availability | Notes |
+|---|---|---|
+| Speech output | Not included | No text-to-speech surface is included in the current interface. |
+| Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
+| Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
+
+#### Supported content
+
+| Content | Local processing |
+|---|---|
+| Plain text and common source files | Text extraction and chunking |
+| PDF | PDFKit extraction; Vision OCR for image-only pages |
+| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR; labels and visible text become searchable, but visual objects and chart shapes are not captioned. |
+| DOCX | Visible Open XML text |
+| XLSX | Visible worksheet and shared-string XML text |
+| PPTX | Visible slide XML text |
+| Pages | OCR from an available local preview |
+| Folders | Name, relative path, direct-child context, local embedding, and descendant scoping |
+| Other files | Name, path, type, and metadata search |
+
+- Complex formulas, charts, comments, embedded objects, encrypted files, and proprietary Pages IWA bodies are not fully reconstructed.
+- The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
+
 ## Quick start
 
 Use the installed application for normal work. The source-build section is only for developers preparing an offline release.
@@ -293,77 +366,6 @@ SQLite may create `-wal` and `-shm` files beside the database. Conversation hist
 - The optional separate Connector installs a one-shot per-user launchd job that wakes only for queued work or schedule checks, closes every SSH tunnel, and exits.
 
 </details>
-
-## Usage
-
-What each capability covers, as the project records it, then the content the index reads.
-
-### Conversation
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Local conversation | Available | Runs through an embedded model in the application process. |
-| Current command presentation | Available in v1.7 | Shows only the active request, processing state, latest centered response, and latest responsive file findings on the main screen. |
-| Retained conversation History | Available in v1.7 | Preserves the established chronological message and result-card layout in a separate in-window screen, including the current launch. |
-| Intent-aware routing | Available | Selects conversation, clarification, or constrained file search. |
-| Card-aware answers | Available | Summarizes results without duplicating filenames, paths, or source lists already shown in cards. |
-| Styled conversation text | Available in v0.8 | Distinguishes each sender and renders lightweight local emphasis, inline code, and list markers. |
-| Automatic conversation scrolling | Available | Follows new messages, results, and completed answers while respecting reduced motion. |
-| Message timestamps | Available | Uses local time for today and an abbreviated local date and time for older messages. |
-| Clear conversation history | Available | Removes saved messages and cards after confirmation. |
-
-### Finding files
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Hard file-type filtering | Available in v0.9 source; hardened in v2.2 | Supports folders, PDFs, documents, spreadsheets, presentations, images, code, text, and archives. Only types explicitly requested by the user become constraints. |
-| Hybrid retrieval | Folder-aware in v2.3 | Combines filename, path, folder hierarchy, keyword, text-semantic, recency, and reciprocal-rank signals. Semantic ranking operates on extracted text, OCR, and generated local folder context rather than raw visual pixels. |
-| Folder-aware retrieval | Available in v2.3 | Indexes authorized roots and descendant folders, then uses a strong folder match to scope and explain contained results. |
-| Explainable result cards | Available; evidence-backed in v2.2 | Shows file type, confidence, path, explicit actions, and the concrete filename, path, keyword passage, or semantic passage that qualified the result. |
-| Durable result cards | Available | Restores saved cards with conversation history after relaunch. |
-
-### Authorized folders and indexing
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Read-only folder selection | Available | Uses macOS security-scoped bookmarks. |
-| Folder revocation | Available | Removes authorization and dependent private index records. |
-| Manual incremental indexing | Available | Updates one or several authorized folders sequentially. |
-| Continuous folder updates | Available in v1.0 source | Uses native macOS folder events while the application is running and performs a catch-up scan at launch. |
-| Indexing progress and pause | Available in v1.0 source | Shows per-folder counts and percentage progress and safely pauses the active run without pruning unfinished index data. |
-| Index activity | Available in v1.0 source | Retains automatic, manual, startup, and file-level results locally for 30 days, including history for revoked folders. |
-| PDF and image OCR | Available | Uses PDFKit and Apple Vision. |
-
-### Speaking and shortcuts
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Local voice input | Available in v1.7 | Updates the bottom command control with recognized words while speaking and ends on a pause or an explicit stop. |
-| Global quick-call shortcut | Available | Uses fixed `⌃⌥Space` while the application process is running. |
-
-### Deliberately not included
-
-| Capability | Availability | Notes |
-|---|---|---|
-| Speech output | Not included | No text-to-speech surface is included in the current interface. |
-| Feishu bridge | Not implemented | Reserved for a separately approved future network boundary. |
-| Runtime web access | Prohibited | The application has no browser, download route, or network entitlement. |
-### Supported content
-
-| Content | Local processing |
-|---|---|
-| Plain text and common source files | Text extraction and chunking |
-| PDF | PDFKit extraction; Vision OCR for image-only pages |
-| PNG, JPEG, HEIC, TIFF, BMP, and GIF | Apple Vision OCR; labels and visible text become searchable, but visual objects and chart shapes are not captioned. |
-| DOCX | Visible Open XML text |
-| XLSX | Visible worksheet and shared-string XML text |
-| PPTX | Visible slide XML text |
-| Pages | OCR from an available local preview |
-| Folders | Name, relative path, direct-child context, local embedding, and descendant scoping |
-| Other files | Name, path, type, and metadata search |
-
-- Complex formulas, charts, comments, embedded objects, encrypted files, and proprietary Pages IWA bodies are not fully reconstructed.
-- The scanner does not follow symbolic links and skips hidden paths, credential-like files, package descendants, common caches, and build directories.
 
 <!-- project-control:section=workflows -->
 ## Workflow
@@ -716,7 +718,7 @@ For source changes, follow the [Local Assistant contribution guide](CONTRIBUTING
 <!-- project-control:section=history -->
 ## Change history
 
-![Changelog history, Aug – Oct 2026: 86 entries; busiest August 2026 (57); v0.1 → v6.4 over 64 releases.](CHANGELOG.svg)
+![Changelog history, Aug – Oct 2026: 87 entries; busiest August 2026 (57); v0.1 → v6.4 over 64 releases.](CHANGELOG.svg)
 
 **Change-history numbering:** This project uses marketing versions and integer build numbers.
 Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
@@ -727,6 +729,7 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> The rules behind the Capabilities map moved from Usage into Capabilities itself, under one In detail subsection with a heading per map item; Project Control still shows the map alone.</li></ul> | [Full record](CHANGELOG.md#capabilities-in-one-section) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> Capabilities is a map of five labelled lines, one per area; the five availability tables moved under Usage as subsections of the same names, ahead of Supported content.</li></ul> | [Full record](CHANGELOG.md#capabilities-as-a-map) |
 | Documentation | 2026-10-06 | <ul><li><strong>Changelog:</strong> The README's Change history opens with a history strip, <code>CHANGELOG.svg</code>, drawn from the changelog: the entries of every period as shaded cells, release months marked, and the span, total and version range beside them.</li></ul> | [Full record](CHANGELOG.md#history-strip) |
 | Documentation | 2026-10-06 | <ul><li><strong>Layout:</strong> The line of section links under the title now holds three quick links, Quick start, Architecture and Change history, in place of one for every section; the outline of the whole README is the one GitHub, Obsidian and Project Control provide.</li></ul> | [Full record](CHANGELOG.md#three-quick-links) |
@@ -736,7 +739,6 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 | Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](CHANGELOG.md#readme-skeleton) |
 | v6.4 / build 64 | 2026-10-05 | <ul><li><strong>Models:</strong> The app keeps no model of its own; it reads the three models in place from a model folder chosen under Settings → Models.</li><li><strong>Settings:</strong> Models names the chosen folder and says when none is chosen, when it can no longer be found, and when a model is missing or damaged.</li><li><strong>Installer:</strong> The offline installer puts models into the shared library instead of the app's private storage.</li><li><strong>Evidence:</strong> 160 Swift and 43 Connector tests, the Release set's signatures, the offline-boundary audit and a launch passed; the owner then chose the model folder in the delivered app, which verified every model in it.</li></ul> | [Full record](CHANGELOG.md#v6-4-build-64) |
 | Documentation | 2026-10-05 | <ul><li><strong>Readability:</strong> Long paragraphs, bullets and table cells are now short leads with sub-points, one fact each; no detail was removed.</li></ul> | [Full record](CHANGELOG.md#readme-structure) |
-| v6.3 / build 63 | 2026-10-02 | <ul><li><strong>Server kit:</strong> The Connector's server setup kit carries Local Assistant bridge v1.5.6, whose store manager no longer needs a package the kit does not ship, and which reads the CloudBase token only from its own section.</li><li><strong>Checks:</strong> The kit check now also reads the Python the kit's shell scripts embed, which is where the missing package hid.</li><li><strong>Delivery:</strong> Signed v6.3 applications and a rebuilt disk image replace the v6.2 set at the project root.</li></ul> | [Full record](CHANGELOG.md#v6-3-build-63) |
 ---
 
 <!-- project-control:section=ignore -->
