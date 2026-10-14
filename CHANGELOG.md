@@ -222,7 +222,7 @@ Local Assistant and OpenClaw Connector advance to v6.4/build 64; the Connector's
 - The set replaced the v6.3 artifacts at the project root, where the application launched, stayed running for ten seconds without a crash report, and quit on request.
 - On 2026-10-05 the owner chose the Mac library in the delivered app and confirmed that selecting the model folder and voice input work; the app verified all 23 model files at the library's paths.
 - The replaced v6.3 set and the 23 model links in the sandbox's earlier Models folder were moved to the Trash with approval on 2026-10-05.
-- Delivered uncommitted on 2026-10-05, then committed as `09a3323`, with this citation after it.
+- Delivered uncommitted on 2026-10-05, then committed as `a7e32ef`, with this citation after it.
 
 <a id="readme-structure"></a>
 
@@ -282,7 +282,7 @@ All 43 Connector tests passed.
 
 - The set then replaced the v6.2 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching this source; the application launched from there, stayed running, quit on request, and left no crash report.
 - The owner moved the replaced v6.2 set to the Trash before the new set was copied in.
-- Delivered uncommitted on 2026-10-02, then committed as `2683a50`, with this record after it, and published to the public repository the same day.
+- Delivered uncommitted on 2026-10-02, then committed as `0f698c2`, with this record after it, and published to the public repository the same day.
 
 <a id="v6-2-build-62"></a>
 
@@ -311,7 +311,7 @@ All 43 Connector tests passed, including the check that every module a shipped k
 
 - The set then replaced the v6.1 artifacts at the project root, where it passed the same identity, signature, offline-boundary and disk-image checks with its kit matching the committed source; the application launched from there, stayed running, quit on request, and left no crash report.
 - Once those checks passed, the replaced v6.1 set and the llama.cpp build intermediates under `Vendor/`, which the next release build recreates, were moved to the Trash with approval.
-- Delivered uncommitted, then committed as `b5c96e0` and published to the public repository on 2026-10-02.
+- Delivered uncommitted, then committed as `8bfc728` and published to the public repository on 2026-10-02.
 
 <a id="v6-1-build-61"></a>
 
