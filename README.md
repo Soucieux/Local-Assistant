@@ -1,6 +1,6 @@
 # Local Assistant
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.5%20build%2065-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
+![Platform](https://img.shields.io/badge/Platform-macOS%2015%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![Release](https://img.shields.io/badge/Release-v6.6%20build%2066-brightgreen) ![Main app](https://img.shields.io/badge/Main%20app-Offline-9f9f9f)
 
 [Quick start](#quick-start) · [Architecture](#architecture) · [Change history](#change-history)
 
@@ -700,7 +700,7 @@ Return to the connected preparation phase and rerun `prepare_offline_bundle.sh`.
 <!-- project-control:section=release -->
 ## Current release
 
-**v6.5 (build 65)**. [Release details and delivery evidence](CHANGELOG.md#v6-5-build-65).
+**v6.6 (build 66)**. [Release details and delivery evidence](CHANGELOG.md#v6-6-build-66).
 
 To identify an application bundle, read `CFBundleShortVersionString` in its `Info.plist`.
 
@@ -718,7 +718,7 @@ For source changes, follow the [Local Assistant contribution guide](CONTRIBUTING
 <!-- project-control:section=history -->
 ## Change history
 
-![Changelog history, Aug – Oct 2026: 89 entries; busiest August 2026 (57); v0.1 → v6.5 over 65 releases.](CHANGELOG.svg)
+![Changelog history, Aug – Oct 2026: 90 entries; busiest August 2026 (57); v0.1 → v6.6 over 66 releases.](CHANGELOG.svg)
 
 **Change-history numbering:** This project uses marketing versions and integer build numbers.
 Follow the [version and build policy](CONTRIBUTING.md#version-and-build-policy).
@@ -729,6 +729,7 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 
 | Record | Date | Highlights | Details |
 |---|---|---|---|
+| v6.6 / build 66 | 2026-10-25 | <ul><li><strong>Connector:</strong> The OpenClaw Connector's runtime moves to langgraph-checkpoint-sqlite 3.1.2, which keeps namespaces apart in LangGraph's SQLite store; the Connector uses only the checkpointer, so nothing it does changes.</li><li><strong>Versions:</strong> Local Assistant and OpenClaw Connector v6.6/build 66, Connector runtime v1.9.2.</li></ul> | [Full record](CHANGELOG.md#v6-6-build-66) |
 | v6.5 / build 65 | 2026-10-07 | <ul><li><strong>Messages:</strong> Chat, file search, indexing and voice input name the model they are missing, as Settings › Models names it, and point there instead of describing an offline package or bundled models.</li><li><strong>Settings:</strong> The error alert offers Open Settings beside Done when a model is missing.</li><li><strong>Evidence:</strong> 17 focused Swift tests, the Release set's signatures and the offline-boundary audit passed; the alert was reviewed in both appearances, and the installed app launched.</li></ul> | [Full record](CHANGELOG.md#v6-5-build-65) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> Every In detail heading names a map item: the content table that was Supported content now sits under Finding files, as what the index reads from each kind of content.</li></ul> | [Full record](CHANGELOG.md#in-detail-named-as-the-map) |
 | Documentation | 2026-10-07 | <ul><li><strong>Documentation:</strong> The rules behind the Capabilities map moved from Usage into Capabilities itself, under one In detail subsection with a heading per map item; Project Control still shows the map alone.</li></ul> | [Full record](CHANGELOG.md#capabilities-in-one-section) |
@@ -738,7 +739,6 @@ One record per change; complete details and evidence are in [CHANGELOG.md](CHANG
 | Documentation | 2026-10-06 | <ul><li><strong>Audit:</strong> The Connector's Python stack, CryptoKit, the Carbon hotkey and a Build & Delivery table joined the architecture tables, and the structure tree lists the three root documents.</li></ul> | [Full record](CHANGELOG.md#readme-source-audit) |
 | Documentation | 2026-10-06 | <ul><li><strong>History:</strong> The complete change history now lives in <code>CHANGELOG.md</code>, one entry per change with its summary, what changed, what was checked and how it was delivered; the README table keeps the newest ten rows and opens each entry from its Details cell.</li></ul> | [Full record](CHANGELOG.md#changelog) |
 | Documentation | 2026-10-05 | <ul><li><strong>Alignment:</strong> Capabilities carries the overview marker; the architecture notes sit under Architecture, and the structure tree is no longer collapsed.</li></ul> | [Full record](CHANGELOG.md#readme-alignment) |
-| Documentation | 2026-10-05 | <ul><li><strong>Structure:</strong> Sections follow the order and names every project README now shares, under a contents line; sections were renamed and moved, and no wording was removed.</li></ul> | [Full record](CHANGELOG.md#readme-skeleton) |
 ---
 
 <!-- project-control:section=ignore -->

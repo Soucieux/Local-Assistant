@@ -2,6 +2,45 @@
 
 Every change to Local Assistant, newest first, in one shape: the summary from the history table, then what changed, what was checked and how it was delivered. The README's Change history table lists the newest 10 and links here.
 
+<a id="v6-6-build-66"></a>
+
+## v6.6 / build 66 — 2026-10-25
+
+- **Connector:** The OpenClaw Connector's runtime moves to langgraph-checkpoint-sqlite 3.1.2, which keeps namespaces apart in LangGraph's SQLite store; the Connector uses only the checkpointer, so nothing it does changes.
+- **Versions:** Local Assistant and OpenClaw Connector v6.6/build 66, Connector runtime v1.9.2.
+
+### Changed
+
+- **What was reported:** one medium advisory (GHSA-6hmw-9432-67qq) against
+  langgraph-checkpoint-sqlite 3.1.1, counted against both the Connector's `requirements.txt` and its
+  `pyproject.toml`.
+  - LangGraph's SQLite and Postgres stores joined a namespace's labels with `.` and checked the
+    labels only when writing, so a label containing `.` could read, overwrite or delete the items of
+    another namespace.
+- **Exposure:** none. The Connector keeps its workflow state with `SqliteSaver`, the checkpointer,
+  and never opens a `SqliteStore`.
+- **Fix:** both files pin `langgraph-checkpoint-sqlite==3.1.2`. It needs langgraph-checkpoint 4.3.0
+  or newer, which the pins already resolved, so no other package moves.
+- **Release:** Local Assistant and OpenClaw Connector advance to v6.6/build 66, and the Connector
+  runtime to v1.9.2; the main application's source is otherwise unchanged.
+- **Connector guide:** its current-release list still named v5.8/build 58 and runtime v1.9.1; it
+  now names v6.6/build 66 and runtime v1.9.2.
+
+### Checked
+
+- The Connector's 43 tests pass with langgraph-checkpoint-sqlite 3.1.2, and `pip-audit` reports no
+  advisory in its packages.
+- `Scripts/build_connector_app.sh` built `OpenClaw Connector.app` 6.6 (66) in a separate working
+  copy, from the pinned environment holding langgraph-checkpoint-sqlite 3.1.2 and runtime 1.9.2.
+  - Its signature verifies, and its frozen runtime starts and lists its commands; starting it loads
+    the workflow and LangGraph's checkpointer.
+  - The main application and the Release disk image were not rebuilt.
+
+### Delivered
+
+- Committed on 2026-10-25 with this record. The v6.5 set at the project root stays in place until a
+  Release build replaces it.
+
 <a id="v6-5-build-65"></a>
 
 ## v6.5 / build 65 — 2026-10-07
