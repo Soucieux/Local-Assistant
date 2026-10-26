@@ -34,12 +34,18 @@ Every change to Local Assistant, newest first, in one shape: the summary from th
   copy, from the pinned environment holding langgraph-checkpoint-sqlite 3.1.2 and runtime 1.9.2.
   - Its signature verifies, and its frozen runtime starts and lists its commands; starting it loads
     the workflow and LangGraph's checkpointer.
-  - The main application and the Release disk image were not rebuilt.
+- The offline Release build, run in a separate working copy, produced the signed v6.6/build 66 main
+  application, the matching signed Connector, and `Local Assistant Release.dmg`.
+  - Both bundles passed strict deep signature verification, the disk image checksum is valid, and
+    the main app passed the offline-boundary audit.
+  - The Connector was not launched.
 
 ### Delivered
 
-- Committed on 2026-10-25 with this record. The v6.5 set at the project root stays in place until a
-  Release build replaces it.
+- Committed on 2026-10-25 with this record.
+- The set replaced the v6.5 artifacts at the project root on 2026-10-25, where the application
+  launched, stayed running for ten seconds without a crash report, and quit on request.
+- The replaced v6.5 set was moved to the Trash on 2026-10-25.
 
 <a id="v6-5-build-65"></a>
 
