@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "local-assistant-openclaw-connector"
-version = "1.9.2"
+version = "1.9.3"
 description = "Opt-in one-shot SSH connector between Local Assistant and OpenClaw"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
   "keyring==25.7.0",
-  "langgraph==1.2.11",
+  "langgraph==1.2.14",
   "langgraph-checkpoint-sqlite==3.1.2"
 ]
 

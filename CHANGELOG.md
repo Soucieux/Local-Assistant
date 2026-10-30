@@ -2,6 +2,53 @@
 
 Every change to Local Assistant, newest first, in one shape: the summary from the history table, then what changed, what was checked and how it was delivered. The README's Change history table lists the newest 10 and links here.
 
+<a id="v6-7-build-67"></a>
+
+## v6.7 / build 67 — 2026-10-30
+
+- **Connector:** The OpenClaw Connector's runtime moves to langgraph 1.2.14, which requires the fixed LangGraph SDK; the Connector never uses the SDK's remote graphs, so nothing it does changes.
+- **Versions:** Local Assistant and OpenClaw Connector v6.7/build 67, Connector runtime v1.9.3.
+
+### Changed
+
+- **What was reported:** one medium advisory (GHSA-3fx2-cqw9-xr3c) against langgraph 1.2.3 to
+  1.2.13, counted against both the Connector's `requirements.txt` and its `pyproject.toml`.
+  - The LangGraph SDK's v3 streaming client, 0.4.0 to 0.4.5, put a thread or assistant identifier
+    into a request path unencoded, so a crafted identifier could send an authenticated GET request
+    to another path on the same server; `RemoteGraph` hands it a thread identifier.
+- **Exposure:** none. `workflow.py` builds the Connector's graph with `StateGraph` and keeps its
+  state with `SqliteSaver`; nothing imports `RemoteGraph` or `langgraph_sdk`, and the Connector
+  talks only to the OpenClaw Gateway through its SSH tunnel, never to a LangGraph server.
+- **Fix:** both files pin `langgraph==1.2.14`, the first release that requires langgraph-sdk 0.4.6
+  or newer.
+  - langgraph 1.2.11 accepted any SDK from 0.4.2, so an environment that already held an affected
+    SDK kept it; a fresh install chose a fixed one. With this pin, every install moves off it.
+- **Release:** Local Assistant and OpenClaw Connector advance to v6.7/build 67, and the Connector
+  runtime to v1.9.3; the main application's source is otherwise unchanged.
+- **Connector guide:** its current-release list now names v6.7/build 67 and runtime v1.9.3.
+
+### Checked
+
+- The Connector's 43 tests pass on langgraph 1.2.14, with langgraph-sdk 0.4.10,
+  langgraph-checkpoint 4.3.1, langgraph-prebuilt 1.1.1 and langgraph-checkpoint-sqlite 3.1.2.
+  - `pip-audit` reports no advisory in its packages; its one finding is the pip 25.0.1 that every
+    new Python 3.12.12 environment carries, which the Connector doesn't pin.
+- The offline Release build, run in a separate working copy, produced the signed v6.7/build 67
+  main application, the matching signed Connector, and `Local Assistant Release.dmg`.
+  - The Connector's frozen runtime was built from the pinned environment holding langgraph 1.2.14
+    and runtime 1.9.3; it starts and lists its commands.
+  - Both bundles passed strict deep signature verification, the disk image checksum is valid, and
+    the main app passed the offline-boundary audit. Neither app was opened.
+- Not run: the Swift tests; no Swift source changed.
+- The README, history and link checks pass.
+
+### Delivered
+
+- Committed on 2026-10-30 with this record.
+- The set replaced the v6.6 artifacts at the project root on 2026-10-30, after the same signature
+  and disk image checks there; neither application has been opened yet.
+- The replaced v6.6 set was moved to the Trash on 2026-10-30.
+
 <a id="v6-6-build-66"></a>
 
 ## v6.6 / build 66 — 2026-10-25
