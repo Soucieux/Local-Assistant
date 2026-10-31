@@ -47,6 +47,8 @@ Every change to Local Assistant, newest first, in one shape: the summary from th
 - Committed on 2026-10-30 with this record.
 - The set replaced the v6.6 artifacts at the project root on 2026-10-30, after the same signature
   and disk image checks there; neither application has been opened yet.
+  - Local Assistant and OpenClaw Connector were each opened on 2026-10-30, after this record was
+    written.
 - The replaced v6.6 set was moved to the Trash on 2026-10-30.
 
 <a id="v6-6-build-66"></a>
